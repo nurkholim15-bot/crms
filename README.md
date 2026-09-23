@@ -214,6 +214,51 @@ flowchart TB
 
 ---
 
+## 🗄️ Katalog Tabel Basis Data & Kebijakan ETL (Data Ingestion & Lifecycle Policy)
+
+Basis data **CRMS (Collection & Recovery Management System)** mengelola 18 entitas relasional terstruktur yang diklasifikasikan ke dalam 3 kategori berdasarkan sumber data dan siklus hidupnya:
+
+### 1. Taksonomi 18 Tabel Basis Data CRMS
+* **Kategori A: Master Replikasi Eksternal (External Ingestion Core Systems)**
+  - `customers`: Master debitur (CIF, nama, kontak, alamat, NIK masked UU PDP, instansi ASN Pemprov DKI, status VIP). Difeeding dari **Customer Acquisition System (CAS/LOS)** & **Loan Management System (LMS/CBS)**.
+  - `agreements`: Master rekening kredit aktif (No Kontrak, LOB KPR/KMK/KTA/KUR/CC, plafon, angsuran, tenor, agunan SHM/BPKB, cabang). Difeeding dari **Loan Management System (LMS/CBS)**.
+* **Kategori B: Hasil Transformasi Engine CRMS (CRMS Engine & Rule Generated)**
+  - `pre_delinquency_accounts`: Akun DPD 0 pengawasan dini (H-3..H-0). Dihasilkan dari LMS + API CASA Tabungan Autodebet + Kalender Gaji/Tukin ASN DKI.
+  - `overdue_accounts`: Antrean kerja penagihan (DPD 1+). Dihasilkan oleh CRMS Decision Engine: scoring risiko multi-faktor (0–1000 poin), Action Path Grade 1–8, alokasi PIC & kanal rekomendasi.
+  - `decision_rules`: Tabel konfigurasi matriks strategi risiko (*Champion vs Challenger*) yang dikelola oleh Risk Administrator CRMS.
+* **Kategori C: Tabel Native Operasional & Transaksional CRMS (Dibuat & Dikelola di CRMS)**
+  - `collection_activities`: Log rekam jejak histori penagihan (*Append-Only Audit Trail*, no update/no delete).
+  - `settlement_proposals`: Usulan kompromi diskon pelunasan dengan alur persetujuan bertingkat 6-stage (*Maker-Checker-Approver*).
+  - `settlement_tranches`: Jadwal dan realisasi pembayaran bertahap (1 s.d 6 termin) hasil persetujuan settlement.
+  - `skip_tracing_cases`: Berkas investigasi pelacakan kontak/domisili baru debitur yang hilang kontak (*unreachable*).
+  - `legal_cases`: Alur penegakan hukum perbankan (6 tahapan litigasi perdata di Pengadilan Negeri).
+  - `repossession_cases`: Alur eksekusi agunan dan lelang (8 tahapan: penarikan fisik, KJPP valuation, lelang KPKNL).
+  - `payment_receipt_slips`: Kuitansi Pembayaran Digital Resmi (PIS) yang diterbitkan mobile oleh Field Officer via mCollect.
+  - `collector_geo_locations`: Telemetri posisi GPS live real-time petugas lapangan, status (Visiting/Transit/Idle), dan deteksi anomali.
+  - `collector_route_points`: Rekam jejak kronologis titik-titik rute perjalanan harian untuk pemutaran animasi (*route playback*).
+  - `collection_agencies`: Administrasi rekanan agensi penagihan pihak ketiga (eksternal), kuota akun, dan evaluasi recovery rate SLA.
+  - `authority_delegations`: Pendelegasian batas wewenang persetujuan sementara saat pejabat berhalangan (*Out of Office / OOO*).
+  - `users`: Otentikasi dan otorisasi peran pengguna (RBAC: `ADMIN`, `AR_HEAD`, `COLLECTOR`).
+  - `global_parameters`: Konfigurasi terpusat parameter dinamis bank (`GENERAL_NAMA_PT`, `GENERAL_SIMBOL_PT`).
+
+### 2. Kebijakan & Strategi Pemrosesan ETL Eksternal
+1. **Refresh Data ETL: Mengapa TIDAK DI-TRUNCATE, Melainkan Incremental Upsert?**
+   - **Integritas Referensial (Foreign Key)**: Tabel `customers` dan `agreements` menjadi parent table bagi `collection_activities`, `payment_receipt_slips`, `legal_cases`, dan `settlement_proposals`. Perintah `TRUNCATE` akan di-reject oleh PostgreSQL. Jika dipaksa `TRUNCATE ... CASCADE`, seluruh histori penagihan, kuitansi bayar, dan audit trail perbankan akan **musnah terhapus**.
+   - **Kepatuhan Regulasi POJK & UU PDP**: Data riwayat debitur dan bukti penagihan wajib disimpan 5–10 tahun untuk audit OJK dan KAP.
+   - **Incremental Upsert**: Sinkronisasi EOD harian menggunakan `INSERT ... ON CONFLICT (agreement_no) DO UPDATE SET ...`. Staging table perantara (`stg_*`) boleh di-truncate saat data cleansing, namun tabel operasional CRMS selalu menggunakan *Upsert*. Rekening lunas tidak dihapus fisik (*soft sync*).
+2. **Cakupan Data Transfer: Seluruh Fasilitas Kredit Aktif (Termasuk DPD 0 Lancar) Ditransfer ke CRMS**
+   - **Pre-Delinquency Management (PDM DPD 0)**: Pengawasan H-3 s.d H-0 membutuhkan data pinjaman lancar untuk verifikasi kecukupan saldo autodebet CASA dan kalender Tukin ASN Pemprov DKI sebelum jatuh tempo.
+   - **Unified Customer 360° (Cross-Facility Aggregation)**: Kolektor yang menangani pinjaman menunggak (misal KTA DPD 15) wajib melihat seluruh fasilitas lain yang dimiliki nasabah di bank, termasuk KPR lancar (DPD 0) dan agunan sertifikat SHM-nya untuk negosiasi pelunasan silang (*cross-collateral leverage*).
+   - **First Payment Default (FPD)**: Pengawasan intensif angsuran ke 1–3 pada fasilitas baru untuk deteksi fraud dini.
+3. **Treatment Data Inputan Operasional CRMS**
+   - **Append-Only Immutability**: Log aktivitas, kuitansi digital PIS, dan koordinat GPS permanen tidak dapat diubah/dihapus siapapun.
+   - **State Machine & Maker-Checker**: Transaksi finansial (diskon settlement 6-stage) dan hukum (litigasi 6-stage, lelang 8-stage) dikunci matriks batas wewenang bertingkat.
+   - **Isolasi Mutlak dari Batch ETL**: Proses sinkronisasi malam hari tidak pernah menimpa catatan negosiasi kolektor (`notes`), janji bayar (`ptp_date`), kuitansi PIS, atau proposal settlement.
+   - **Real-Time Reverse Webhook**: Pembayaran di mCollect / Settlement memicu webhook ke Core Banking untuk *Takeout Task* otomatis (<5 menit) guna mencabut akun dari antrean kerja dan mencegah penagihan berulang.
+   - **Partisi & Retensi Data**: Telemetri GPS aktif 90 hari kalender lalu dipindahkan ke partisi arsip; data finansial dan log audit dipertahankan 5–10 tahun sesuai regulasi OJK.
+
+---
+
 ## 🛠️ Tech Stack & Konfigurasi Lingkungan
 
 * **Backend API**: Golang 1.24+ / Gin Web Framework / GORM ORM

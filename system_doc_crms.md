@@ -66,12 +66,14 @@
     - 11.11. Arsitektur Jaringan, Topologi Infrastruktur & Deployment (Production Stack)
 12. [Spesifikasi Teknis & Skema Basis Data (Technical Specs & Data Model)](#12-spesifikasi-teknis--skema-basis-data-technical-specs--data-model)
     - 12.1. Arsitektur Komponen Terimplementasi (Production Stack)
-    - 12.2. Entity Relationship Model (ERD) & Kamus Data Tabel Fisik
-    - 12.3. Spesifikasi REST API v1 Terintegrasi
-    - 12.4. Manajemen Pengguna & Role-Based Access Control (RBAC)
-    - 12.5. Parameter Dinamis Lembaga Perbankan (`global_parameters`)
-    - 12.6. Panduan Kompilasi & Deployment Mandiri ke VPS (Linux Systemd & Nginx SSL Port 3030)
-    - 12.7. Manajemen Repositori Source Code & Git Workflow (GitHub)
+    - 12.2. Taksonomi & Daftar Lengkap Tabel Basis Data CRMS (Data Catalog & Sourcing)
+    - 12.3. Kebijakan & Strategi Pemrosesan ETL Data Eksternal serta Tata Kelola Data Inputan CRMS
+    - 12.4. Entity Relationship Model (ERD) Enterprise & Kamus Data Tabel Fisik
+    - 12.5. Spesifikasi REST API v1 Terintegrasi
+    - 12.6. Manajemen Pengguna & Role-Based Access Control (RBAC)
+    - 12.7. Parameter Dinamis Lembaga Perbankan (`global_parameters`)
+    - 12.8. Panduan Kompilasi & Deployment Mandiri ke VPS (Linux Systemd & Nginx SSL Port 3030)
+    - 12.9. Manajemen Repositori Source Code & Git Workflow (GitHub)
 13. [Panduan Operasional & Cara Verifikasi 9 Dimensi Penagihan Modern](#13-panduan-operasional--cara-verifikasi-9-dimensi-penagihan-modern)
     - 13.1. Matriks Evaluasi 9 Dimensi Penagihan (Sebelum vs Sesudah Upgrade)
     - 13.2. Prosedur Pengecekan Mendalam: Dimensi 2 s/d Dimensi 9
@@ -1059,137 +1061,538 @@ graph TB
 
 ---
 
-### 12.2. Entity Relationship Model (ERD) & Kamus Data Tabel Fisik
+### 12.2. Taksonomi & Daftar Lengkap Tabel Basis Data CRMS (Data Catalog & Sourcing)
+
+Basis data **CRMS (Collection & Recovery Management System)** didesain dengan skema relasional ternormalisasi tingkat ketiga (3NF) pada engine PostgreSQL enterprise. Struktur tabel dalam sistem CRMS diklasifikasikan ke dalam **3 (tiga) kategori utama** berdasarkan sumber asal data (*data sourcing*), siklus hidup (*lifecycle*), dan entitas yang memiliki otoritas modifikasi:
+
+```mermaid
+flowchart LR
+    subgraph KAT_A["KATEGORI A: EXTERNAL FEEDING MASTER"]
+        direction TB
+        TA1["customers<br/>(Master Debitur CAS & LMS)"]
+        TA2["agreements<br/>(Master Rekening Kredit LMS/CBS)"]
+    end
+
+    subgraph KAT_B["KATEGORI B: CRMS ENGINE & ETL GENERATED"]
+        direction TB
+        TB1["pre_delinquency_accounts<br/>(DPD 0 PDM Watcher)"]
+        TB2["overdue_accounts<br/>(DPD 1+ Action Path 1-8)"]
+        TB3["decision_rules<br/>(Champion vs Challenger Rules)"]
+    end
+
+    subgraph KAT_C["KATEGORI C: CRMS NATIVE OPERATIONAL & TRANSACTIONAL"]
+        direction TB
+        TC1["collection_activities (Audit Log)"]
+        TC2["settlement_proposals & tranches"]
+        TC3["skip_tracing_cases"]
+        TC4["legal_cases & repossession_cases"]
+        TC5["payment_receipt_slips (Digital PIS)"]
+        TC6["collector_geo_locations & route_points"]
+        TC7["collection_agencies & authority_delegations"]
+        TC8["users & global_parameters"]
+    end
+
+    KAT_A -->|Nightly Ingestion & Staging| KAT_B
+    KAT_B -->|Work Queues & Benchmarks| KAT_C
+    KAT_C -.->|Reverse Webhook & Takeout Task| KAT_A
+```
+
+#### Tabel Ringkasan Taksonomi 18 Entitas Basis Data CRMS:
+| No | Nama Tabel Fisik | Kategori Data | Sistem Asal / Sumber Data (*Source System*) | Dibuat / Dikelola di CRMS? | Deskripsi Fungsional Entitas Perbankan |
+|:---:|---|:---:|---|:---:|---|
+| **1** | `customers` | **Kategori A** (Replikasi Master) | **Customer Acquisition System (CAS / LOS)** & **Loan Management System (LMS / CBS)** | Dikelola via ETL Sync (Replikasi Read/Update) | Menyimpan master profil identitas debitur: CIF (*Customer Identification File*), NIK (di-masking UU PDP), nama lengkap, kontak ponsel/WhatsApp, email domisili, instansi pekerjaan (ASN Pemprov DKI / BUMD / Swasta), dan indikator nasabah prioritas (`is_vip`). |
+| **2** | `agreements` | **Kategori A** (Replikasi Master) | **Loan Management System (LMS / CBS)** | Dikelola via ETL Sync (Replikasi Read/Update) | Menyimpan seluruh fasilitas rekening kredit aktif perbankan: No Kontrak, LOB (*KPR, KMK, KTA, KUR, CC*), plafon pembiayaan, kewajiban angsuran bulanan pokok+bunga, jangka waktu tenor, tenor terbayar, data agunan (SHM, SHGB, Fidusia), kode/nama cabang, dan pengelompokan portofolio (`combo_group`). |
+| **3** | `pre_delinquency_accounts` | **Kategori B** (Generated Engine) | **CRMS Pre-Delinquency Engine** (Kombinasi LMS + API Saldo CASA Tabungan + Kalender Tukin ASN) | Dihasilkan Otomatis oleh CRMS | Memantau rekening berstatus DPD 0 pada jendela H-3 s.d H-0 sebelum jatuh tempo, mendeteksi ketidakcukupan saldo autodebet CASA tabungan, dan memicu pengingat ramah (*gentle reminder*) via WhatsApp. |
+| **4** | `overdue_accounts` | **Kategori B** (Generated Engine) | **CRMS Data Transformer & Decision Engine** (Dipicu mutasi saldo tunggakan dari LMS) | Dihasilkan Otomatis oleh CRMS | Antrean kerja operasional utama penagihan: menghitung hari keterlambatan (*DPD*), nominal overdue, penentuan *Bucket* (1-3 s.d >150), scoring risiko multi-faktor (0–1000 poin), penetapan *Action Path* (Grade 1–8), penugasan PIC & kanal penanganan, serta pelacakan *Recovery Stage*. |
+| **5** | `decision_rules` | **Kategori B** (Engine Config) | **CRMS Risk Management** | Dibuat & Dikelola di CRMS | Tabel konfigurasi matriks Decision Engine: memetakan kombinasi *Strategy Group* (*Champion/Challenger*), kategori risiko, dan bucket ke dalam *Action Path*, jenis penanganan (*Handling Type*), dan kriteria alokasi PIC. |
+| **6** | `collection_activities` | **Kategori C** (Native Operational) | **CRMS Touchpoints** (Desk Collector, Field Officer mCollect, WhatsApp Bot, Smart IVR) | Dibuat Langsung di CRMS | Buku besar catatan penagihan (*Append-Only Audit Trail*): mencatat kronologis kontak, respon debitur, komitmen janji bayar (*Promise to Pay / PTP*), koordinat GPS kunjungan, dan berita acara negosiasi. |
+| **7** | `settlement_proposals` | **Kategori C** (Native Operational) | **CRMS Remedial & Restructuring** (Collector, Supervisor, Debitur) | Dibuat Langsung di CRMS | Mengelola usulan program kompromi / diskon pelunasan kredit bermasalah: jenis settlement (*Net Settlement / Charge-Wise*), diskon denda/bunga, nominal pelunasan netto, dan alur persetujuan bertingkat 6-stage (*Maker-Checker-Approver*). |
+| **8** | `settlement_tranches` | **Kategori C** (Native Operational) | **CRMS Settlement Engine** | Dihasilkan & Dikelola di CRMS | Memecah jadwal pembayaran kompromi ke dalam 1 s.d 6 termin cicilan, memantau tanggal jatuh tempo termin, kanal setor (Virtual Account / QRIS / Tunai), dan status pelunasan per termin. |
+| **9** | `skip_tracing_cases` | **Kategori C** (Native Operational) | **CRMS Skip Tracing Unit** (Remedial & Investigator) | Dibuat Langsung di CRMS | Mengelola investigasi pelacakan debitur yang hilang kontak (*unreachable*): penelusuran nomor telepon baru, alamat tempat kerja baru, koordinasi RT/RW kelurahan, dan histori penelusuran identitas. |
+| **10** | `legal_cases` | **Kategori C** (Native Operational) | **CRMS Legal Department** (Litigation Officer) | Dibuat Langsung di CRMS | Mengelola 6 tahapan alur penegakan hukum perbankan (*Legal Recourse*): somasi tertulis, penunjukan kuasa hukum rekanan, legal drafting somasi/gugatan sederhana, persidangan Pengadilan Negeri, audit kepatuhan, hingga putusan/perdamaian. |
+| **11** | `repossession_cases` | **Kategori C** (Native Operational) | **CRMS Asset Recovery Unit** (Remedial & Auction Specialist) | Dibuat Langsung di CRMS | Mengelola 8 tahapan eksekusi agunan dan lelang: penandaan agunan (*marking*), penarikan fisik agunan, penitipan di stockyard, penunjukan KJPP (*appraisal*), penetapan nilai pasar/likuidasi, registrasi lelang KPKNL, transaksi penjualan, hingga penyerahan aset. |
+| **12** | `payment_receipt_slips` | **Kategori C** (Native Operational) | **CRMS mCollect Mobile Workbench** (Field Officer di Lapangan) | Dibuat Langsung di CRMS | Menerbitkan Kuitansi Pembayaran Digital Resmi (*Payment Information Slip / PIS*) saat kolektor menerima setoran tunai atau verifikasi transfer VA/QRIS di lapangan, lengkap dengan nomor slip seri unik, geotagging GPS, dan pengiriman otomatis via WhatsApp. |
+| **13** | `collector_geo_locations` | **Kategori C** (Native Operational) | **CRMS Telemetry Ingestion Service** (Background GPS Smartphone mCollect) | Dibuat & Diperbarui di CRMS | Menyimpan status telemetri GPS *real-time* petugas lapangan: koordinat lintang/bujur terkini, radius akurasi, status operasional (*Visiting, In-Transit, Idle*), persentase baterai ponsel, dan indikator deteksi anomali waktu diam (> 120 menit). |
+| **14** | `collector_route_points` | **Kategori C** (Native Operational) | **CRMS GeoTracker Service** | Dibuat Langsung di CRMS | Rekam jejak kronologis titik-titik koordinat rute perjalanan harian kolektor untuk keperluan pemutaran ulang rute animasi (*route playback*), audit efisiensi mobilitas, dan verifikasi kehadiran fisik di alamat debitur. |
+| **15** | `collection_agencies` | **Kategori C** (Native Operational) | **CRMS Supervisory Module** (Head of Collection / AR Head) | Dibuat & Dikelola di CRMS | Mengelola administrasi agensi penagihan pihak ketiga (eksternal): pendaftaran mitra, legalitas kontrak PKS, nomor izin, jumlah tenaga penagih terafiliasi, kuota akun yang ditugaskan, persentase komisi, dan evaluasi *Recovery Rate* berbasis SLA. |
+| **16** | `authority_delegations` | **Kategori C** (Native Operational) | **CRMS Supervisory Module** (AR Head / Pejabat Pemutus) | Dibuat & Dikelola di CRMS | Mengelola pendelegasian wewenang persetujuan (*approval limit delegation*) saat pejabat definitif berhalangan / cuti (*Out of Office / OOO*), mencakup identitas delegator, delegasi, tanggal masa berlaku, batas nominal limit wewenang, dan alasan pendelegasian. |
+| **17** | `users` | **Kategori C** (Native Operational) | **CRMS Identity Management** (Admin Sistem / Integrasi SSO IAM Bank) | Dibuat & Dikelola di CRMS | Mengelola otentikasi akun pengguna CRMS, enkripsi kata sandi Bcrypt, hak akses berbasis peran (RBAC: `ADMIN`, `AR_HEAD`, `COLLECTOR`), status keaktifan akun, dan pencatatan waktu login terakhir. |
+| **18** | `global_parameters` | **Kategori C** (Native Operational) | **CRMS System Administration** | Dibuat & Dikelola di CRMS | Menyimpan konfigurasi parameter dinamis institusi perbankan (`GENERAL_NAMA_PT`, `GENERAL_SIMBOL_PT`), ambang batas toleransi, SLA, dan pengaturan sistem tanpa melakukan *hardcoding* pada source code. |
+
+---
+
+### 12.3. Kebijakan & Strategi Pemrosesan ETL Data Eksternal serta Tata Kelola Data Inputan CRMS
+
+Bagian ini menguraikan arsitektur tata kelola data (*Data Governance Architecture*), mekanisme sinkronisasi *Extract-Transform-Load* (ETL), serta aturan perlakuan data operasional penagihan sesuai regulasi ketat Otoritas Jasa Keuangan (OJK) dan UU Perlindungan Data Pribadi (PDP No. 27/2022).
+
+#### 12.3.1. Kebijakan Refresh Data ETL Eksternal: Mengapa Bukan Truncate-and-Insert, Melainkan Incremental Upsert?
+
+Dalam perancangan sistem perbankan skala enterprise, timbul pertanyaan mendasar: **Apakah tabel yang berasal dari sistem eksternal (seperti `customers` dan `agreements`) di-refresh setiap hari dengan cara me-truncate seluruh data lalu meng-insert ulang dari awal?**
+
+> [!IMPORTANT]
+> **JAWABAN ARSITEKTURAL TEGAS: TABEL OPERASIONAL CRMS TIDAK PERNAH DI-TRUNCATE SECARA PENUH PADA BASIS DATA OPERASIONAL.**
+> Pendekatan yang wajib diterapkan adalah **Incremental Upsert (Merge on Unique Conflict Key)** yang dikombinasikan dengan arsitektur **Staging Layer Perantara**.
+
+##### 1. Hambatan Integritas Referensial (Foreign Key Constraints):
+* Tabel `customers` dan `agreements` merupakan **tabel induk (*parent tables*)** yang direferensikan secara langsung oleh hampir seluruh tabel operasional transaksional di CRMS, antara lain:
+  - `collection_activities` mereferensikan `agreement_no`.
+  - `payment_receipt_slips` mereferensikan `agreement_no` dan `customer_id`.
+  - `settlement_proposals` dan `settlement_tranches` mereferensikan `agreement_no` dan `customer_id`.
+  - `legal_cases` dan `repossession_cases` mereferensikan `agreement_no` dan `customer_id`.
+  - `pre_delinquency_accounts` mereferensikan `agreement_no` dan `customer_id`.
+* Jika perintah `TRUNCATE TABLE agreements` atau `TRUNCATE TABLE customers` dieksekusi pada PostgreSQL, mesin basis data akan **menolak keras dan mengembalikan pesan kesalahan fatal**:
+  ```text
+  ERROR: cannot truncate a table referenced in a foreign key constraint
+  DETAIL: Table "collection_activities" references "agreements" via foreign key.
+  ```
+* Jika dipaksakan menggunakan opsi destruktif `TRUNCATE TABLE agreements CASCADE;`, maka PostgreSQL akan secara otomatis menghapus bersih seluruh baris pada tabel-tabel anak yang berelasi dengannya. Akibatnya: **Seluruh histori penagihan, kuitansi digital pembayaran yang sah (PIS), berkas perkara pengadilan, dan jejak audit perbankan bertahun-tahun akan MUSNAH TERHAPUS SECARA PERMANEN!** Tindakan ini merupakan pelanggaran berat standar audit sistem informasi perbankan.
+
+##### 2. Kepatuhan Regulasi Audit Perbankan (POJK & UU PDP):
+Berdasarkan regulasi POJK No. 11/POJK.03/2016 tentang Penerapan Manajemen Risiko dalam Penggunaan Teknologi Informasi oleh Bank Umum dan UU PDP No. 27/2022, data histori transaksi nasabah, komunikasi penagihan, dan dokumen hukum wajib dipertahankan secara utuh (*immutable audit trail*) dengan masa retensi minimal 5 hingga 10 tahun. Penghapusan data secara masal melalui truncate melanggar kepatuhan hukum perbankan.
+
+##### 3. Mekanisme Standar yang Diimplementasikan: Incremental Upsert
+CRMS menerapkan pola integrasi *idempotent* menggunakan sintaks **PostgreSQL `INSERT ... ON CONFLICT DO UPDATE`**:
+
+```sql
+-- Pola Sinkronisasi ETL Incremental Upsert pada agreements
+INSERT INTO agreements (
+    agreement_no, customer_id, lob, asset_brand, asset_model, 
+    plate_no, total_financing, installment_amount, tenor_months, 
+    paid_tenor_months, branch_code, branch_name, combo_group, 
+    created_at, updated_at
+)
+VALUES (
+    :agreement_no, :customer_id, :lob, :asset_brand, :asset_model,
+    :plate_no, :total_financing, :installment_amount, :tenor_months,
+    :paid_tenor_months, :branch_code, :branch_name, :combo_group,
+    NOW(), NOW()
+)
+ON CONFLICT (agreement_no) DO UPDATE SET
+    total_financing    = EXCLUDED.total_financing,
+    installment_amount = EXCLUDED.installment_amount,
+    paid_tenor_months  = EXCLUDED.paid_tenor_months,
+    branch_code        = EXCLUDED.branch_code,
+    branch_name        = EXCLUDED.branch_name,
+    combo_group        = EXCLUDED.combo_group,
+    updated_at         = NOW();
+```
+
+##### 4. Arsitektur Staging Area (Tempat Diperbolehkannya Truncate):
+Proses ETL batch malam hari (*Nightly EOD Ingestion*) memisahkan lingkungan transfer data menjadi 2 lapisan:
+1. **Staging Schema (`stg_*`)**: File data mentah dari Core Banking diimpor ke tabel penampungan sementara (`stg_customers`, `stg_agreements`). Tabel-tabel di lapisan staging ini **tidak memiliki foreign key ke tabel operasional CRMS**. Oleh karena itu, tabel staging **boleh di-truncate setiap malam** sebelum proses *extract* dimulai.
+2. **Operational Schema (`public.*`)**: Setelah data pada staging dibersihkan (*data cleansing*), divalidasi tipe datanya, dan di-masking NIK-nya sesuai UU PDP, prosedur ETL menjalankan operasi *Upsert* dari tabel staging ke tabel operasional utama (`public.customers`, `public.agreements`).
+
+##### 5. Penanganan Rekening yang Sudah Lunas (Paid Off / Closed):
+Jika sebuah rekening pinjaman telah dilunasi di Core Banking, data rekening tersebut pada tabel `agreements` di CRMS **tidak dihapus secara fisik (*no physical hard delete*)**. Status rekening hanya diperbarui menjadi `PAID_OFF` / `CLOSED` pada tabel antrean `overdue_accounts`. Hal ini bertujuan agar histori pinjaman nasabah tetap dapat ditinjau kapan saja melalui modul **Customer 360° View**.
+
+---
+
+#### 12.3.2. Cakupan Data Transfer Eksternal: Mengapa Seluruh Fasilitas Kredit Aktif (Termasuk DPD 0 Lancar) Ditransfer ke CRMS?
+
+Pertanyaan mendasar berikutnya: **Apakah seluruh data pinjaman dari Core Banking ditransfer secara komprehensif ke CRMS, termasuk pinjaman berstatus lancar yang belum overdue (DPD-0), atau hanya pinjaman yang sudah menunggak saja?**
+
+> [!IMPORTANT]
+> **JAWABAN ARSITEKTURAL TEGAS: YA, SELURUH FASILITAS KREDIT AKTIF (BAIK YANG BERSTATUS LANCAR DPD 0 MAUPUN MENUNGGAK DPD 1+) DITRANSFER DAN DISINKRONISASIKAN KE CRMS SECARA BERKALA.**
+
+Alasan teknis dan bisnis perbankan di balik transfer menyeluruh ini meliputi:
+
+##### 1. Kebutuhan Pre-Delinquency Management (PDM - DPD 0 Early Warning):
+* Paradigma penagihan modern bertransformasi dari *reaktif pasif* menjadi **proaktif preventif**. CRMS dilengkapi modul PDM yang bertugas mengawasi fasilitas pinjaman pada rentang **H-3 s.d H-0 (DPD 0)** sebelum tanggal jatuh tempo angsuran.
+* Modul PDM memerlukan data seluruh pinjaman lancar untuk:
+  - Memeriksa kecukupan saldo autodebet rekening tabungan/CASA nasabah melalui API internal.
+  - Memverifikasi kalender pencairan gaji dan rapel Tunjangan Kinerja Daerah (Tukin) ASN/PNS Pemprov DKI Jakarta (biasanya tanggal 25 s.d akhir bulan).
+  - Mengirimkan pengingat ramah (*gentle reminder*) melalui WhatsApp otomatis sebelum timbul denda keterlambatan.
+* Jika data fasilitas pinjaman DPD 0 tidak ditransfer ke CRMS, maka modul PDM akan mengalami *blind spot* (kebutaan informasi) dan tidak dapat menjalankan fungsi pencegahan kredit bermasalah.
+
+##### 2. Tampilan Terpadu Nasabah (Unified Customer 360° View) & Liabilitas Lintas Fasilitas (*Cross-Facility Liability*):
+* Karakteristik nasabah perbankan modern seringkali memiliki lebih dari satu fasilitas kredit secara simultan (misalnya: fasilitas KPR Griya, pinjaman modal kerja KMK, fasilitas multiguna KTA, dan Kartu Kredit).
+* Apabila seorang nasabah menunggak pada fasilitas KTA (misalnya DPD 18), petugas penagih di CRMS **wajib mengetahui seluruh fasilitas lain yang dimiliki nasabah tersebut di bank**, meskipun fasilitas lainnya (seperti KPR) berstatus **LANCAR (DPD 0)**.
+* **Manfaat Strategis:**
+  - Kolektor dapat mengetahui total eksposur kewajiban nasabah di bank (*total exposure*).
+  - Kolektor dapat memanfaatkan agunan sertifikat tanah (SHM/SHGB) pada fasilitas KPR yang lancar sebagai instrumen daya tawar dan negosiasi (*cross-collateral leverage*).
+  - Mengantisipasi risiko *contagion default* (kegagalan bayar merambat dari satu produk tanpa agunan ke produk beragun properti).
+
+##### 3. Pengawasan Risiko Gagal Bayar Dini (First Payment Default / FPD):
+Seluruh fasilitas kredit baru yang baru saja dicairkan dari CAS ke LMS langsung dimonitor di CRMS pada angsuran ke-1 hingga ke-3 (*vintage analysis*). Fasilitas baru berstatus DPD 0 yang menunjukkan tanda-tanda saldo autodebet kosong langsung diberi flag peringatan dini guna mendeteksi potensi *origination fraud* atau penurunan likuiditas nasabah.
+
+##### 4. Data yang Dikecualikan dari Transfer Rutin (Out of Scope):
+Untuk menjaga efisiensi kapasitas disk penyimpanan dan kecepatan pembacaan indeks query basis data, sistem mengecualikan:
+- Rekening kredit yang telah lunas tuntas bertahun-tahun sebelumnya (*historical archived contracts*). Data ini disimpan di Data Warehouse / Data Lake bank dan hanya ditarik via on-demand API jika diperlukan.
+- Aplikasi kredit yang dibatalkan (*cancelled*) atau ditolak (*rejected*) pada tahap Customer Acquisition (CAS).
+
+---
+
+#### 12.3.3. Tata Kelola & Proteksi Data Inputan Operasional CRMS (Treatment of Native Data)
+
+Tabel-tabel operasional yang datanya diinputkan langsung oleh pengguna atau dihasilkan oleh aktivitas sistem di CRMS (**Kategori C**) memiliki tata kelola (*data treatment*) khusus dengan prinsip keamanan tingkat tinggi:
+
+```mermaid
+flowchart TD
+    subgraph TREAT["TATA KELOLA DATA INPUTAN OPERASIONAL CRMS (5 PRINSIP UTAMA)"]
+        direction TB
+        P1["1. Immutability & Append-Only<br/>(Histori Aktivitas, Kuitansi PIS & GPS Permanen)"]
+        P2["2. Dual-Control & State Machine<br/>(6-Stage Settlement, Litigasi Hukum & Lelang)"]
+        P3["3. Isolasi dari Timpaan Batch ETL<br/>(ETL Malam Hari Tidak Menimpa Catatan Kolektor & PTP)"]
+        P4["4. Real-Time Reverse Webhook Sync<br/>(Setoran Lapangan Langsung Memotong Saldo Core Banking)"]
+        P5["5. Partisi & Siklus Retensi Regulasi<br/>(Telemetri GPS 90 Hari, Rekam Audit Finansial 5-10 Tahun)"]
+    end
+```
+
+##### 1. Prinsip Append-Only & Immutability (Buku Besar Tanpa Ubah/Hapus):
+* Seluruh pencatatan pada tabel `collection_activities` dan `payment_receipt_slips` bersifat **abadi dan tidak dapat diubah maupun dihapus (*immutable records*)**.
+* Tidak disediakan query `UPDATE` maupun `DELETE` pada level API untuk tabel log aktivitas. Setiap interaksi kolektor (telepon, kunjungan, pengiriman pesan bot) dicatat sebagai baris data baru lengkap dengan identitas petugas (`performed_by`), stempel waktu server yang tidak dapat dimanipulasi (*tamper-proof timestamp*), dan koordinat GPS.
+* Bukti pembayaran kuitansi digital PIS (`payment_receipt_slips`) memiliki nomor seri slip acak yang unik dan tercatat secara permanen untuk mencegah manipulasi setoran tunai oleh oknum kolektor (*anti-fraud embezzlement*).
+
+##### 2. Validasi Alur Kerja Mesin Status (*State Machine*) & Persetujuan Berjenjang (*Dual-Control*):
+* Transaksi bernilai finansial dan proses hukum tidak dapat diubah statusnya secara sepihak oleh seorang operator, melainkan diatur oleh *State Machine* dengan matriks batas wewenang:
+  - **Settlement 6-Stage**: Proposal kompromi diskon pelunasan wajib melalui tahapan berurutan: *Initiate -> Schedule -> Plan -> Recommend & Approval -> Payment Tracking -> Closure*. Persetujuan diskon di atas plafon tertentu wajib ditandatangani oleh pejabat dengan level kewenangan yang sesuai (Collector < Rp 5 jt, BM < Rp 25 jt, AR Head < Rp 100 jt, Direksi > Rp 100 jt).
+  - **Litigasi & Lelang**: Perubahan tahapan perkara hukum (`legal_cases`) dan eksekusi agunan (`repossession_cases`) wajib disertai lampiran nomor surat somasi resmi, akta risalah lelang KPKNL, atau laporan penilaian dari Lembaga Penilai Independen (KJPP).
+
+##### 3. Isolasi Mutlak dari Proses Batch ETL (Non-Destructive Overwrite Policy):
+* Proses batch sinkronisasi ETL malam hari dari LMS/Core Banking **didesain secara ketat hanya memperbarui data saldo pokok, denda sistem, dan tenor** pada tabel master `agreements` dan antrean `overdue_accounts`.
+* Proses ETL **TIDAK AKAN PERNAH menimpa, menghapus, atau mereset data inputan operasional kolektor**, antara lain:
+  - Kolom catatan berita acara dan negosiasi (`notes`).
+  - Kolom janji bayar debitur (`ptp_date`, `ptp_amount`).
+  - Penugasan PIC yang telah diatur secara khusus oleh Supervisor / AR Head.
+  - Berkas pengajuan settlement yang sedang menunggu persetujuan komite kredit.
+
+##### 4. Real-Time Reverse Webhook ke Core Banking (Takeout Task Automation):
+* Ketika seorang kolektor lapangan menerima setoran pembayaran melalui aplikasi mobile mCollect dan mencatatkannya pada tabel `payment_receipt_slips`, sistem CRMS secara instan menembakkan *HTTP Webhook event* ke endpoint pembayaran Core Banking / Payment Gateway (Virtual Account BI-FAST).
+* Begitu Core Banking memvalidasi pembukuan saldo masuk, sistem secara otomatis mengeksekusi **Takeout Task** dalam hitungan kurang dari 5 menit:
+  - Mengubah status akun di `overdue_accounts` menjadi `PAID`.
+  - Mencabut akun dari daftar kunjungan harian kolektor lapangan secara *real-time*.
+  - Menghindarkan risiko penagihan berulang yang memalukan nasabah yang telah melunasi kewajibannya (*post-payment disturbance mitigation*).
+
+##### 5. Partisi Data & Siklus Retensi Regulasi (Data Retention Lifecycle):
+* **Data Telemetri Geografis Berfrekuensi Tinggi**: Tabel `collector_geo_locations` dan `collector_route_points` menghasilkan volume jutaan titik koordinat GPS setiap bulannya. Data ini disimpan secara aktif pada tabel utama selama **90 hari kalender** untuk keperluan pemutaran ulang rute dan evaluasi produktivitas. Setelah 90 hari, data dipindahkan secara otomatis ke tabel partisi arsip (*archival partition*) agar ukuran basis data operasional tetap ramping dan performa indeks query tetap prima.
+* **Data Transaksional & Audit Trail Finansial**: Data nasabah, kontrak kredit, log penagihan, kuitansi bayar, dan berkas perkara hukum disimpan secara permanen di basis data selama fasilitas kredit aktif ditambah **minimal 5 tahun (dan hingga 10 tahun)** pasca penyelesaian kredit, memenuhi ketentuan POJK Manajemen Risiko TI Perbankan dan UU PDP.
+
+---
+
+### 12.4. Entity Relationship Model (ERD) Enterprise & Kamus Data Tabel Fisik
+
+Diagram Entity Relationship Model (ERD) enterprise di bawah ini menggambarkan arsitektur relasional komprehensif yang menghubungkan seluruh 18 tabel pada basis data `crms_db`:
 
 ```mermaid
 erDiagram
-    CUSTOMERS ||--o{ AGREEMENTS : "memiliki"
-    AGREEMENTS ||--|| OVERDUE_ACCOUNTS : "memantau"
-    OVERDUE_ACCOUNTS ||--o{ COLLECTION_ACTIVITIES : "mencatat log"
+    CUSTOMERS ||--o{ AGREEMENTS : "memiliki 1..n rekening"
+    CUSTOMERS ||--o{ PRE_DELINQUENCY_ACCOUNTS : "pengawasan DPD 0"
+    CUSTOMERS ||--o{ SETTLEMENT_PROPOSALS : "mengajukan kompromi"
+    CUSTOMERS ||--o{ SKIP_TRACING_CASES : "pelacakan kontak"
+    CUSTOMERS ||--o{ LEGAL_CASES : "perkara perdata"
+    CUSTOMERS ||--o{ REPOSSESSION_CASES : "eksekusi agunan"
+    CUSTOMERS ||--o{ PAYMENT_RECEIPT_SLIPS : "penerima kuitansi"
+
+    AGREEMENTS ||--|| OVERDUE_ACCOUNTS : "memantau DPD 1+"
+    AGREEMENTS ||--o{ PRE_DELINQUENCY_ACCOUNTS : "relasi rekening"
+    AGREEMENTS ||--o{ COLLECTION_ACTIVITIES : "riwayat log interaksi"
+    AGREEMENTS ||--o{ SETTLEMENT_PROPOSALS : "rekening settlement"
+    AGREEMENTS ||--o{ LEGAL_CASES : "objek gugatan"
+    AGREEMENTS ||--o{ REPOSSESSION_CASES : "objek lelang"
+    AGREEMENTS ||--o{ PAYMENT_RECEIPT_SLIPS : "pembayaran angsuran"
+
+    OVERDUE_ACCOUNTS ||--o{ COLLECTION_ACTIVITIES : "mencatat aktivitas"
+    
+    SETTLEMENT_PROPOSALS ||--o{ SETTLEMENT_TRANCHES : "memiliki 1..6 termin"
+    
+    COLLECTION_AGENCIES ||--o{ OVERDUE_ACCOUNTS : "alokasi agensi eksternal"
+
+    COLLECTOR_GEO_LOCATIONS ||--o{ COLLECTOR_ROUTE_POINTS : "titik rute harian"
+
+    USERS ||--o{ COLLECTION_ACTIVITIES : "petugas pelaksana"
+    USERS ||--o{ AUTHORITY_DELEGATIONS : "delegator & penerima wewenang"
+
+    GLOBAL_PARAMETERS {
+        bigserial id PK
+        varchar param_key UK
+        text param_value
+        varchar description
+    }
+
+    USERS {
+        bigserial id PK
+        varchar username UK
+        varchar password "Bcrypt Hash"
+        varchar full_name
+        varchar email
+        varchar role "ADMIN, AR_HEAD, COLLECTOR"
+        boolean is_active
+        timestamptz last_login
+    }
 
     CUSTOMERS {
         bigserial id PK
-        varchar customer_no UK "CIF-00001"
+        varchar customer_no UK "Nomor CIF Debitur"
         varchar name "Nama Lengkap Debitur"
-        varchar phone "Nomor Telepon Seluler / WA"
-        varchar email "Alamat Email"
-        text address "Alamat Domisili KTP"
+        varchar phone "Nomor Telepon / WA (Masked)"
+        varchar email "Email Domisili"
+        text address "Alamat KTP (Masked)"
         varchar city "Kota Domisili"
-        varchar occupation "Pekerjaan / Instansi (PNS Pemprov DKI / Swasta)"
-        boolean is_vip "Flag Nasabah Prioritas Bank"
-        timestamptz created_at
-        timestamptz updated_at
+        varchar occupation "Instansi / PNS Pemprov DKI"
+        boolean is_vip "Flag Nasabah Prioritas"
     }
 
     AGREEMENTS {
         bigserial id PK
         varchar agreement_no UK "Nomor Rekening Pinjaman"
-        bigint customer_id FK "Relasi ke customers(id)"
+        bigint customer_id FK
         varchar lob "KPR, KMK, KTA, KUR, CC"
-        varchar asset_brand "Tipe Agunan (Properti SHM/SHGB, Deposito, Fidusia)"
+        varchar asset_brand "Tipe Agunan (SHM, SHGB, Fidusia)"
         varchar asset_model "Spesifikasi Jaminan"
-        varchar plate_no "Nomor Sertifikat / Bukti Kepemilikan Agunan"
-        numeric total_financing "Plafon Pinjaman Pokok"
-        numeric installment_amount "Kewajiban Angsuran Bulanan"
-        bigint tenor_months "Jangka Waktu Pinjaman (Bulan)"
-        bigint paid_tenor_months "Tenor Telah Dijalani"
-        varchar branch_code "Kode Cabang Bank"
-        varchar branch_name "Nama Kantor Cabang"
-        timestamptz created_at
-        timestamptz updated_at
+        varchar plate_no "No Sertifikat Tanah / BPKB"
+        numeric total_financing "Plafon Pinjaman"
+        numeric installment_amount "Angsuran Bulanan"
+        int tenor_months "Tenor Total"
+        int paid_tenor_months "Tenor Berjalan"
+        varchar branch_code "Kode Cabang"
+        varchar branch_name "Nama Cabang"
+        varchar combo_group "COMBO_1_PROPERTY, COMBO_2_UNSECURED"
     }
 
     OVERDUE_ACCOUNTS {
         bigserial id PK
-        varchar agreement_no UK "Relasi ke agreements(agreement_no)"
-        bigint dpd "Hari Keterlambatan (Days Past Due)"
-        numeric overdue_amount "Nilai Tunggakan Total"
-        varchar current_bucket "Bucket Keterlambatan (1-3, 4-7, ... >150)"
-        bigint risk_score "Skor Risiko Debitur (0-1000)"
-        varchar risk_level "LOW_RISK, MEDIUM_RISK, HIGH_RISK, VIP"
+        varchar agreement_no UK FK
+        int dpd "Days Past Due"
+        numeric overdue_amount "Nilai Tunggakan"
+        varchar current_bucket "1-3, 4-7, ... >150"
+        int risk_score "Skor Risiko (0-1000)"
+        varchar risk_level "LOW, MEDIUM, HIGH, VIP"
         varchar strategy_group "CHAMPION, CHALLENGER, VIP"
-        varchar action_path "Action Path (1 s/d 8, VIP)"
-        varchar assigned_pic "WA, Robot, DC, FC, SFC, Special Team"
-        varchar pic_channel "AUTOMATION, HEAD_OFFICE, BRANCH, VIP"
+        varchar action_path "1 s/d 8, VIP"
+        varchar assigned_pic "Petugas / Kanal PIC"
+        varchar pic_channel "AUTOMATION, HEAD_OFFICE, BRANCH, REMEDIAL"
         varchar status "OPEN, PROMISE_TO_PAY, PAID"
-        varchar recovery_stage "STAGE_COLLECTION, STAGE_SKIP_TRACING, STAGE_RESTRUCTURING, STAGE_LEGAL_NOTICE, STAGE_LITIGATION_AUCTION, STAGE_SETTLEMENT, STAGE_CLOSED"
-        varchar recommended_channel "WA_BOT, SMART_ROBOCALL, DESK_TELEPHONY, FIELD_VISIT, LEGAL_REMEDIAL"
-        numeric cost_efficiency_rate "Tingkat Penghematan Biaya Kanal (0.00 - 1.00)"
-        timestamptz last_contact_at
-        timestamptz next_action_at
+        varchar recovery_stage "STAGE_COLLECTION s/d STAGE_CLOSED"
+        varchar recommended_channel "WA, ROBO, DESK, FIELD"
+        numeric cost_efficiency_rate "Tingkat Efisiensi Biaya"
         timestamptz ptp_date "Tanggal Janji Bayar"
         numeric ptp_amount "Nominal Janji Bayar"
-        text notes "Catatan Hasil Penanganan Kolektor"
-        timestamptz created_at
-        timestamptz updated_at
     }
 
     COLLECTION_ACTIVITIES {
         bigserial id PK
-        bigint overdue_account_id FK "Relasi ke overdue_accounts(id)"
-        varchar agreement_no "Nomor Rekening Pinjaman"
-        varchar channel_type "WA, ROBO, DC, FC, SFC, AR_HEAD, REMEDIAL"
-        varchar performed_by "Petugas / Sistem Pemroses"
-        varchar contact_status "CONTACTED, UNREACHABLE, VISITED, PAID, STAGE_UPDATED"
-        varchar result_code "PTP_MADE, PAID, ESCALATED, STAGE_MOVED"
-        timestamptz ptp_date "Tanggal PTP"
-        numeric ptp_amount "Nominal PTP"
-        numeric geo_lat "Latitude GPS Kunjungan Lapangan"
-        numeric geo_lng "Longitude GPS Kunjungan Lapangan"
-        text notes "Berita Acara / Catatan Negosiasi"
-        timestamptz created_at
+        bigint overdue_account_id FK
+        varchar agreement_no FK
+        varchar channel_type "WA, ROBO, DC, FC, SFC, REMEDIAL"
+        varchar performed_by "Username Petugas / Sistem"
+        varchar contact_status "CONTACTED, UNREACHABLE, PTP_MADE, PAID"
+        varchar result_code "Hasil Interaksi"
+        timestamptz ptp_date "Tanggal Komitmen Bayar"
+        numeric ptp_amount "Nominal Janji Bayar"
+        numeric geo_lat "Latitude GPS Kunjungan"
+        numeric geo_lng "Longitude GPS Kunjungan"
+        text notes "Berita Acara Negosiasi"
+        timestamptz created_at "Audit Timestamp Server"
     }
 
-    GLOBAL_PARAMETERS {
+    PRE_DELINQUENCY_ACCOUNTS {
         bigserial id PK
-        varchar param_key UK "GENERAL_NAMA_PT, GENERAL_SIMBOL_PT"
-        text param_value "Nilai Parameter Konfigurasi"
-        varchar description "Deskripsi Parameter"
+        varchar agreement_no FK
+        bigint customer_id FK
+        timestamptz due_date "Jatuh Tempo Angsuran"
+        numeric installment_amount "Kewajiban Angsuran"
+        numeric casa_balance "Saldo Rekening Tabungan Autodebet"
+        int salary_date "Tanggal Siklus Payroll / Tukin"
+        varchar pdm_trigger_reason "INSUFFICIENT_CASA, SALARY_DELAY"
+        varchar reminder_status "PENDING, WA_SENT, CURED"
     }
 
-    USERS {
+    SETTLEMENT_PROPOSALS {
         bigserial id PK
-        varchar username UK "admin, ar_head, collector"
-        varchar password "Hash Bcrypt"
-        varchar full_name "Nama Pengguna"
-        varchar email "Email"
-        varchar role "ADMIN, AR_HEAD, COLLECTOR"
-        boolean is_active "Status Keaktifan Akun"
-        timestamptz last_login
-        timestamptz created_at
-        timestamptz updated_at
+        varchar proposal_no UK
+        varchar agreement_no FK
+        bigint customer_id FK
+        varchar settlement_stage "STAGE_INITIATE s/d STAGE_CLOSURE"
+        varchar settlement_type "NET_SETTLEMENT, CHARGE_WISE"
+        numeric original_overdue "Total Tunggakan Awal"
+        numeric waived_penalty "Diskon Denda"
+        numeric waived_interest "Diskon Bunga"
+        numeric net_settlement_amount "Nominal Bayar Netto"
+        varchar approval_status "PENDING, RECOMMENDED, APPROVED, REJECTED"
+        varchar recommendation_tier "COLLECTOR, BM, AR_HEAD, DIRECTOR"
+        int total_tranches "Jumlah Termin (1-6)"
+    }
+
+    SETTLEMENT_TRANCHES {
+        bigserial id PK
+        bigint settlement_proposal_id FK
+        int tranche_no "Termin Ke-N"
+        timestamptz due_date "Jatuh Tempo Termin"
+        numeric amount "Nominal Termin"
+        string payment_method "ONLINE_VA, QRIS, CASH"
+        string payment_status "PENDING, PAID, OVERDUE"
+        string receipt_no "Nomor Kuitansi PIS"
+    }
+
+    LEGAL_CASES {
+        bigserial id PK
+        varchar case_no UK
+        varchar agreement_no FK
+        bigint customer_id FK
+        varchar legal_stage "6 Tahapan Litigasi"
+        varchar lawyer_name "Kuasa Hukum"
+        varchar law_firm "Kantor Advokat Rekanan"
+        varchar court_name "Pengadilan Negeri"
+        numeric claim_amount "Nilai Gugatan"
+        varchar status "ACTIVE, WON, SETTLED"
+    }
+
+    REPOSSESSION_CASES {
+        bigserial id PK
+        varchar repo_no UK
+        varchar agreement_no FK
+        bigint customer_id FK
+        varchar repo_stage "8 Tahapan Repo & Lelang"
+        varchar asset_type "PROPERTI_SHM, FIDUSIA"
+        varchar stockyard_location "Lokasi Penyimpanan"
+        numeric market_value "Nilai Pasar Wajar KJPP"
+        numeric liquidation_value "Nilai Likuidasi KJPP"
+        numeric highest_bid_amount "Penawaran Lelang KPKNL"
+        varchar status "IN_REPO, SOLD, RELEASED"
+    }
+
+    SKIP_TRACING_CASES {
+        bigserial id PK
+        varchar case_no UK
+        varchar agreement_no FK
+        bigint customer_id FK
+        varchar tracer_pic "Petugas Pelacak"
+        varchar tracing_status "INITIATED, IN_PROGRESS, FOUND, UNTRACEABLE"
+        varchar new_phone "Nomor Kontak Baru Ditemukan"
+        text new_address "Alamat Baru Terverifikasi"
+        varchar source_info "DUKCAPIL, CASA, RT_RW, SURVEY"
+    }
+
+    PAYMENT_RECEIPT_SLIPS {
+        bigserial id PK
+        varchar receipt_no UK "Nomor Seri Kuitansi Digital PIS"
+        varchar agreement_no FK
+        bigint customer_id FK
+        numeric amount_paid "Nominal Disetor"
+        varchar payment_method "CASH, QRIS, ONLINE_VA"
+        int tranche_number "Termin Bayar"
+        varchar collector_username "Kolektor Penerima"
+        boolean whatsapp_sent "Status Kirim WA Kuitansi"
+        numeric geotag_lat "Latitude Geotagging"
+        numeric geotag_lng "Longitude Geotagging"
+        timestamptz issued_at "Waktu Penerbitan Slip"
+    }
+
+    COLLECTOR_GEO_LOCATIONS {
+        bigserial id PK
+        varchar collector_username UK
+        varchar collector_name
+        varchar agency_name "Agensi Rekanan / Internal"
+        numeric current_lat "Latitude Terkini"
+        numeric current_lng "Longitude Terkini"
+        numeric accuracy_meters "Akurasi GPS (Meter)"
+        varchar status "VISITING, IN_TRANSIT, IDLE"
+        timestamptz last_heartbeat "Ping GPS Terakhir"
+        int today_visits_count "Kunjungan Hari Ini"
+        int today_idle_minutes "Total Waktu Diam"
+        boolean anomaly_flag "Indikasi Anomali / GPS Palsu"
+        int battery_pct "Sisa Daya Baterai"
+    }
+
+    COLLECTOR_ROUTE_POINTS {
+        bigserial id PK
+        varchar collector_username FK
+        int sequence_order "Urutan Titik Rute"
+        numeric lat "Latitude"
+        numeric lng "Longitude"
+        varchar activity_type "CHECKIN, PAYMENT, RTS, PTP, IDLE"
+        varchar agreement_no
+        timestamptz recorded_at "Waktu Rekam Titik"
+        numeric speed_kmh "Kecepatan Bergerak"
+    }
+
+    COLLECTION_AGENCIES {
+        bigserial id PK
+        varchar agency_code UK
+        varchar agency_name "Nama Agensi Pihak Ketiga"
+        varchar contract_no "Nomor Kontrak PKS"
+        timestamptz license_expiry "Masa Berlaku Izin"
+        int active_collectors_count "Jumlah Petugas Aktif"
+        numeric recovery_rate "Persentase Pemulihan Tagihan (%)"
+        numeric commission_rate "Komisi Agensi (%)"
+        varchar status "ACTIVE, SUSPENDED"
+    }
+
+    AUTHORITY_DELEGATIONS {
+        bigserial id PK
+        varchar delegator_username
+        varchar delegate_username
+        timestamptz start_date "Mulai Pendelegasian"
+        timestamptz end_date "Selesai Pendelegasian"
+        numeric approval_limit_amount "Batas Wewenang Nominal"
+        varchar reason "Alasan Cuti / Dinas Luar"
+        boolean is_active "Status Keaktifan OOO"
     }
 ```
 
 ---
 
-### 12.3. Spesifikasi REST API v1 Terintegrasi
+### 12.5. Spesifikasi REST API v1 Terintegrasi
 
-| Method | Endpoint URI | Deskripsi Fungsi | Parameter / Payload |
-|---|---|---|---|
-| `GET` | `/health` | Pemeriksaan kesehatan layanan (*health check*) | Status server, company name, timestamp |
-| `POST` | `/api/v1/auth/login` | Autentikasi pengguna & pembuatan sesi JWT | `{"username": "admin", "password": "..."}` |
-| `GET` | `/api/v1/auth/me` | Validasi sesi aktif dan hak akses pengguna | Header: `Authorization: Bearer <token>` |
-| `POST` | `/api/v1/auth/logout` | Mengakhiri sesi login pengguna | Header: `Authorization: Bearer <token>` |
-| `GET` | `/api/v1/users` | Daftar seluruh pengguna CRMS | Mengembalikan user list & role |
-| `GET` | `/api/v1/dashboard/summary` | Ringkasan KPI, cure rate, roll rate & matriks Action Path | Agregasi sel matriks, total overdue, parameter instansi |
-| `GET` | `/api/v1/overdue-accounts` | Daftar akun tertunggak dengan filter multi-parameter | Query: `bucket`, `action_path`, `assigned_pic`, `status`, `search`, `recovery_stage` |
-| `GET` | `/api/v1/overdue-accounts/:id` | Detail akun tertunggak beserta riwayat penanganan | Path Param: ID akun |
-| `POST` | `/api/v1/overdue-accounts/:id/reevaluate` | Pemicu evaluasi ulang Decision Engine secara manual | `{"is_champion": false}` |
-| `PUT` | `/api/v1/overdue-accounts/:id/status` | Pembaharuan status akun, komitmen PTP, atau penugasan | `status`, `ptp_date`, `ptp_amount`, `notes` |
-| **`GET`** | **`/api/v1/customers/:id/exposure-360`** | **Tampilan Terpadu Customer 360° lintas fasilitas pinjaman, linimasa omnichannel, dan skrip dialog terpandu** | **Path Param: ID Nasabah (`customer_id`)** |
-| **`PUT`** | **`/api/v1/overdue-accounts/:id/recovery-stage`** | **Perubahan tahapan siklus pemulihan lanjutan (Skip Tracing, Restrukturisasi, Somasi, Litigasi, Settlement, Closed)** | **`{"recovery_stage": "STAGE_RESTRUCTURING", "reason": "...", "notes": "..."}`** |
-| `POST` | `/api/v1/activities` | Pencatatan rekam jejak aktivitas penagihan (Audit Trail) | `channel_type`, `contact_status`, `result_code`, `ptp_date`, `notes` |
-| `GET` | `/api/v1/activities/agreement/:no` | Riwayat seluruh interaksi pada satu nomor rekening pinjaman | Path Param: `agreement_no` |
-| `POST` | `/api/v1/confins/eod-sync` | Simulasi sinkronisasi batch harian End of Day (EOD) | `{"increment_days": 1, "auto_cure_ratio": 0.08}` |
-| `POST` | `/api/v1/confins/simulate-payment` | Simulasi pembayaran angsuran masuk (pelunasan / cure) | `{"agreement_no": "...", "amount": 4500000}` |
-| `POST` | `/api/v1/confins/reset-demo` | Reset basis data ke kondisi awal seeder perbankan | Tanpa payload |
-| `GET` | `/api/v1/vip/accounts` | Kueri akun debitur VIP khusus di bawah wewenang AR Head | Filter otomatis `action_path = 'VIP'` |
-| `POST` | `/api/v1/vip/accounts/:no/action` | Penerapan instruksi perlakuan khusus oleh AR Head | `action_plan`, `assigned_specialist`, `notes`, `ptp_date` |
+Backend CRMS mengimplementasikan 35+ endpoint RESTful API terstandarisasi yang mendukung operasi penagihan omnichannel, *decisioning*, administrasi, dan integrasi eksternal:
+
+| Kelompok Modul | Method | Endpoint URI | Deskripsi Fungsi Operasional | Parameter / Payload Request |
+|---|:---:|---|---|---|
+| **System & Health** | `GET` | `/health` | Pemeriksaan kesehatan service dan parameter bank | Respons status server, DB connection, waktu server |
+| **Authentication** | `POST` | `/api/v1/auth/login` | Otentikasi pengguna & penerbitan token sesi JWT | `{"username": "...", "password": "..."}` |
+| **Authentication** | `GET` | `/api/v1/auth/me` | Validasi sesi aktif, identitas, dan peran pengguna (RBAC) | Header: `Authorization: Bearer <token>` |
+| **Authentication** | `POST` | `/api/v1/auth/logout` | Mengakhiri sesi login pengguna secara aman | Header: `Authorization: Bearer <token>` |
+| **User Management** | `GET` | `/api/v1/users` | Mengambil daftar seluruh pengguna terdaftar di CRMS | Filter query: `role`, `is_active` |
+| **Dashboard KPI** | `GET` | `/api/v1/dashboard/summary` | Ringkasan metrik eksekutif, cure rate, roll rate & matriks Action Path | Agregasi total overdue, total akun, filter LOB |
+| **Overdue Worklist** | `GET` | `/api/v1/overdue-accounts` | Antrean penagihan dengan filter multi-parameter | Query: `bucket`, `action_path`, `assigned_pic`, `status`, `recovery_stage`, `search` |
+| **Overdue Worklist** | `GET` | `/api/v1/overdue-accounts/:id` | Detail komprehensif satu akun tertunggak | Path Param: ID Akun |
+| **Overdue Worklist** | `POST` | `/api/v1/overdue-accounts/:id/reevaluate` | Memicu simulasi evaluasi ulang Decision Engine secara dinamis | `{"is_champion": true/false}` |
+| **Overdue Worklist** | `PUT` | `/api/v1/overdue-accounts/:id/status` | Pembaharuan status penagihan, komitmen janji bayar (PTP), atau catatan | `{"status": "PROMISE_TO_PAY", "ptp_date": "...", "ptp_amount": ..., "notes": "..."}` |
+| **Customer 360°** | `GET` | `/api/v1/customers/:id/exposure-360` | Tampilan terpadu Customer 360° lintas fasilitas (lancar vs overdue), agunan, dan skrip dialog | Path Param: ID Nasabah (`customer_id`) |
+| **Customer 360°** | `PUT` | `/api/v1/customers/:id/phone` | Pembaruan nomor kontak telepon/WA nasabah terverifikasi | `{"phone": "0812xxxxxxxx"}` |
+| **Omnichannel WA** | `POST` | `/api/v1/customers/:id/send-whatsapp` | Pengiriman pesan notifikasi penagihan tertarget via gateway WhatsApp | `{"template_type": "REMINDER_1", "notes": "..."}` |
+| **Recovery Lifecycle** | `PUT` | `/api/v1/overdue-accounts/:id/recovery-stage` | Perubahan tahapan siklus pemulihan lanjutan (Skip Tracing, Somasi, Litigasi, Settlement) | `{"recovery_stage": "STAGE_RESTRUCTURING", "reason": "...", "notes": "..."}` |
+| **Activity Trail** | `POST` | `/api/v1/activities` | Pencatatan rekam jejak aktivitas penagihan (Audit Trail Permanen) | `channel_type`, `contact_status`, `result_code`, `ptp_date`, `ptp_amount`, `notes` |
+| **Activity Trail** | `GET` | `/api/v1/activities/agreement/:agreement_no` | Riwayat kronologis seluruh interaksi penagihan pada nomor kontrak | Path Param: `agreement_no` |
+| **Pre-Delinquency** | `GET` | `/api/v1/pdm/accounts` | Antrean pengawasan rekening sebelum jatuh tempo (DPD 0 H-3..H-0) | Filter: `trigger_reason`, `reminder_status` |
+| **Pre-Delinquency** | `POST` | `/api/v1/pdm/:id/send-reminder` | Pengiriman pengingat dini ramah (*gentle reminder*) via WhatsApp | Path Param: ID PDM Account |
+| **Legal Recourse** | `GET` | `/api/v1/legal/cases` | Daftar seluruh perkara hukum perbankan dalam penanganan | Filter: `legal_stage`, `law_firm`, `status` |
+| **Legal Recourse** | `PUT` | `/api/v1/legal/cases/:id/stage` | Pembaruan tahapan alur litigasi pengadilan (6 Stages) | `{"legal_stage": "STAGE_PROCEEDINGS", "court_name": "...", "hearing_date": "..."}` |
+| **Asset Repo & Auction** | `GET` | `/api/v1/repo/cases` | Daftar perkara eksekusi agunan dan lelang KPKNL (8 Stages) | Filter: `repo_stage`, `asset_type`, `status` |
+| **Asset Repo & Auction** | `PUT` | `/api/v1/repo/cases/:id/stage` | Pembaruan tahapan penyitaan, penilaian KJPP, dan risalah lelang | `{"repo_stage": "STAGE_AUCTION", "market_value": ..., "liquidation_value": ...}` |
+| **Settlement Lifecycle**| `GET` | `/api/v1/settlement/proposals` | Daftar usulan program kompromi / diskon pelunasan (6 Stages) | Filter: `settlement_stage`, `approval_status` |
+| **Settlement Lifecycle**| `POST` | `/api/v1/settlement/proposals` | Pengajuan proposal kompromi pelunasan diskon denda/bunga baru | `agreement_no`, `waived_penalty`, `waived_interest`, `net_amount`, `total_tranches` |
+| **Settlement Lifecycle**| `PUT` | `/api/v1/settlement/proposals/:id/stage` | Pembaruan tahapan alur proposal settlement (*state machine*) | `{"settlement_stage": "STAGE_PLAN", "notes": "..."}` |
+| **Settlement Tranches** | `POST` | `/api/v1/settlement/proposals/:id/tranches` | Penyusunan jadwal termin cicilan settlement (1 s.d 6 termin) | `[{"tranche_no": 1, "due_date": "...", "amount": ...}]` |
+| **Settlement Tranches** | `POST` | `/api/v1/settlement/tranches/:id/pay` | Pencatatan realisasi setoran termin settlement | `{"payment_method": "ONLINE_VA", "paid_amount": ...}` |
+| **Settlement Approval** | `POST` | `/api/v1/settlement/proposals/:id/recommend` | Rekomendasi proposal settlement ke level persetujuan di atasnya | `{"recommend_to": "AR_HEAD", "notes": "..."}` |
+| **Settlement Approval** | `PUT` | `/api/v1/settlement/proposals/:id/action` | Keputusan persetujuan / penolakan (*Approve / Reject / Send Back*) | `{"action": "APPROVE", "notes": "Disetujui komite"}` |
+| **Skip Tracing** | `GET` | `/api/v1/skip-tracing/cases` | Daftar kasus investigasi pelacakan debitur hilang kontak | Filter: `tracing_status`, `tracer_pic` |
+| **Skip Tracing** | `PUT` | `/api/v1/skip-tracing/cases/:id/feedback` | Input umpan balik kontak atau domisili baru yang ditemukan | `{"tracing_status": "FOUND", "new_phone": "...", "new_address": "..."}` |
+| **GeoTracker Telemetry**| `GET` | `/api/v1/geotracker/collectors` | Pemantauan posisi GPS live seluruh armada kolektor DKI Jakarta | Menampilkan koordinat, status, baterai, idle alert |
+| **GeoTracker Telemetry**| `GET` | `/api/v1/geotracker/collectors/:username/route` | Histori titik rute perjalanan harian untuk pemutaran animasi (*playback*) | Path Param: `username` |
+| **GeoTracker Telemetry**| `POST` | `/api/v1/geotracker/ping` | Penerimaan heartbeat GPS background dari aplikasi smartphone mCollect | `{"lat": -6.2088, "lng": 106.8456, "status": "VISITING", "battery": 92}` |
+| **mCollect Workbench** | `GET` | `/api/v1/mcollect/accounts` | Antrean penugasan kunjungan lapangan kolektor mCollect | Filter otomatis wilayah cabang & status kunjungan |
+| **mCollect Payments** | `POST` | `/api/v1/mcollect/record-payment` | Perekaman setoran bayar tunai/transfer, pembuatan kuitansi digital PIS | `agreement_no`, `amount_paid`, `payment_method`, `geotag_lat`, `geotag_lng` |
+| **mCollect Payments** | `POST` | `/api/v1/mcollect/request-payment-link` | Pembuatan tautan pembayaran mandiri online (VA BI-FAST / QRIS) | `{"agreement_no": "...", "amount": ...}` |
+| **mCollect Receipts** | `GET` | `/api/v1/mcollect/receipts` | Daftar seluruh bukti kuitansi pembayaran resmi (PIS) | Filter: `collector_username`, `date` |
+| **mCollect Receipts** | `POST` | `/api/v1/mcollect/receipts/:id/send-whatsapp` | Pengiriman ulang kuitansi digital resmi (PIS) ke nomor WhatsApp debitur | Path Param: ID Kuitansi (`receipt_id`) |
+| **Foreclosure Payoff** | `POST` | `/api/v1/mcollect/foreclosure-simulate` | Simulasi perhitungan pelunasan dipercepat metode bunga menurun (*Rule 78*) | `{"agreement_no": "...", "penalty_rate": 0.02}` |
+| **External Agency** | `GET` | `/api/v1/agencies` | Daftar rekanan agensi penagihan eksternal dan evaluasi SLA | Filter: `status` (`ACTIVE`/`SUSPENDED`) |
+| **External Agency** | `POST` | `/api/v1/agencies` | Pendaftaran mitra agensi penagihan pihak ketiga baru | `agency_code`, `agency_name`, `contract_no`, `commission_rate` |
+| **Supervisory & OOO** | `GET` | `/api/v1/delegations` | Daftar pendelegasian wewenang aktif (*Out of Office*) | Filter status aktif |
+| **Supervisory & OOO** | `POST` | `/api/v1/delegations` | Penetapan pendelegasian batas wewenang persetujuan sementara | `delegate_username`, `start_date`, `end_date`, `limit_amount`, `reason` |
+| **Supervisory & OOO** | `DELETE` | `/api/v1/delegations/:id` | Pencabutan lebih awal wewenang pendelegasian pejabat pengganti | Path Param: ID Pendelegasian |
+| **Capacity Planning** | `GET` | `/api/v1/capacity-planning` | Analisis kapasitas beban kerja harian kolektor (Round-Robin Optimization) | Menampilkan akun assigned, status overload/optimal |
+| **Batch Simulator** | `POST` | `/api/v1/confins/eod-sync` | Simulasi sinkronisasi batch harian End of Day (EOD) | `{"increment_days": 1, "auto_cure_ratio": 0.08}` |
+| **Batch Simulator** | `POST` | `/api/v1/confins/simulate-payment` | Simulasi pembayaran masuk (memotong saldo & memicu Takeout Task) | `{"agreement_no": "...", "amount": 5000000}` |
+| **Batch Simulator** | `POST` | `/api/v1/confins/reset-demo` | Mengembalikan kondisi basis data ke seeder awal portofolio bank | Tanpa payload |
+| **VIP Desk** | `GET` | `/api/v1/vip/accounts` | Portofolio debitur VIP khusus di bawah kendali eksklusif AR Head | Filter otomatis `action_path = 'VIP'` |
+| **VIP Desk** | `POST` | `/api/v1/vip/accounts/:agreement_no/action` | Penerapan instruksi perlakuan khusus nasabah prioritas oleh AR Head | `action_plan`, `assigned_specialist`, `notes`, `ptp_date` |
 
 ---
 
-### 12.4. Manajemen Pengguna & Role-Based Access Control (RBAC)
+### 12.6. Manajemen Pengguna & Role-Based Access Control (RBAC)
 
 1. **`ADMIN` (Administrator Sistem & IT Ops)**:
    - Hak penuh konfigurasi sistem, parameter global bank, simulasi batch EOD, dan re-evaluasi Decision Engine.
@@ -1207,14 +1610,14 @@ erDiagram
 
 ---
 
-### 12.5. Parameter Dinamis Lembaga Perbankan (`global_parameters`)
+### 12.7. Parameter Dinamis Lembaga Perbankan (`global_parameters`)
 Identitas lembaga perbankan tidak di-hardcode melainkan dikonfigurasi melalui tabel `public.global_parameters`:
 - **`GENERAL_NAMA_PT`**: Nama resmi bank (contoh: `"BANK DKI"` atau `"BANK JAKARTA"`).
 - **`GENERAL_SIMBOL_PT`**: Simbol institusi (contoh: `"BDKI"` atau `"CRMS"`), otomatis menjadi prefix nomor rekening pinjaman (`BDKI-KPR-...`, `BDKI-KMK-...`), logo badge navigasi, dan kop dokumen tagihan.
 
 ---
 
-### 12.6. Panduan Kompilasi & Deployment Mandiri ke VPS (Linux Systemd & Nginx SSL Port 3030)
+### 12.8. Panduan Kompilasi & Deployment Mandiri ke VPS (Linux Systemd & Nginx SSL Port 3030)
 
 #### Alokasi Port Server VPS:
 - **Backend Golang API**: Port **`8030`** (`http://127.0.0.1:8030` internal)
@@ -1316,7 +1719,7 @@ sudo nginx -t && sudo systemctl reload nginx
 
 ---
 
-### 12.7. Manajemen Repositori Source Code & Git Workflow (GitHub)
+### 12.9. Manajemen Repositori Source Code & Git Workflow (GitHub)
 
 Seluruh kode sumber sistem **CRMS (Collection & Recovery Management System)** dikelola dan dipelihara secara terpusat melalui repositori GitHub resmi:
 
