@@ -1,0 +1,35 @@
+# Binaries and executables
+backend/crms-server
+backend/crms-server-linux
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Node Dependencies
+node_modules/
+frontend/node_modules/
+
+# Production build outputs
+frontend/dist/
+frontend/build/
+
+# Logs
+*.log
+backend/*.log
+
+# Environment variables
+.env
+backend/.env
+frontend/.env
+*.local
+
+# Archive / compressed bundles
+*.tar.gz
+*.zip
+
+# OS / Editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
