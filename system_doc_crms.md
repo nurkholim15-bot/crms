@@ -64,6 +64,7 @@
     - 12.4. Manajemen Pengguna & Role-Based Access Control (RBAC)
     - 12.5. Parameter Dinamis Lembaga Perbankan (`global_parameters`)
     - 12.6. Panduan Kompilasi & Deployment Mandiri ke VPS (Linux Systemd & Nginx SSL Port 3030)
+    - 12.7. Manajemen Repositori Source Code & Git Workflow (GitHub)
 13. [Panduan Operasional & Cara Verifikasi 9 Dimensi Penagihan Modern](#13-panduan-operasional--cara-verifikasi-9-dimensi-penagihan-modern)
     - 13.1. Matriks Evaluasi 9 Dimensi Penagihan (Sebelum vs Sesudah Upgrade)
     - 13.2. Prosedur Pengecekan Mendalam: Dimensi 2 s/d Dimensi 9
@@ -851,6 +852,56 @@ server {
 Terapkan konfigurasi web server:
 ```bash
 sudo nginx -t && sudo systemctl reload nginx
+```
+
+---
+
+### 12.7. Manajemen Repositori Source Code & Git Workflow (GitHub)
+
+Seluruh kode sumber sistem **CRMS (Collection & Recovery Management System)** dikelola dan dipelihara secara terpusat melalui repositori GitHub resmi:
+
+#### 1. Informasi Repositori Resmi
+| Parameter | Nilai Konfigurasi | Keterangan |
+|---|---|---|
+| **Repository Web URL** | `https://github.com/nurkholim15-bot/crms` | Portal web repositori, riwayat commit, pull requests & issues |
+| **Git Clone / Push (SSH)** | `git@github.com:nurkholim15-bot/crms.git` | **Rekomendasi Utama** (otentikasi otomatis via SSH key `id_ed25519`) |
+| **Git Clone / Push (HTTPS)**| `https://github.com/nurkholim15-bot/crms.git` | Memerlukan Personal Access Token (PAT) |
+| **Organization / Owner** | `nurkholim15-bot` | Akun pemilik repositori resmi |
+| **Default Branch** | `main` | Cabang produksi utama |
+
+#### 2. Konfigurasi Autentikasi SSH Key
+Untuk keamanan tingkat enterprise tanpa perlu memasukkan password berulang kali pada setiap operasi push/pull, repositori dihubungkan menggunakan kunci SSH:
+- **Verifikasi Status Koneksi SSH (Terminal WSL)**:
+  ```bash
+  ssh -T git@github.com
+  # Respon sukses:
+  # Hi nurkholim15-bot! You've successfully authenticated, but GitHub does not provide shell access.
+  ```
+- **Mengatur Remote URL ke SSH**:
+  ```bash
+  git remote set-url origin git@github.com:nurkholim15-bot/crms.git
+  ```
+
+#### 3. Standar Berkas Proteksi (`.gitignore`)
+Berkas `.gitignore` telah dikonfigurasi secara ketat untuk mencegah kebocoran kredensial serta mencegah pengunggahan berkas biner/dependensi raksasa:
+* **Dependensi Pustaka**: `node_modules/`, `frontend/node_modules/`
+* **Hasil Build & Biner**: `frontend/dist/`, `backend/crms-server`, `backend/crms-server-linux`, `*.exe`
+* **Berkas Lingkungan & Kredensial**: `.env`, `backend/.env`, `frontend/.env`, `*.local`
+* **Arsip & Log Server**: `*.tar.gz`, `*.zip`, `*.log`, `backend/*.log`
+
+#### 4. Prosedur Siklus Kerja Git (Git Workflow)
+```bash
+# 1. Pengecekan status perubahan file lokal
+git status
+
+# 2. Penambahan seluruh perubahan yang telah diverifikasi ke staging
+git add .
+
+# 3. Pembuatan commit dengan pesan deskriptif
+git commit -m "feat: implement CRMS complete system with banking portfolio, customer 360, and decision engine"
+
+# 4. Pengunggahan ke repositori GitHub cabang main
+git push -u origin main
 ```
 
 ---
