@@ -44,4 +44,21 @@ export const updateCustomerPhone = (customerId, phone) => api.put(`/customers/${
 export const sendCustomerWhatsApp = (customerId, data) => api.post(`/customers/${customerId}/send-whatsapp`, data);
 export const updateRecoveryStage = (accountId, data) => api.put(`/overdue-accounts/${accountId}/recovery-stage`, data);
 
+// Enterprise Collections Architecture Modules
+export const getPDMAccounts = (params) => api.get('/pdm/accounts', { params });
+export const sendPDMReminder = (id) => api.post(`/pdm/${id}/send-reminder`);
+
+export const getLegalCases = (params) => api.get('/legal/cases', { params });
+export const updateLegalStage = (id, data) => api.put(`/legal/cases/${id}/stage`, data);
+
+export const getRepoCases = (params) => api.get('/repo/cases', { params });
+export const updateRepoStage = (id, data) => api.put(`/repo/cases/${id}/stage`, data);
+
+export const getSettlementProposals = (params) => api.get('/settlement/proposals', { params });
+export const processSettlementProposal = (id, data) => api.put(`/settlement/proposals/${id}/action`, data);
+
+export const getSkipTracingCases = (params) => api.get('/skip-tracing/cases', { params });
+export const updateSkipTracingFeedback = (id, data) => api.put(`/skip-tracing/cases/${id}/feedback`, data);
+
 export default api;
+

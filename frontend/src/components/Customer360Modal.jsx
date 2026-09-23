@@ -316,6 +316,12 @@ export default function Customer360Modal({ customerId, isOpen, onClose, onActivi
                     <Crown className="w-3.5 h-3.5 mr-1" /> VIP Prioritas
                   </span>
                 )}
+                {data?.combo_case_stamping && data.combo_case_stamping !== 'Single Facility' && (
+                  <span className="px-2.5 py-0.5 text-xs font-bold bg-indigo-500/40 text-indigo-200 border border-indigo-400/50 rounded-full flex items-center shadow-sm">
+                    <Sparkles className="w-3.5 h-3.5 mr-1 text-yellow-300" />
+                    {data.combo_case_stamping}
+                  </span>
+                )}
                 <span className="px-2 py-0.5 text-[11px] font-mono bg-slate-800 text-slate-300 rounded border border-slate-700">
                   {data?.customer_no || 'CIF-000000'}
                 </span>
@@ -502,6 +508,48 @@ export default function Customer360Modal({ customerId, isOpen, onClose, onActivi
             <Clock className="w-4 h-4 text-amber-600" />
             <span>Timeline Interaksi ({timelineActivities.length})</span>
           </button>
+
+          {(data?.legal_cases?.length || 0) > 0 && (
+            <button
+              onClick={() => setActiveTab('legal')}
+              className={`py-3 flex items-center space-x-2 border-b-2 transition ${
+                activeTab === 'legal'
+                  ? 'border-indigo-600 text-indigo-600 font-bold'
+                  : 'border-transparent text-slate-500 hover:text-slate-900'
+              }`}
+            >
+              <Gavel className="w-4 h-4 text-indigo-600" />
+              <span>Kasus Hukum ({data.legal_cases.length})</span>
+            </button>
+          )}
+
+          {(data?.repo_cases?.length || 0) > 0 && (
+            <button
+              onClick={() => setActiveTab('repo')}
+              className={`py-3 flex items-center space-x-2 border-b-2 transition ${
+                activeTab === 'repo'
+                  ? 'border-emerald-600 text-emerald-600 font-bold'
+                  : 'border-transparent text-slate-500 hover:text-slate-900'
+              }`}
+            >
+              <Building className="w-4 h-4 text-emerald-600" />
+              <span>Eksekusi Agunan ({data.repo_cases.length})</span>
+            </button>
+          )}
+
+          {(data?.settlement_proposals?.length || 0) > 0 && (
+            <button
+              onClick={() => setActiveTab('settlement')}
+              className={`py-3 flex items-center space-x-2 border-b-2 transition ${
+                activeTab === 'settlement'
+                  ? 'border-teal-600 text-teal-600 font-bold'
+                  : 'border-transparent text-slate-500 hover:text-slate-900'
+              }`}
+            >
+              <DollarSign className="w-4 h-4 text-teal-600" />
+              <span>Settlement ({data.settlement_proposals.length})</span>
+            </button>
+          )}
         </div>
 
         {/* Modal Body Content */}
@@ -1037,6 +1085,131 @@ export default function Customer360Modal({ customerId, isOpen, onClose, onActivi
                       ))}
                     </div>
                   )}
+                </div>
+              )}
+
+              {/* TAB 5: LEGAL & LITIGASI RECOURSE */}
+              {activeTab === 'legal' && (
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center text-xs text-slate-500">
+                    <span>Rekam Jejak Kasus Hukum & Somasi yang Terdaftar:</span>
+                    <span className="font-semibold text-indigo-700">6-Stage Legal Recourse Workflow</span>
+                  </div>
+
+                  <div className="space-y-3">
+                    {data?.legal_cases?.map((lc) => (
+                      <div key={lc.id} className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <span className="font-mono text-xs font-bold text-indigo-900 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">
+                              {lc.case_no}
+                            </span>
+                            <span className="ml-2 font-mono text-xs text-slate-500">{lc.agreement_no}</span>
+                            <h4 className="font-semibold text-slate-900 mt-1 text-sm">{lc.legal_section}</h4>
+                          </div>
+                          <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-indigo-100 text-indigo-800">
+                            {lc.legal_stage}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs text-slate-600 bg-white p-3 rounded-lg border border-slate-200">
+                          <div><strong>Advokat:</strong> {lc.lawyer_name || '-'} ({lc.law_firm || 'In-House'})</div>
+                          <div><strong>Instansi:</strong> {lc.court_name || lc.police_station || '-'}</div>
+                          <div><strong>Nilai Tuntutan:</strong> <span className="font-bold text-slate-900">{formatRupiah(lc.claim_amount)}</span></div>
+                        </div>
+                        {lc.notes && (
+                          <p className="text-xs text-slate-500 italic bg-amber-50/50 p-2 rounded border border-amber-200/50">
+                            <strong>Catatan:</strong> {lc.notes}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 6: EKSEKUSI AGUNAN & LELANG (REPO) */}
+              {activeTab === 'repo' && (
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center text-xs text-slate-500">
+                    <span>Agunan yang Sedang Dalam Penanganan Eksekusi & Lelang:</span>
+                    <span className="font-semibold text-emerald-700">8-Stage Repossession & Auction Workflow</span>
+                  </div>
+
+                  <div className="space-y-3">
+                    {data?.repo_cases?.map((rc) => (
+                      <div key={rc.id} className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <span className="font-mono text-xs font-bold text-emerald-900 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                              {rc.repo_no}
+                            </span>
+                            <span className="ml-2 font-mono text-xs text-slate-500">{rc.agreement_no}</span>
+                            <h4 className="font-semibold text-slate-900 mt-1 text-sm">{rc.asset_description}</h4>
+                          </div>
+                          <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
+                            {rc.repo_stage}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs text-slate-600 bg-white p-3 rounded-lg border border-slate-200">
+                          <div><strong>Tipe Aset:</strong> {rc.asset_type?.replace('_', ' ')}</div>
+                          <div><strong>Stockyard:</strong> {rc.stockyard_location || '-'}</div>
+                          <div><strong>Nilai Pasar:</strong> {formatRupiah(rc.market_value)}</div>
+                          <div><strong>Nilai Likuidasi:</strong> {formatRupiah(rc.liquidation_value)}</div>
+                          <div><strong>Penilai:</strong> {rc.valuation_agency || '-'}</div>
+                          <div><strong>Tawaran Tertinggi:</strong> <span className="font-bold text-emerald-700">{formatRupiah(rc.highest_bid_amount)}</span></div>
+                        </div>
+                        {rc.notes && (
+                          <p className="text-xs text-slate-500 italic bg-slate-100 p-2 rounded">
+                            <strong>Keterangan:</strong> {rc.notes}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 7: SETTLEMENT & DISKON */}
+              {activeTab === 'settlement' && (
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center text-xs text-slate-500">
+                    <span>Pengajuan Program Kompromi & Keringanan Pelunasan:</span>
+                    <span className="font-semibold text-teal-700">Settlement Engine</span>
+                  </div>
+
+                  <div className="space-y-3">
+                    {data?.settlement_proposals?.map((sp) => (
+                      <div key={sp.id} className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <span className="font-mono text-xs font-bold text-teal-900 bg-teal-50 px-2 py-0.5 rounded border border-teal-200">
+                              {sp.proposal_no}
+                            </span>
+                            <span className="ml-2 font-mono text-xs text-slate-500">{sp.agreement_no}</span>
+                            <h4 className="font-semibold text-slate-900 mt-1 text-sm">{sp.settlement_type?.replace(/_/g, ' ')}</h4>
+                          </div>
+                          <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-teal-100 text-teal-800">
+                            {sp.approval_status}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs text-slate-600 bg-white p-3 rounded-lg border border-slate-200">
+                          <div><strong>Tunggakan Awal:</strong> {formatRupiah(sp.original_overdue)}</div>
+                          <div className="text-rose-600"><strong>Waive Denda/Bunga:</strong> - {formatRupiah((sp.waived_penalty || 0) + (sp.waived_interest || 0))}</div>
+                          <div className="text-emerald-700 font-bold"><strong>Net Settlement:</strong> {formatRupiah(sp.net_settlement_amount)}</div>
+                        </div>
+                        {sp.approved_by && (
+                          <div className="text-[11px] text-slate-500">
+                            <strong>Pemutus / Komite:</strong> {sp.approved_by}
+                          </div>
+                        )}
+                        {sp.notes && (
+                          <p className="text-xs text-slate-500 italic bg-teal-50/50 p-2 rounded border border-teal-200/50">
+                            <strong>Pertimbangan:</strong> {sp.notes}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </>

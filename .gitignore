@@ -1,6 +1,7 @@
 # Binaries and executables
 backend/crms-server
 backend/crms-server-linux
+backend/server
 *.exe
 *.dll
 *.so

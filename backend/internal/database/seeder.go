@@ -26,22 +26,22 @@ func SeedInitialData(db *gorm.DB) {
 
 	var seedVer models.GlobalParameter
 	needReseed := false
-	if err := db.Where("param_key = ?", "BANKING_SEED_VERSION").First(&seedVer).Error; err != nil || seedVer.ParamValue != "2026.09.23_v4_multi_facility" {
+	if err := db.Where("param_key = ?", "BANKING_SEED_VERSION").First(&seedVer).Error; err != nil || seedVer.ParamValue != "2026.09.23_v5_enterprise_architecture" {
 		needReseed = true
 	}
 
 	if toyotaCount > 0 || needReseed {
-		log.Println("Pembaruan portofolio perbankan: Menghapus dan feeding ulang data perbankan multi-fasilitas (Unified Customer 360°)...")
-		db.Exec("TRUNCATE TABLE collection_activities, overdue_accounts, decision_rules, agreements, customers RESTART IDENTITY CASCADE")
+		log.Println("Pembaruan portofolio perbankan: Menghapus dan feeding ulang data perbankan multi-fasilitas & arsitektur enterprise lengkap...")
+		db.Exec("TRUNCATE TABLE collection_activities, overdue_accounts, decision_rules, agreements, customers, pre_delinquency_accounts, legal_cases, repossession_cases, settlement_proposals, skip_tracing_cases RESTART IDENTITY CASCADE")
 		count = 0
 		if err := db.Where("param_key = ?", "BANKING_SEED_VERSION").First(&seedVer).Error; err == nil {
-			seedVer.ParamValue = "2026.09.23_v4_multi_facility"
+			seedVer.ParamValue = "2026.09.23_v5_enterprise_architecture"
 			db.Save(&seedVer)
 		} else {
 			db.Create(&models.GlobalParameter{
 				ParamKey:    "BANKING_SEED_VERSION",
-				ParamValue:  "2026.09.23_v4_multi_facility",
-				Description: "Versi Seeder Portofolio Perbankan Multi-Fasilitas",
+				ParamValue:  "2026.09.23_v5_enterprise_architecture",
+				Description: "Versi Seeder Portofolio Perbankan Multi-Fasilitas Enterprise",
 				CreatedUser: "SYSTEM",
 			})
 		}
@@ -354,6 +354,15 @@ func SeedInitialData(db *gorm.DB) {
 			paidTenor = 12
 		}
 
+		comboGrp := "SINGLE_FACILITY"
+		if strings.Contains(name, "Budi Santoso") {
+			comboGrp = "COMBO_KPR_KTA"
+		} else if strings.Contains(name, "Kusuma Hartono") {
+			comboGrp = "COMBO_KMK_CC"
+		} else if i%3 == 0 || isVIP {
+			comboGrp = "COMBO_RETAIL_MULTI"
+		}
+
 		agr := models.Agreement{
 			AgreementNo:       agrNo,
 			CustomerID:        cust.ID,
@@ -367,6 +376,7 @@ func SeedInitialData(db *gorm.DB) {
 			PaidTenorMonths:   paidTenor,
 			BranchCode:        bInfo.code,
 			BranchName:        bInfo.name,
+			ComboGroup:        comboGrp,
 			CreatedAt:         now.AddDate(0, -paidTenor, 0),
 			UpdatedAt:         now,
 		}
@@ -515,6 +525,7 @@ func SeedInitialData(db *gorm.DB) {
 				PaidTenorMonths:   8,
 				BranchCode:        bInfo.code,
 				BranchName:        bInfo.name,
+				ComboGroup:        "COMBO_KPR_KTA",
 				CreatedAt:         now.AddDate(0, -8, 0),
 				UpdatedAt:         now,
 			}
@@ -536,6 +547,7 @@ func SeedInitialData(db *gorm.DB) {
 				PaidTenorMonths:   6,
 				BranchCode:        bInfo.code,
 				BranchName:        bInfo.name,
+				ComboGroup:        "COMBO_KMK_CC",
 				CreatedAt:         now.AddDate(0, -6, 0),
 				UpdatedAt:         now,
 			}
@@ -577,6 +589,7 @@ func SeedInitialData(db *gorm.DB) {
 				PaidTenorMonths:   4,
 				BranchCode:        bInfo.code,
 				BranchName:        bInfo.name,
+				ComboGroup:        comboGrp,
 				CreatedAt:         now.AddDate(0, -6, 0),
 				UpdatedAt:         now,
 			}
@@ -610,6 +623,13 @@ func SeedInitialData(db *gorm.DB) {
 	}
 
 	log.Printf("Successfully seeded %d banking customers, credit agreements, and overdue accounts with symbol %s!\n", len(names), ptSymbol)
+
+	// Seed Modul Enterprise Collections Architecture
+	SeedPreDelinquency(db)
+	SeedLegalCases(db)
+	SeedRepossessionCases(db)
+	SeedSettlementProposals(db)
+	SeedSkipTracingCases(db)
 }
 
 func SeedUsers(db *gorm.DB) {
@@ -658,4 +678,487 @@ func SeedUsers(db *gorm.DB) {
 		db.Create(&u)
 	}
 	log.Println("Default CRMS users successfully seeded: admin, ar_head, collector.")
+}
+
+func SeedPreDelinquency(db *gorm.DB) {
+	var count int64
+	db.Model(&models.PreDelinquencyAccount{}).Count(&count)
+	if count > 0 {
+		return
+	}
+
+	var agrs []models.Agreement
+	db.Preload("Customer").Limit(10).Find(&agrs)
+	if len(agrs) == 0 {
+		return
+	}
+
+	now := time.Now()
+	pdmData := []struct {
+		Reason  string
+		CasaBal float64
+		SalDate int
+		Status  string
+		Score   int
+		Notes   string
+	}{
+		{"INSUFFICIENT_CASA", 350000, 25, "PENDING", 710, "Saldo CASA Rp 350.000 jauh di bawah cicilan. Rekomendasi Gentle Reminder H-1 via WhatsApp."},
+		{"SALARY_DELAY_TUKIN", 1200000, 28, "PENDING", 740, "ASN Pemprov DKI, indikasi keterlambatan pencairan Tukin/payroll bulanan."},
+		{"INSUFFICIENT_CASA", 750000, 25, "WA_SENT", 680, "Gentle reminder WA terkirim. Nasabah mengkonfirmasi akan transfer dari rekening bank lain."},
+		{"HIGH_UTILIZATION", 150000, 27, "PENDING", 650, "Limit kartu kredit terpakai 98%, saldo tabungan menipis."},
+		{"INSUFFICIENT_CASA", 500000, 25, "CURED", 790, "Nasabah telah melakukan top up saldo tabungan, siap didebet otomatis."},
+		{"FIRST_PAYMENT_DEFAULT", 800000, 25, "PENDING", 620, "Angsuran pertama (FPD Risk Alert). Perlu pemantauan khusus kanal digital."},
+		{"SALARY_DELAY_TUKIN", 2100000, 30, "WA_SENT", 760, "Notifikasi pengingat ramah WA terkirim, nasabah menjanjikan dana masuk tgl 28."},
+		{"INSUFFICIENT_CASA", 450000, 25, "PENDING", 705, "Saldo tabungan Rp 450rb < cicilan. Sistem merekomendasikan pre-due WhatsApp."},
+	}
+
+	for i, p := range pdmData {
+		agr := agrs[i%len(agrs)]
+		dueDate := now.AddDate(0, 0, (i % 3))
+		acc := models.PreDelinquencyAccount{
+			AgreementNo:       agr.AgreementNo,
+			CustomerID:        agr.CustomerID,
+			DueDate:           dueDate,
+			InstallmentAmount: agr.InstallmentAmount,
+			CASABalance:       p.CasaBal,
+			SalaryDate:        p.SalDate,
+			PDMTriggerReason:  p.Reason,
+			ReminderStatus:    p.Status,
+			RiskScore:         p.Score,
+			Notes:             p.Notes,
+			CreatedAt:         now,
+			UpdatedAt:         now,
+		}
+		if p.Status == "CURED" || p.Status == "WA_SENT" {
+			curedTime := now.Add(-time.Hour * 4)
+			acc.CuredAt = &curedTime
+		}
+		db.Create(&acc)
+	}
+	log.Println("Pre-Delinquency (PDM) DPD 0 accounts successfully seeded.")
+}
+
+func SeedLegalCases(db *gorm.DB) {
+	var count int64
+	db.Model(&models.LegalCase{}).Count(&count)
+	if count > 0 {
+		return
+	}
+
+	var agrs []models.Agreement
+	db.Preload("Customer").Where("asset_brand IN ?", []string{"KPR", "KMK", "KPA"}).Limit(10).Find(&agrs)
+	if len(agrs) < 5 {
+		db.Preload("Customer").Limit(10).Find(&agrs)
+	}
+	if len(agrs) == 0 {
+		return
+	}
+
+	now := time.Now()
+	hearing1 := now.AddDate(0, 0, 14)
+	hearing2 := now.AddDate(0, 0, 7)
+
+	cases := []models.LegalCase{
+		{
+			CaseNo:        "LEG-2026-JKT-001",
+			AgreementNo:   agrs[0].AgreementNo,
+			CustomerID:    agrs[0].CustomerID,
+			LegalStage:    "STAGE_INITIATE",
+			LawyerName:    "Bambang Sujatmo, S.H.",
+			LawFirm:       "Sujatmo & Partners Law Firm",
+			CourtName:     "PN Jakarta Pusat",
+			PoliceStation: "-",
+			ClaimAmount:   850000000,
+			LegalSection:  "Pasal 1243 KUHPerdata & UU Hak Tanggungan No. 4/1996",
+			Status:        "ACTIVE",
+			Notes:         "Somasi 1 dan 2 telah diabaikan. Persiapan draft gugatan wanprestasi.",
+			CreatedAt:     now.AddDate(0, 0, -20),
+			UpdatedAt:     now,
+		},
+		{
+			CaseNo:        "LEG-2026-JKT-002",
+			AgreementNo:   agrs[1%len(agrs)].AgreementNo,
+			CustomerID:    agrs[1%len(agrs)].CustomerID,
+			LegalStage:    "STAGE_LAWYER_ALLOC",
+			LawyerName:    "Hendra Wijaya, S.H., M.H.",
+			LawFirm:       "Assegaf, Wijaya & Associates",
+			CourtName:     "PN Jakarta Selatan",
+			PoliceStation: "Polres Metro Jakarta Selatan",
+			ClaimAmount:   1250000000,
+			LegalSection:  "UU Jaminan Fidusia No. 42/1999 & Dugaan Penggelapan 372 KUHP",
+			Status:        "ACTIVE",
+			Notes:         "Surat Kuasa Khusus telah ditandatangani. Alokasi pengacara eksternal panel Bank.",
+			CreatedAt:     now.AddDate(0, 0, -35),
+			UpdatedAt:     now,
+		},
+		{
+			CaseNo:        "LEG-2026-JKT-003",
+			AgreementNo:   agrs[2%len(agrs)].AgreementNo,
+			CustomerID:    agrs[2%len(agrs)].CustomerID,
+			LegalStage:    "STAGE_DOC_APPROVAL",
+			LawyerName:    "Ratna Juwita, S.H.",
+			LawFirm:       "In-House Legal Litigation Bank",
+			CourtName:     "PN Jakarta Barat",
+			PoliceStation: "-",
+			ClaimAmount:   490000000,
+			LegalSection:  "Gugatan Sederhana (Small Claim Court) PERMA No. 4/2019",
+			Status:        "ACTIVE",
+			Notes:         "Verifikasi kelengkapan dokumen PK notariil, sertifikat hak tanggungan, dan SKMHT telah disetujui Head of Legal.",
+			CreatedAt:     now.AddDate(0, 0, -45),
+			UpdatedAt:     now,
+		},
+		{
+			CaseNo:        "LEG-2026-JKT-004",
+			AgreementNo:   agrs[3%len(agrs)].AgreementNo,
+			CustomerID:    agrs[3%len(agrs)].CustomerID,
+			LegalStage:    "STAGE_PROCEEDINGS",
+			LawyerName:    "Bambang Sujatmo, S.H.",
+			LawFirm:       "Sujatmo & Partners Law Firm",
+			CourtName:     "PN Jakarta Pusat",
+			PoliceStation: "-",
+			ClaimAmount:   920000000,
+			HearingDate:   &hearing1,
+			LegalSection:  "No Perkara: 142/Pdt.G/2026/PN.Jkt.Pst - Sidang Mediasi",
+			Status:        "ACTIVE",
+			Notes:         "Sidang mediasi pertama gagal, dilanjutkan pembacaan jawaban tergugat pekan depan.",
+			CreatedAt:     now.AddDate(0, 0, -60),
+			UpdatedAt:     now,
+		},
+		{
+			CaseNo:        "LEG-2026-JKT-005",
+			AgreementNo:   agrs[4%len(agrs)].AgreementNo,
+			CustomerID:    agrs[4%len(agrs)].CustomerID,
+			LegalStage:    "STAGE_JUDGEMENT_WITHDRAWAL",
+			LawyerName:    "Hendra Wijaya, S.H., M.H.",
+			LawFirm:       "Assegaf, Wijaya & Associates",
+			CourtName:     "PN Jakarta Timur",
+			PoliceStation: "-",
+			ClaimAmount:   680000000,
+			HearingDate:   &hearing2,
+			LegalSection:  "Putusan Inkrah No. 89/Pdt.G/2025/PN.Jkt.Tim",
+			Status:        "DECIDED_WON",
+			Notes:         "Gugatan dimenangkan penuh oleh Bank. Penetapan Aanmaning dan fiat eksekusi lelang diterbitkan pengadilan.",
+			CreatedAt:     now.AddDate(0, 0, -90),
+			UpdatedAt:     now,
+		},
+		{
+			CaseNo:        "LEG-2026-JKT-006",
+			AgreementNo:   agrs[5%len(agrs)].AgreementNo,
+			CustomerID:    agrs[5%len(agrs)].CustomerID,
+			LegalStage:    "STAGE_JUDGEMENT_WITHDRAWAL",
+			LawyerName:    "Ratna Juwita, S.H.",
+			LawFirm:       "In-House Legal Litigation Bank",
+			CourtName:     "PN Jakarta Utara",
+			PoliceStation: "-",
+			ClaimAmount:   310000000,
+			LegalSection:  "Akta Perdamaian (Dading) di Luar Pengadilan",
+			Status:        "SETTLED",
+			Notes:         "Debitur menyetujui restrukturisasi dan membayar uang muka komitmen. Perkara dicabut resmi dari pengadilan.",
+			CreatedAt:     now.AddDate(0, 0, -110),
+			UpdatedAt:     now,
+		},
+	}
+
+	for _, c := range cases {
+		db.Create(&c)
+	}
+	log.Println("Legal Recourse cases (6-stage workflow) successfully seeded.")
+}
+
+func SeedRepossessionCases(db *gorm.DB) {
+	var count int64
+	db.Model(&models.RepossessionCase{}).Count(&count)
+	if count > 0 {
+		return
+	}
+
+	var agrs []models.Agreement
+	db.Preload("Customer").Where("asset_brand IN ?", []string{"KPR", "KKB", "KPA"}).Limit(10).Find(&agrs)
+	if len(agrs) < 5 {
+		db.Preload("Customer").Limit(10).Find(&agrs)
+	}
+	if len(agrs) == 0 {
+		return
+	}
+
+	now := time.Now()
+
+	repos := []models.RepossessionCase{
+		{
+			RepoNo:            "REPO-2026-JKT-001",
+			AgreementNo:       agrs[0].AgreementNo,
+			CustomerID:        agrs[0].CustomerID,
+			RepoStage:         "STAGE_MARKING",
+			AssetType:         "PROPERTI_SHM",
+			AssetDescription:  "Rumah Tinggal 2 Lantai Cluster Menteng Hijau Blok C No. 12 (LT: 160m2, LB: 140m2)",
+			StockyardLocation: "N/A (Objek Properti Terpasang Plang Pengawasan)",
+			ValuationAgency:   "-",
+			MarketValue:       1200000000,
+			LiquidationValue:  900000000,
+			Status:            "IN_REPO",
+			Notes:             "Akun ditandai default > 90 DPD. SP1 s.d SP3 eksekusi agunan telah terkirim.",
+			CreatedAt:         now.AddDate(0, 0, -15),
+			UpdatedAt:         now,
+		},
+		{
+			RepoNo:            "REPO-2026-JKT-002",
+			AgreementNo:       agrs[1%len(agrs)].AgreementNo,
+			CustomerID:        agrs[1%len(agrs)].CustomerID,
+			RepoStage:         "STAGE_ASSET_CAPTURING",
+			AssetType:         "KENDARAAN_BPKB",
+			AssetDescription:  "Truk Box Isuzu Giga FVR 34P 2022 (B 9811 KXT) - Armada Distribusi",
+			StockyardLocation: "Pool Stockyard Pulogadung Kav. 18",
+			ValuationAgency:   "Internal Asset Evaluator Bank",
+			MarketValue:       480000000,
+			LiquidationValue:  360000000,
+			Status:            "IN_REPO",
+			Notes:             "Kendaraan berhasil ditarik secara damai dengan Berita Acara Serah Terima Kendaraan (BASTK). Fisik tersimpan aman.",
+			CreatedAt:         now.AddDate(0, 0, -25),
+			UpdatedAt:         now,
+		},
+		{
+			RepoNo:            "REPO-2026-JKT-003",
+			AgreementNo:       agrs[2%len(agrs)].AgreementNo,
+			CustomerID:        agrs[2%len(agrs)].CustomerID,
+			RepoStage:         "STAGE_ASSET_VALUATION",
+			AssetType:         "PROPERTI_SHM",
+			AssetDescription:  "Ruko Niaga Fatmawati 3 Lantai No. 8B (SHM No. 4412/Cilandak)",
+			StockyardLocation: "N/A (Properti Tersegel Bank)",
+			ValuationAgency:   "KJPP Tri, Suwondo & Rekan (Panel Bank)",
+			MarketValue:       2850000000,
+			LiquidationValue:  2100000000,
+			Status:            "IN_REPO",
+			Notes:             "Laporan penilaian independen KJPP resmi selesai. Nilai pasar Rp 2.85 Milyar, nilai likuidasi Rp 2.1 Milyar.",
+			CreatedAt:         now.AddDate(0, 0, -40),
+			UpdatedAt:         now,
+		},
+		{
+			RepoNo:            "REPO-2026-JKT-004",
+			AgreementNo:       agrs[3%len(agrs)].AgreementNo,
+			CustomerID:        agrs[3%len(agrs)].CustomerID,
+			RepoStage:         "STAGE_AUCTION",
+			AssetType:         "PROPERTI_SHGB",
+			AssetDescription:  "Apartemen Bassura City Tower Cattleya Lt. 15 Unit 08 (34 m2)",
+			StockyardLocation: "N/A (Apartemen)",
+			ValuationAgency:   "KJPP Muttaqin Bambang Purwanto",
+			MarketValue:       620000000,
+			LiquidationValue:  465000000,
+			HighestBidAmount:  495000000,
+			BuyerName:         "Bpk. Ronald Susanto (Peserta Lelang No. 042)",
+			Status:            "AUCTION_ACTIVE",
+			Notes:             "Proses lelang melalui KPKNL Jakarta II secara open-bidding. Penawaran tertinggi tercatat Rp 495 Juta.",
+			CreatedAt:         now.AddDate(0, 0, -55),
+			UpdatedAt:         now,
+		},
+		{
+			RepoNo:            "REPO-2026-JKT-005",
+			AgreementNo:       agrs[4%len(agrs)].AgreementNo,
+			CustomerID:        agrs[4%len(agrs)].CustomerID,
+			RepoStage:         "STAGE_RELEASE",
+			AssetType:         "PROPERTI_SHM",
+			AssetDescription:  "Rumah Tinggal Pondok Kelapa Asri Kav. B-14 (SHM No. 1092)",
+			StockyardLocation: "N/A",
+			ValuationAgency:   "KJPP Tri & Rekan",
+			MarketValue:       950000000,
+			LiquidationValue:  720000000,
+			HighestBidAmount:  760000000,
+			BuyerName:         "Ibu Hartati Mulyono",
+			Status:            "SOLD",
+			Notes:             "Risalah Lelang KPKNL No. 412/2026 telah terbit. Hasil lelang dialokasikan melunasi seluruh baki debet pinjaman.",
+			CreatedAt:         now.AddDate(0, 0, -80),
+			UpdatedAt:         now,
+		},
+	}
+
+	for _, r := range repos {
+		db.Create(&r)
+	}
+	log.Println("Repossession & Auction cases (8-stage workflow) successfully seeded.")
+}
+
+func SeedSettlementProposals(db *gorm.DB) {
+	var count int64
+	db.Model(&models.SettlementProposal{}).Count(&count)
+	if count > 0 {
+		return
+	}
+
+	var agrs []models.Agreement
+	db.Preload("Customer").Limit(10).Find(&agrs)
+	if len(agrs) == 0 {
+		return
+	}
+
+	now := time.Now()
+	due1 := now.AddDate(0, 0, 7)
+	due2 := now.AddDate(0, 0, 14)
+	due3 := now.AddDate(0, 0, 3)
+
+	proposals := []models.SettlementProposal{
+		{
+			ProposalNo:          "SETTLE-2026-001",
+			AgreementNo:         agrs[0].AgreementNo,
+			CustomerID:          agrs[0].CustomerID,
+			SettlementType:      "NET_SETTLEMENT",
+			OriginalOverdue:     145000000,
+			WaivedPenalty:       18000000,
+			WaivedInterest:      22000000,
+			NetSettlementAmount: 105000000,
+			ApprovalStatus:      "PENDING_APPROVAL",
+			ApprovedBy:          "-",
+			PaymentDueDate:      &due1,
+			Notes:               "Pengajuan Program Keringanan Net Settlement: Diskon denda keterlambatan 100% dan diskon bunga tunggakan 65%. Nasabah sanggup bayar net Rp 105 Juta tunai.",
+			CreatedAt:           now.AddDate(0, 0, -3),
+			UpdatedAt:           now,
+		},
+		{
+			ProposalNo:          "SETTLE-2026-002",
+			AgreementNo:         agrs[1%len(agrs)].AgreementNo,
+			CustomerID:          agrs[1%len(agrs)].CustomerID,
+			SettlementType:      "CHARGE_WISE_SETTLEMENT",
+			OriginalOverdue:     62000000,
+			WaivedPenalty:       12000000,
+			WaivedInterest:      5000000,
+			NetSettlementAmount: 45000000,
+			ApprovalStatus:      "APPROVED_BY_COMMITTEE",
+			ApprovedBy:          "Bambang Wijaya (AR Head & Komite Remedial)",
+			PaymentDueDate:      &due2,
+			Notes:               "Charge-Wise: Penghapusan biaya denda 100% (Rp 12 Juta), bunga diskon Rp 5 Juta. Pokok pinjaman dibayar penuh Rp 45 Juta. Disetujui Komite Remedial Cabang.",
+			CreatedAt:           now.AddDate(0, 0, -8),
+			UpdatedAt:           now,
+		},
+		{
+			ProposalNo:          "SETTLE-2026-003",
+			AgreementNo:         agrs[2%len(agrs)].AgreementNo,
+			CustomerID:          agrs[2%len(agrs)].CustomerID,
+			SettlementType:      "AUTO_CHARGE_ALLOCATION",
+			OriginalOverdue:     85000000,
+			WaivedPenalty:       0,
+			WaivedInterest:      0,
+			NetSettlementAmount: 85000000,
+			ApprovalStatus:      "PAID_OFF",
+			ApprovedBy:          "Sistem Otomatis Settlement Engine",
+			PaymentDueDate:      &due3,
+			Notes:               "Auto-Charge Allocation: Debitur menyetor pembayaran lump-sum Rp 85 Juta. Alokasi otomatis mesin: Pokok Rp 72 Jt -> Bunga Rp 9.5 Jt -> Denda/Biaya Rp 3.5 Jt. Rekening lunas.",
+			CreatedAt:           now.AddDate(0, 0, -14),
+			UpdatedAt:           now,
+		},
+		{
+			ProposalNo:          "SETTLE-2026-004",
+			AgreementNo:         agrs[3%len(agrs)].AgreementNo,
+			CustomerID:          agrs[3%len(agrs)].CustomerID,
+			SettlementType:      "NET_SETTLEMENT",
+			OriginalOverdue:     210000000,
+			WaivedPenalty:       35000000,
+			WaivedInterest:      45000000,
+			NetSettlementAmount: 130000000,
+			ApprovalStatus:      "REJECTED",
+			ApprovedBy:          "Komite Kredit Wilayah",
+			PaymentDueDate:      nil,
+			Notes:               "Proposal ditolak karena potongan melebihi batas kewenangan cabang (>40%) dan debitur memiliki aset agunan likuid bernilai tinggi.",
+			CreatedAt:           now.AddDate(0, 0, -21),
+			UpdatedAt:           now,
+		},
+		{
+			ProposalNo:          "SETTLE-2026-005",
+			AgreementNo:         agrs[4%len(agrs)].AgreementNo,
+			CustomerID:          agrs[4%len(agrs)].CustomerID,
+			SettlementType:      "CHARGE_WISE_SETTLEMENT",
+			OriginalOverdue:     38000000,
+			WaivedPenalty:       8000000,
+			WaivedInterest:      0,
+			NetSettlementAmount: 30000000,
+			ApprovalStatus:      "PENDING_APPROVAL",
+			ApprovedBy:          "-",
+			PaymentDueDate:      &due1,
+			Notes:               "Keringanan biaya penagihan dan denda (Waive Penalty Rp 8 Jt), pokok dan bunga dibayarkan penuh dalam 2 termin.",
+			CreatedAt:           now.AddDate(0, 0, -2),
+			UpdatedAt:           now,
+		},
+	}
+
+	for _, p := range proposals {
+		db.Create(&p)
+	}
+	log.Println("Settlement proposals (3 settlement types) successfully seeded.")
+}
+
+func SeedSkipTracingCases(db *gorm.DB) {
+	var count int64
+	db.Model(&models.SkipTracingCase{}).Count(&count)
+	if count > 0 {
+		return
+	}
+
+	var agrs []models.Agreement
+	db.Preload("Customer").Limit(10).Find(&agrs)
+	if len(agrs) == 0 {
+		return
+	}
+
+	now := time.Now()
+
+	skipCases := []models.SkipTracingCase{
+		{
+			CaseNo:        "SKIP-2026-001",
+			AgreementNo:   agrs[0].AgreementNo,
+			CustomerID:    agrs[0].CustomerID,
+			TracerPIC:     "Dimas Kurniawan (Field Investigator)",
+			TracingStatus: "FOUND",
+			NewPhone:      "0813-8899-7711",
+			NewAddress:    "Graha Mandiri Lt. 8, Jl. Imam Bonjol No. 61, Menteng, Jakarta Pusat",
+			NewEmployer:   "PT Logistik Nusantara Sejahtera",
+			SourceInfo:    "DUKCAPIL & MUTASI_CASA",
+			Notes:         "Berhasil melacak alamat kantor baru dan nomor telepon aktif melalui mutasi transaksi payroll dan data kependudukan.",
+			CreatedAt:     now.AddDate(0, 0, -18),
+			UpdatedAt:     now,
+		},
+		{
+			CaseNo:        "SKIP-2026-002",
+			AgreementNo:   agrs[1%len(agrs)].AgreementNo,
+			CustomerID:    agrs[1%len(agrs)].CustomerID,
+			TracerPIC:     "Rian Hidayat (Skip Tracer)",
+			TracingStatus: "IN_PROGRESS",
+			NewPhone:      "0821-4455-9012 (Nomor Kerabat)",
+			NewAddress:    "Ruko Duta Mas Blok B-12, Fatmawati, Jakarta Selatan",
+			NewEmployer:   "CV Mitra Abadi Sentosa",
+			SourceInfo:    "EMERGENCY_CONTACT",
+			Notes:         "Kontak darurat berhasil dihubungi. Saudara kandung mengkonfirmasi alamat usaha baru di Fatmawati, tim survei menjadwalkan kunjungan.",
+			CreatedAt:     now.AddDate(0, 0, -9),
+			UpdatedAt:     now,
+		},
+		{
+			CaseNo:        "SKIP-2026-003",
+			AgreementNo:   agrs[2%len(agrs)].AgreementNo,
+			CustomerID:    agrs[2%len(agrs)].CustomerID,
+			TracerPIC:     "Dimas Kurniawan (Field Investigator)",
+			TracingStatus: "ASSIGNED",
+			NewPhone:      "",
+			NewAddress:    "",
+			NewEmployer:   "",
+			SourceInfo:    "FIELD_SURVEY",
+			Notes:         "Penugasan pelacakan baru setelah surat peringatan fisik returned to sender (RTS). Debitur tidak berada di domisili KTP.",
+			CreatedAt:     now.AddDate(0, 0, -3),
+			UpdatedAt:     now,
+		},
+		{
+			CaseNo:        "SKIP-2026-004",
+			AgreementNo:   agrs[3%len(agrs)].AgreementNo,
+			CustomerID:    agrs[3%len(agrs)].CustomerID,
+			TracerPIC:     "Rian Hidayat (Skip Tracer)",
+			TracingStatus: "UNTRACEABLE",
+			NewPhone:      "",
+			NewAddress:    "",
+			NewEmployer:   "",
+			SourceInfo:    "DUKCAPIL & SOCIAL_MEDIA",
+			Notes:         "Investigasi di domisili lama, RT/RW, dan tempat kerja lama nihil. Direkomendasikan naik ke tahap Somasi Publikasi Surat Kabar.",
+			CreatedAt:     now.AddDate(0, 0, -30),
+			UpdatedAt:     now,
+		},
+	}
+
+	for _, sc := range skipCases {
+		db.Create(&sc)
+	}
+	log.Println("Skip Tracing cases successfully seeded.")
 }

@@ -38,6 +38,21 @@ func InitDB(databaseURL string) (*gorm.DB, error) {
 	if err := db.AutoMigrate(&models.User{}); err != nil {
 		return nil, err
 	}
+	if err := db.AutoMigrate(&models.PreDelinquencyAccount{}); err != nil {
+		return nil, err
+	}
+	if err := db.AutoMigrate(&models.LegalCase{}); err != nil {
+		return nil, err
+	}
+	if err := db.AutoMigrate(&models.RepossessionCase{}); err != nil {
+		return nil, err
+	}
+	if err := db.AutoMigrate(&models.SettlementProposal{}); err != nil {
+		return nil, err
+	}
+	if err := db.AutoMigrate(&models.SkipTracingCase{}); err != nil {
+		return nil, err
+	}
 
 	DB = db
 	log.Println("PostgreSQL connection and migration successful!")

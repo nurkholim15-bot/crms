@@ -36,6 +36,7 @@ type Agreement struct {
 	PaidTenorMonths   int       `json:"paid_tenor_months"`
 	BranchCode        string    `gorm:"size:20" json:"branch_code"`
 	BranchName        string    `gorm:"size:100" json:"branch_name"`
+	ComboGroup        string    `gorm:"size:100" json:"combo_group"` // e.g. COMBO_1_PROPERTY (KPR+KPA), COMBO_2_UNSECURED (KTA+CC)
 	CreatedAt         time.Time `json:"created_at"`
 	UpdatedAt         time.Time `json:"updated_at"`
 }
@@ -128,5 +129,110 @@ type User struct {
 
 func (User) TableName() string {
 	return "public.users"
+}
+
+// PreDelinquencyAccount merepresentasikan akun dalam pengawasan sebelum menunggak (DPD 0)
+type PreDelinquencyAccount struct {
+	ID                uint       `gorm:"primaryKey" json:"id"`
+	AgreementNo       string     `gorm:"size:50;not null;index" json:"agreement_no"`
+	Agreement         Agreement  `gorm:"foreignKey:AgreementNo;references:AgreementNo;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"agreement"`
+	CustomerID        uint       `gorm:"not null;index" json:"customer_id"`
+	Customer          Customer   `gorm:"foreignKey:CustomerID" json:"customer"`
+	DueDate           time.Time  `json:"due_date"`
+	InstallmentAmount float64    `gorm:"type:numeric(15,2);not null" json:"installment_amount"`
+	CASABalance       float64    `gorm:"type:numeric(15,2);default:0" json:"casa_balance"`
+	SalaryDate        int        `gorm:"default:25" json:"salary_date"` // Tanggal perkiraan payroll/tukin ASN
+	PDMTriggerReason  string     `gorm:"size:100;not null" json:"pdm_trigger_reason"` // INSUFFICIENT_CASA, SALARY_DELAY_TUKIN, HIGH_UTILIZATION
+	ReminderStatus    string     `gorm:"size:50;default:'PENDING'" json:"reminder_status"` // PENDING, WA_SENT, ROBO_CALLED, CURED
+	RiskScore         int        `gorm:"default:750" json:"risk_score"`
+	CuredAt           *time.Time `json:"cured_at"`
+	Notes             string     `gorm:"type:text" json:"notes"`
+	CreatedAt         time.Time  `json:"created_at"`
+	UpdatedAt         time.Time  `json:"updated_at"`
+}
+
+// LegalCase merepresentasikan alur penanganan hukum perbankan (6 Tahapan Legal Recourse)
+type LegalCase struct {
+	ID             uint       `gorm:"primaryKey" json:"id"`
+	CaseNo         string     `gorm:"uniqueIndex;size:50;not null" json:"case_no"`
+	AgreementNo    string     `gorm:"size:50;not null;index" json:"agreement_no"`
+	Agreement      Agreement  `gorm:"foreignKey:AgreementNo;references:AgreementNo;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"agreement"`
+	CustomerID     uint       `gorm:"not null;index" json:"customer_id"`
+	Customer       Customer   `gorm:"foreignKey:CustomerID" json:"customer"`
+	LegalStage     string     `gorm:"size:50;default:'STAGE_INITIATE'" json:"legal_stage"` // STAGE_INITIATE, STAGE_LAWYER_ALLOC, STAGE_DOC_APPROVAL, STAGE_PROCEEDINGS, STAGE_AUDIT_TRAIL, STAGE_JUDGEMENT_WITHDRAWAL
+	LawyerName     string     `gorm:"size:100" json:"lawyer_name"`
+	LawFirm        string     `gorm:"size:150" json:"law_firm"`
+	CourtName      string     `gorm:"size:150" json:"court_name"`
+	PoliceStation  string     `gorm:"size:150" json:"police_station"`
+	ClaimAmount    float64    `gorm:"type:numeric(15,2);not null" json:"claim_amount"`
+	HearingDate    *time.Time `json:"hearing_date"`
+	LegalSection   string     `gorm:"size:150" json:"legal_section"` // e.g. Pasal 1243 KUHPerdata, UU Hak Tanggungan 4/1996, Fidusia
+	Status         string     `gorm:"size:50;default:'ACTIVE'" json:"status"` // ACTIVE, DECIDED_WON, WITHDRAWN, SETTLED
+	Notes          string     `gorm:"type:text" json:"notes"`
+	CreatedAt      time.Time  `json:"created_at"`
+	UpdatedAt      time.Time  `json:"updated_at"`
+}
+
+// RepossessionCase merepresentasikan alur eksekusi agunan & lelang (8 Tahapan Repo)
+type RepossessionCase struct {
+	ID                uint       `gorm:"primaryKey" json:"id"`
+	RepoNo            string     `gorm:"uniqueIndex;size:50;not null" json:"repo_no"`
+	AgreementNo       string     `gorm:"size:50;not null;index" json:"agreement_no"`
+	Agreement         Agreement  `gorm:"foreignKey:AgreementNo;references:AgreementNo;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"agreement"`
+	CustomerID        uint       `gorm:"not null;index" json:"customer_id"`
+	Customer          Customer   `gorm:"foreignKey:CustomerID" json:"customer"`
+	RepoStage         string     `gorm:"size:50;default:'STAGE_MARKING'" json:"repo_stage"` // STAGE_MARKING, STAGE_INITIATE_REPO, STAGE_ASSET_CAPTURING, STAGE_VALUATION_ALLOC, STAGE_ASSET_VALUATION, STAGE_AUCTION, STAGE_SALE, STAGE_RELEASE
+	AssetType         string     `gorm:"size:50;not null" json:"asset_type"` // PROPERTI_SHM, PROPERTI_SHGB, KENDARAAN_BPKB, KIOS_PASAR
+	AssetDescription  string     `gorm:"size:255;not null" json:"asset_description"`
+	StockyardLocation string     `gorm:"size:150" json:"stockyard_location"`
+	ValuationAgency   string     `gorm:"size:150" json:"valuation_agency"`
+	MarketValue       float64    `gorm:"type:numeric(15,2);default:0" json:"market_value"`
+	LiquidationValue  float64    `gorm:"type:numeric(15,2);default:0" json:"liquidation_value"`
+	HighestBidAmount  float64    `gorm:"type:numeric(15,2);default:0" json:"highest_bid_amount"`
+	BuyerName         string     `gorm:"size:100" json:"buyer_name"`
+	Status            string     `gorm:"size:50;default:'IN_REPO'" json:"status"` // IN_REPO, AUCTION_ACTIVE, SOLD, RELEASED_TO_CUSTOMER
+	Notes             string     `gorm:"type:text" json:"notes"`
+	CreatedAt         time.Time  `json:"created_at"`
+	UpdatedAt         time.Time  `json:"updated_at"`
+}
+
+// SettlementProposal merepresentasikan program kompromi / diskon pelunasan (3 Tipe)
+type SettlementProposal struct {
+	ID                  uint       `gorm:"primaryKey" json:"id"`
+	ProposalNo          string     `gorm:"uniqueIndex;size:50;not null" json:"proposal_no"`
+	AgreementNo         string     `gorm:"size:50;not null;index" json:"agreement_no"`
+	Agreement           Agreement  `gorm:"foreignKey:AgreementNo;references:AgreementNo;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"agreement"`
+	CustomerID          uint       `gorm:"not null;index" json:"customer_id"`
+	Customer            Customer   `gorm:"foreignKey:CustomerID" json:"customer"`
+	SettlementType      string     `gorm:"size:50;not null" json:"settlement_type"` // NET_SETTLEMENT, CHARGE_WISE_SETTLEMENT, AUTO_CHARGE_ALLOCATION
+	OriginalOverdue     float64    `gorm:"type:numeric(15,2);not null" json:"original_overdue"`
+	WaivedPenalty       float64    `gorm:"type:numeric(15,2);default:0" json:"waived_penalty"`
+	WaivedInterest      float64    `gorm:"type:numeric(15,2);default:0" json:"waived_interest"`
+	NetSettlementAmount float64    `gorm:"type:numeric(15,2);not null" json:"net_settlement_amount"`
+	ApprovalStatus      string     `gorm:"size:50;default:'PENDING_APPROVAL'" json:"approval_status"` // PENDING_APPROVAL, APPROVED_BY_COMMITTEE, REJECTED, PAID_OFF
+	ApprovedBy          string     `gorm:"size:100" json:"approved_by"`
+	PaymentDueDate      *time.Time `json:"payment_due_date"`
+	Notes               string     `gorm:"type:text" json:"notes"`
+	CreatedAt           time.Time  `json:"created_at"`
+	UpdatedAt           time.Time  `json:"updated_at"`
+}
+
+// SkipTracingCase merepresentasikan investigasi pelacakan kontak debitur yang hilang kontak
+type SkipTracingCase struct {
+	ID            uint       `gorm:"primaryKey" json:"id"`
+	CaseNo        string     `gorm:"uniqueIndex;size:50;not null" json:"case_no"`
+	AgreementNo   string     `gorm:"size:50;not null;index" json:"agreement_no"`
+	Agreement     Agreement  `gorm:"foreignKey:AgreementNo;references:AgreementNo;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"agreement"`
+	CustomerID    uint       `gorm:"not null;index" json:"customer_id"`
+	Customer      Customer   `gorm:"foreignKey:CustomerID" json:"customer"`
+	TracerPIC     string     `gorm:"size:100;not null" json:"tracer_pic"`
+	TracingStatus string     `gorm:"size:50;default:'INITIATED'" json:"tracing_status"` // INITIATED, ASSIGNED, IN_PROGRESS, FOUND, UNTRACEABLE
+	NewPhone      string     `gorm:"size:50" json:"new_phone"`
+	NewAddress    string     `gorm:"type:text" json:"new_address"`
+	NewEmployer   string     `gorm:"size:100" json:"new_employer"`
+	SourceInfo    string     `gorm:"size:100" json:"source_info"` // DUKCAPIL, CASA_MUTASI, EMERGENCY_CONTACT, FIELD_SURVEY
+	Notes         string     `gorm:"type:text" json:"notes"`
+	CreatedAt     time.Time  `json:"created_at"`
+	UpdatedAt     time.Time  `json:"updated_at"`
 }
 

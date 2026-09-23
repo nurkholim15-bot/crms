@@ -50,29 +50,34 @@ type FacilityDetail struct {
 	AssignedPIC       string  `json:"assigned_pic"`
 	RecoveryStage     string  `json:"recovery_stage"`
 	AccountStatus     string  `json:"account_status"`
+	ComboGroup        string  `json:"combo_group"`
 }
 
 // Customer360Response merepresentasikan respon lengkap Customer Exposure 360°
 type Customer360Response struct {
-	CustomerID         uint             `json:"customer_id"`
-	CustomerNo         string           `json:"customer_no"`
-	CustomerName       string           `json:"customer_name"`
-	Phone              string           `json:"phone"`
-	Email              string           `json:"email"`
-	Address            string           `json:"address"`
-	City               string           `json:"city"`
-	Occupation         string           `json:"occupation"`
-	IsVIP              bool             `json:"is_vip"`
-	TotalFacilities    int              `json:"total_facilities"`
-	TotalPrincipal     float64          `json:"total_principal"`
-	TotalInstallment   float64          `json:"total_installment"`
-	TotalOverdue       float64          `json:"total_overdue"`
-	MaxDPD             int              `json:"max_dpd"`
-	WorstRiskLevel     string           `json:"worst_risk_level"`
-	PrimaryStage       string           `json:"primary_stage"`
-	Facilities         []FacilityDetail `json:"facilities"`
-	TimelineActivities []models.CollectionActivity `json:"timeline_activities"`
-	ScriptGuidance     ScriptGuidance   `json:"script_guidance"`
+	CustomerID          uint                        `json:"customer_id"`
+	CustomerNo          string                      `json:"customer_no"`
+	CustomerName        string                      `json:"customer_name"`
+	Phone               string                      `json:"phone"`
+	Email               string                      `json:"email"`
+	Address             string                      `json:"address"`
+	City                string                      `json:"city"`
+	Occupation          string                      `json:"occupation"`
+	IsVIP               bool                        `json:"is_vip"`
+	TotalFacilities     int                         `json:"total_facilities"`
+	TotalPrincipal      float64                     `json:"total_principal"`
+	TotalInstallment    float64                     `json:"total_installment"`
+	TotalOverdue        float64                     `json:"total_overdue"`
+	MaxDPD              int                         `json:"max_dpd"`
+	WorstRiskLevel      string                      `json:"worst_risk_level"`
+	PrimaryStage        string                      `json:"primary_stage"`
+	ComboCaseStamping   string                      `json:"combo_case_stamping"`
+	Facilities          []FacilityDetail            `json:"facilities"`
+	TimelineActivities  []models.CollectionActivity `json:"timeline_activities"`
+	LegalCases          []models.LegalCase          `json:"legal_cases"`
+	RepoCases           []models.RepossessionCase   `json:"repo_cases"`
+	SettlementProposals []models.SettlementProposal `json:"settlement_proposals"`
+	ScriptGuidance      ScriptGuidance              `json:"script_guidance"`
 }
 
 // GetCustomerExposure360 mengembalikan pandangan 360° nasabah, total exposure, skrip penagihan dinamis, dan histori aktivitas
@@ -145,6 +150,7 @@ func GetCustomerExposure360(c *gin.Context) {
 			PaidTenorMonths:   agr.PaidTenorMonths,
 			BranchName:        agr.BranchName,
 			IsOverdue:         hasOverdue,
+			ComboGroup:        agr.ComboGroup,
 		}
 
 		if hasOverdue {
@@ -162,35 +168,73 @@ func GetCustomerExposure360(c *gin.Context) {
 		facilities = append(facilities, fDetail)
 	}
 
+	// Ambil data Legal, Repossession, dan Settlement terkait nasabah
+	var legalCases []models.LegalCase
+	var repoCases []models.RepossessionCase
+	var settlementProposals []models.SettlementProposal
+	if len(agreementNos) > 0 {
+		db.Where("agreement_no IN ?", agreementNos).Find(&legalCases)
+		db.Where("agreement_no IN ?", agreementNos).Find(&repoCases)
+		db.Where("agreement_no IN ?", agreementNos).Find(&settlementProposals)
+	}
+
 	// Ambil seluruh rekam jejak aktivitas omnichannel nasabah (berdasarkan nomor perjanjian)
 	var activities []models.CollectionActivity
 	if len(agreementNos) > 0 {
 		db.Where("agreement_no IN ?", agreementNos).Order("created_at desc").Limit(20).Find(&activities)
 	}
 
+	// Tentukan Combo Case Stamping (misal KPR+KPA atau KTA+CC)
+	comboCaseStamping := "Single Facility"
+	if len(facilities) > 1 {
+		hasMortgage := false
+		hasUnsecured := false
+		for _, f := range facilities {
+			if f.ProductCategory == "KPR" || f.ProductCategory == "KPA" {
+				hasMortgage = true
+			}
+			if f.ProductCategory == "KTA" || f.ProductCategory == "KARTU_KREDIT" {
+				hasUnsecured = true
+			}
+		}
+		if hasMortgage && hasUnsecured {
+			comboCaseStamping = "COMBO 1+2: Properti & Konsumer (KPR + KTA/CC)"
+		} else if hasMortgage {
+			comboCaseStamping = "COMBO 1: Portofolio Properti (KPR + KPA)"
+		} else if hasUnsecured {
+			comboCaseStamping = "COMBO 2: Portofolio Konsumer (KTA + Kartu Kredit)"
+		} else {
+			comboCaseStamping = "COMBO 3: Portofolio Komersial & UMKM (KMK + KUR)"
+		}
+	}
+
 	// Generate Dynamic Script Guidance & Cost Recommendation
 	script := generateScriptGuidance(customer, maxDPD, worstRisk, totalOverdue, simbolPT, namaPT)
 
 	resp := Customer360Response{
-		CustomerID:         customer.ID,
-		CustomerNo:         customer.CustomerNo,
-		CustomerName:       customer.Name,
-		Phone:              customer.Phone,
-		Email:              customer.Email,
-		Address:            customer.Address,
-		City:               customer.City,
-		Occupation:         customer.Occupation,
-		IsVIP:              customer.IsVIP,
-		TotalFacilities:    len(facilities),
-		TotalPrincipal:     totalPrincipal,
-		TotalInstallment:   totalInstallment,
-		TotalOverdue:       totalOverdue,
-		MaxDPD:             maxDPD,
-		WorstRiskLevel:     worstRisk,
-		PrimaryStage:       primaryStage,
-		Facilities:         facilities,
-		TimelineActivities: activities,
-		ScriptGuidance:     script,
+		CustomerID:          customer.ID,
+		CustomerNo:          customer.CustomerNo,
+		CustomerName:        customer.Name,
+		Phone:               customer.Phone,
+		Email:               customer.Email,
+		Address:             customer.Address,
+		City:                customer.City,
+		Occupation:          customer.Occupation,
+		IsVIP:               customer.IsVIP,
+		TotalFacilities:     len(facilities),
+		TotalPrincipal:      totalPrincipal,
+		TotalInstallment:    totalInstallment,
+		TotalOverdue:        totalOverdue,
+		MaxDPD:              maxDPD,
+		WorstRiskLevel:      worstRisk,
+		PrimaryStage:        primaryStage,
+		ComboCaseStamping:   comboCaseStamping,
+		Facilities:          facilities,
+		TimelineActivities:  activities,
+		LegalCases:          legalCases,
+		RepoCases:           repoCases,
+		SettlementProposals: settlementProposals,
+		ScriptGuidance:      script,
 	}
 
 	c.JSON(http.StatusOK, gin.H{

@@ -1284,11 +1284,104 @@ PERIODE PENGEMBALIAN MODAL (PAYBACK PERIOD)                        : 3.8 Bulan
 
 ---
 
-## 17. Penutup & Lembar Persetujuan Dokumen
+## 18. Arsitektur Enterprise Lengkap (Enterprise Collections Architecture Patching)
 
-Implementasi **Collection & Recovery Management System (CRMS)** ini menjawab tuntas seluruh kebutuhan modernisasi penagihan Bank DKI / Bank Jakarta dengan mengadopsi 6 pilar unggulan modernisasi sistem penagihan (*Enterprise Standard CRMS*).
+Pembaruan arsitektur enterprise (*Enterprise Architecture Patching*) mengintegrasikan modul-modul pemulihan kredit tingkat lanjut yang diadaptasi dari arsitektur penagihan perbankan modern berskala enterprise.
 
-Sistem ini memastikan penagihan berjalan secara efisien biaya (*digital-first*), adil dan patuh regulasi (*script-driven & PDP compliance*), serta mampu memulihkan kredit bermasalah secara maksimal melalui alur kerja *Advanced Collections Lifecycle* yang terstruktur.
+```
++===================================================================================================+
+|                    ARSITEKTUR FUNGSIONAL LENGKAP - ENTERPRISE CRMS ENGINE                         |
++===================================================================================================+
+|  CHANNELS & TOUCHPOINTS                                                                           |
+|  [ WA Business API ]   [ Robocall / IVR ]   [ SMS Gateway ]   [ Field Officer Mobile ]            |
+|  [ Desk Collector ]    [ Remedial Officer ] [ AR Head Portal] [ In-House Legal & Litigasi ]       |
++---------------------------------------------------------------------------------------------------+
+|  CORE FUNCTIONAL MODULES                                                                          |
+|  1. Pre-Delinquency Management (PDM) - Early Warning DPD 0 (CASA & Payroll ASN Check)            |
+|  2. Regular Collection & Overdue Matrix (DPD 1-30, Action Path 1-8, Champion/Challenger)         |
+|  3. Case Stamping & Combo Definition (Single vs Multi-Facility: KPR+KPA, KMK+CC)                  |
+|  4. Skip Tracing Management (Tracer PIC, Dukcapil, Mutasi CASA, Emergency Contact)                |
+|  5. Legal Recourse Management (6-Stage Alur Litigasi, Somasi, Pengadilan & Aanmaning)             |
+|  6. Repossession & Auction Workflow (8-Stage Eksekusi Agunan, Stockyard, KJPP & Lelang KPKNL)     |
+|  7. Structured Settlement Engine (Net Settlement, Charge-Wise Waive, Auto Charge Allocation)     |
++---------------------------------------------------------------------------------------------------+
+|  INTELLIGENT ENGINES & DECISIONING                                                                |
+|  * Predictive Behavioral Scoring (0-1000)       * Cost-Efficiency Channel Router (95% WA vs FC)   |
+|  * Multi-Facility Exposure Aggregator           * Exception & Capacity Planning Queue Router      |
++---------------------------------------------------------------------------------------------------+
+|  INTERFACES & BACKBONE INTEGRATION                                                                |
+|  [ Core Banking System (CBS) ]  [ CASA & Payroll API ]  [ Dukcapil & SLIK OJK ]                   |
+|  [ Panel KJPP Penilai Publik ]  [ Balai Lelang & KPKNL ] [ Panel Law Firm Eksternal ]              |
++===================================================================================================+
+```
+
+### 18.1 Pre-Delinquency Management (PDM) - DPD 0 Early Warning
+Modul PDM bertindak sebagai garda terdepan pencegahan kredit bermasalah sebelum rekening bergulir ke status menunggak (*prevention over cure*):
+1. **Pengecekan Saldo Tabungan (CASA Balance Check)**: Membandingkan saldo rekening autodebet dengan jumlah angsuran yang akan jatuh tempo pada H-3 s.d H-0.
+2. **Flagging Keterlambatan Gaji / Tukin ASN**: Khusus debitur ASN Pemprov DKI dan BUMD, sistem mendeteksi siklus transfer payroll dan keterlambatan pembayaran tambahan penghasilan pegawai (TPP/Tukin).
+3. **First Payment Default (FPD) Alert**: Pengawasan intensif terhadap debitur baru pada angsuran ke-1 s.d ke-3.
+4. **Gentle Reminder Otomatis via WhatsApp**: Mengirimkan notifikasi ramah tanpa nada penagihan, memfasilitasi *self-cure* debitur dengan efisiensi biaya kanal 95%.
+
+### 18.2 Functional Journey & Case Stamping
+Mengatasi fragmentasi penanganan nasabah yang memiliki lebih dari satu fasilitas pinjaman:
+- **Combo 1 (Properti)**: KPR Griya Idaman + KPA Apartemen (Aset agunan properti sejenis dianalisis bersamaan).
+- **Combo 2 (Non-Collateral)**: Kredit Multi Guna / KTA + Kartu Kredit (Penanganan tanpa jaminan fidusia dengan strategi restrukturisasi tunai).
+- **Combo 3 (Komersial & UMKM)**: Kredit Modal Kerja (KMK) + KUR Ritel Mikro.
+- **Routing Antrean Khusus (Queues)**: Pemisahan otomatis antara antrean reguler (*digital-first*) dengan antrean *exceptional/VIP* yang ditangani langsung oleh AR Head atau Special Asset Management Team.
+
+### 18.3 Alur Penanganan Hukum (6-Stage Legal Recourse Workflow)
+Standar operasional litigasi perbankan dalam 6 tahapan terstruktur:
+1. **STAGE 1 - INITIATE LEGAL**: Penerbitan Surat Peringatan SP-1, SP-2, dan Somasi Hukum Formal.
+2. **STAGE 2 - LAWYER & LAW FIRM ALLOCATION**: Penunjukan Advokat In-House atau Kantor Hukum Panel Rekanan Bank dan penerbitan Surat Kuasa Khusus.
+3. **STAGE 3 - DOCUMENT UPLOAD & APPROVAL**: Verifikasi kelengkapan berkas Akta Perjanjian Kredit notariil, sertifikat Hak Tanggungan (APHT), SKMHT, dan Jaminan Fidusia.
+4. **STAGE 4 - SECTIONS & PROCEEDINGS**: Pendaftaran Gugatan Sederhana (*Small Claim Court*) atau Gugatan Perdata Biasa di Pengadilan Negeri serta proses mediasi.
+5. **STAGE 5 - MULTIPLE CASES & AUDIT TRAIL**: Penelusuran sengketa ganda, gugatan balik (rekonvensi), dan pencatatan audit jejak perkara hukum.
+6. **STAGE 6 - CASE JUDGEMENT / WITHDRAWAL**: Eksekusi putusan berkekuatan hukum tetap (*Inkrah*), Aanmaning, atau pencabutan perkara resmi karena adanya Akta Perdamaian (*Dading*).
+
+### 18.4 Eksekusi Agunan & Pelelangan (8-Stage Repossession & Auction Workflow)
+Tata kelola pemulihan aset agunan yang transparan dan akuntabel dalam 8 tahapan:
+1. **STAGE 1 - MARKING**: Penandaan otomatis pada sistem bagi fasilitas macet DPD > 90 hari dengan agunan bernilai ekonomis.
+2. **STAGE 2 - INITIATE REPO**: Penerbitan Surat Tugas Penarikan, SP-3 Eksekusi Agunan, dan koordinasi dengan aparat berwenang.
+3. **STAGE 3 - ASSET DETAIL CAPTURING**: Penarikan aset fisik, verifikasi nomor rangka/mesin atau pemasangan plang pengawasan agunan, dan penyimpanan di *Stockyard* resmi.
+4. **STAGE 4 - VALUATION ALLOCATION**: Penunjukan Kantor Jasa Penilai Publik (KJPP) independen rekanan bank.
+5. **STAGE 5 - ASSET VALUATION**: Penetapan Nilai Pasar Wajar (*Fair Market Value*) dan Nilai Likuidasi (*Liquidation Value*).
+6. **STAGE 6 - ASSET AUCTION / BIDDING**: Pendaftaran lelang eksekusi Hak Tanggungan/Fidusia ke KPKNL atau Balai Lelang swasta secara *open-bidding*.
+7. **STAGE 7 - ASSET SALE**: Penetapan pemenang lelang, verifikasi pembayaran uang lelang, dan bea lelang negara.
+8. **STAGE 8 - ASSET RELEASE**: Penerbitan Risalah Lelang resmi oleh Pejabat Lelang KPKNL, penghapusan hak tanggungan (roya), dan penyetoran hasil lelang untuk pelunasan baki debet pinjaman.
+
+### 18.5 Manajemen Kompromi & Diskon (Settlement Management)
+Tiga skema resolusi pembayaran kompromi dengan matriks batas wewenang komite (*Approval Authority Limit*):
+1. **Net Settlement**: Negosiasi nominal bersih pelunasan sekaligus secara tunai (*lump sum*) dengan diskon total denda keterlambatan dan sebagian bunga.
+2. **Charge-Wise Settlement**: Keringanan terperinci per komponen kewajiban (penghapusan denda 100%, diskon biaya penagihan, pengurangan bunga tunggakan, pelunasan pokok penuh).
+3. **Auto Charge Allocation**: Penerimaan pembayaran sekaligus dari debitur yang langsung didistribusikan secara otomatis oleh mesin *recovery* perbankan dengan prioritas: **Pokok Pinjaman -> Bunga Berjalan/Tunggakan -> Biaya Administrasi & Denda**.
+
+---
+
+## 19. Matriks Perbandingan Komprehensif: Sebelum vs Sesudah Patching
+
+Tabel berikut menyajikan ringkasan perbedaan mendasar arsitektur CRMS sebelum dan sesudah pelaksanaan *Enterprise Architecture Patching*:
+
+| Parameter Evaluasi | Sebelum Patching (Sistem Eksisting) | Sesudah Patching (Enterprise CRMS Engine) |
+|:---|:---|:---|
+| **Cakupan Lifecycle Penagihan** | Hanya DPD 1 s.d DPD 180 (Penagihan harian desk & field collection). | Menyeluruh dari **DPD 0 (Pre-Delinquency)** hingga litigasi hukum, lelang KPKNL, dan settlement. |
+| **Pencegahan DPD 0 (Pre-Delinquency)** | Tidak ada pengawasan sebelum jatuh tempo. Akun baru ditangani saat DPD 1. | **Aktif Terintegrasi**: Pengecekan saldo CASA, kalender Tukin/Payroll ASN, dan alert FPD (Early Warning H-3 s.d H-0). |
+| **Penanganan Multi-Fasilitas** | Terfragmentasi per nomor kontrak pinjaman. Tidak ada konsolidasi eksposur. | **Unified Customer 360° & Case Stamping**: Combo 1 Properti (KPR+KPA), Combo 2 (KTA+CC), single queue cross-facility. |
+| **Alur Hukum (Legal Recourse)** | Dokumen hukum manual di luar sistem. Tidak terpantau tahapan persidangan. | **6-Stage Legal Recourse Workflow**: Somasi, alokasi lawyer, audit berkas APHT, jadwal sidang PN, hingga putusan Inkrah. |
+| **Eksekusi Agunan & Lelang** | Penarikan aset sporadis tanpa standar pencatatan nilai pasar dan lelang. | **8-Stage Repossession & Auction Workflow**: Penandaan, stockyard tracking, appraisal KJPP, open bidding KPKNL, risalah lelang. |
+| **Program Keringanan / Diskon** | Negosiasi ad-hoc via memo manual cabang tanpa aturan pembagian jelas. | **3 Structured Settlement Types**: Net Settlement, Charge-Wise Waive, dan Auto Charge Allocation Engine. |
+| **Pelacakan Nasabah (Skip Tracing)** | Informasi debitur hilang kontak hanya di catatan kunjungan kolektor. | **Dedicated Skip Tracing Workflow**: Pelacak assigned, integrasi Dukcapil, mutasi CASA, dan verifikasi geo-tagging. |
+| **Skrip & Personalisasi Komunikasi** | Template penagihan seragam tanpa mempertimbangkan profil risiko. | **Dynamic Persona Guidance Script**: Skrip dinamis adaptif profil risiko (Rendah/Sedang/Tinggi) & WhatsApp API gateway. |
+| **Efisiensi Biaya Operasional** | Biaya lapangan tinggi akibat kunjungan fisik pada debitur berkategori ringan. | **Cost Efficiency Optimizer**: Hemat biaya hingga 95% dengan memprioritaskan kanal digital terarah pada DPD 0-14. |
+| **Kepatuhan Regulasi & Audit Trail** | Catatan penagihan tersebar dan berisiko tidak memenuhi standar OJK. | **Full Audit Trail Compliance**: Setiap aksi tercatat dengan cap waktu, pelaksana, hasil penagihan, dan koordinat GPS anti-fraud. |
+| **Kemandirian Brand & Lisensi** | Ketergantungan pada istilah platform proprietary pihak ketiga. | **100% Brand Netral & Mandiri**: Tanpa ketergantungan terminologi pihak ketiga, sesuai kebutuhan internal perbankan. |
+
+---
+
+## 20. Penutup & Lembar Persetujuan Dokumen
+
+Implementasi **Collection & Recovery Management System (CRMS)** ini menjawab tuntas seluruh kebutuhan modernisasi penagihan Bank DKI / Bank Jakarta dengan mengadopsi pilar unggulan modernisasi sistem penagihan perbankan skala enterprise.
+
+Sistem ini memastikan penagihan berjalan secara efisien biaya (*digital-first*), adil dan patuh regulasi (*script-driven & PDP compliance*), serta mampu memulihkan kredit bermasalah secara maksimal melalui alur kerja *Advanced Collections Lifecycle* yang terstruktur dan teruji.
 
 ---
 
@@ -1298,3 +1391,4 @@ Sistem ini memastikan penagihan berjalan secara efisien biaya (*digital-first*),
 |:---:|:---:|:---:|
 | <br><br>____________________<br>**CRMS Lead Architect**<br>Digital Banking & IT Solution | <br><br>____________________<br>**Head of Collection & Recovery**<br>Divisi Manajemen Risiko & Operasional | <br><br>____________________<br>**Direktur Teknologi & Operasional**<br>Bank DKI / Bank Jakarta |
 | Tanggal: ........................ | Tanggal: ........................ | Tanggal: ........................ |
+

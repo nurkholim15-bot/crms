@@ -3,6 +3,10 @@ import KPICards from '../components/KPICards';
 import BucketMatrixTable from '../components/BucketMatrixTable';
 import ActivityModal from '../components/ActivityModal';
 import Customer360Modal from '../components/Customer360Modal';
+import PreDelinquencyView from '../components/PreDelinquencyView';
+import LegalWorkflowView from '../components/LegalWorkflowView';
+import RepoWorkflowView from '../components/RepoWorkflowView';
+import SettlementWorkflowView from '../components/SettlementWorkflowView';
 import { 
   getDashboardSummary, 
   getOverdueAccounts, 
@@ -23,10 +27,17 @@ import {
   Tag,
   Sparkles,
   Workflow,
-  TrendingDown
+  TrendingDown,
+  Scale,
+  Gavel,
+  Warehouse,
+  Layers,
+  BadgePercent,
+  ShieldAlert
 } from 'lucide-react';
 
 export default function Dashboard({ companyInfo }) {
+  const [activeModule, setActiveModule] = useState('reguler');
   const [summary, setSummary] = useState(null);
   const [accounts, setAccounts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -133,20 +144,98 @@ export default function Dashboard({ companyInfo }) {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-      {/* KPI Top Cards */}
-      <KPICards summary={summary} />
+      {/* Enterprise Architecture Module Switcher */}
+      <div className="bg-white rounded-2xl p-2 shadow-sm border border-slate-200 mb-6 flex flex-wrap gap-2">
+        <button
+          onClick={() => setActiveModule('reguler')}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition ${
+            activeModule === 'reguler'
+              ? 'bg-red-600 text-white shadow-md'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+          }`}
+        >
+          <Layers className="w-4 h-4" />
+          <span>Koleksi Reguler (Overdue Matrix)</span>
+        </button>
 
-      {/* Signature Interactive Matrix Table */}
-      <BucketMatrixTable 
-        matrixData={summary?.matrix} 
-        onSelectCell={handleCellSelect} 
-        selectedCell={selectedCell}
-        generalNamaPT={summary?.general_nama_pt || companyInfo?.namaPT}
-        generalSimbolPT={summary?.general_simbol_pt || companyInfo?.simbolPT}
-      />
+        <button
+          onClick={() => setActiveModule('pdm')}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition ${
+            activeModule === 'pdm'
+              ? 'bg-blue-600 text-white shadow-md'
+              : 'text-slate-600 hover:text-blue-600 hover:bg-blue-50'
+          }`}
+        >
+          <ShieldAlert className="w-4 h-4" />
+          <span>Pre-Delinquency DPD 0 (PDM)</span>
+          <span className={`px-1.5 py-0.2 rounded text-[10px] ${activeModule === 'pdm' ? 'bg-blue-500 text-white' : 'bg-blue-100 text-blue-700'}`}>
+            Early Warning
+          </span>
+        </button>
 
-      {/* Drilldown Accounts Table */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <button
+          onClick={() => setActiveModule('legal')}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition ${
+            activeModule === 'legal'
+              ? 'bg-indigo-600 text-white shadow-md'
+              : 'text-slate-600 hover:text-indigo-600 hover:bg-indigo-50'
+          }`}
+        >
+          <Scale className="w-4 h-4" />
+          <span>Alur Hukum & Litigasi (Legal)</span>
+          <span className={`px-1.5 py-0.2 rounded text-[10px] ${activeModule === 'legal' ? 'bg-indigo-500 text-white' : 'bg-indigo-100 text-indigo-700'}`}>
+            6 Tahapan
+          </span>
+        </button>
+
+        <button
+          onClick={() => setActiveModule('repo')}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition ${
+            activeModule === 'repo'
+              ? 'bg-emerald-600 text-white shadow-md'
+              : 'text-slate-600 hover:text-emerald-600 hover:bg-emerald-50'
+          }`}
+        >
+          <Warehouse className="w-4 h-4" />
+          <span>Eksekusi Agunan & Lelang (Repo)</span>
+          <span className={`px-1.5 py-0.2 rounded text-[10px] ${activeModule === 'repo' ? 'bg-emerald-500 text-white' : 'bg-emerald-100 text-emerald-700'}`}>
+            8 Tahapan
+          </span>
+        </button>
+
+        <button
+          onClick={() => setActiveModule('settlement')}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition ${
+            activeModule === 'settlement'
+              ? 'bg-teal-600 text-white shadow-md'
+              : 'text-slate-600 hover:text-teal-600 hover:bg-teal-50'
+          }`}
+        >
+          <BadgePercent className="w-4 h-4" />
+          <span>Settlement & Diskon Pelunasan</span>
+          <span className={`px-1.5 py-0.2 rounded text-[10px] ${activeModule === 'settlement' ? 'bg-teal-500 text-white' : 'bg-teal-100 text-teal-700'}`}>
+            3 Skema
+          </span>
+        </button>
+      </div>
+
+      {/* Module 1: Koleksi Reguler (Overdue Matrix & Drilldown) */}
+      {activeModule === 'reguler' && (
+        <>
+          {/* KPI Top Cards */}
+          <KPICards summary={summary} />
+
+          {/* Signature Interactive Matrix Table */}
+          <BucketMatrixTable 
+            matrixData={summary?.matrix} 
+            onSelectCell={handleCellSelect} 
+            selectedCell={selectedCell}
+            generalNamaPT={summary?.general_nama_pt || companyInfo?.namaPT}
+            generalSimbolPT={summary?.general_simbol_pt || companyInfo?.simbolPT}
+          />
+
+          {/* Drilldown Accounts Table */}
+          <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
         {/* Table Controls Header */}
         <div className="p-5 border-b border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-50/50">
           <div>
@@ -458,6 +547,36 @@ export default function Dashboard({ companyInfo }) {
           </table>
         </div>
       </div>
+      </>
+      )}
+
+      {/* Module 2: Pre-Delinquency Management (PDM) DPD 0 Early Warning */}
+      {activeModule === 'pdm' && (
+        <PreDelinquencyView 
+          onOpenCustomer360={(custId) => setSelectedCustomerIdFor360(custId)} 
+        />
+      )}
+
+      {/* Module 3: Legal Recourse Management (6 Stages) */}
+      {activeModule === 'legal' && (
+        <LegalWorkflowView 
+          onOpenCustomer360={(custId) => setSelectedCustomerIdFor360(custId)} 
+        />
+      )}
+
+      {/* Module 4: Repossession & Auction Management (8 Stages) */}
+      {activeModule === 'repo' && (
+        <RepoWorkflowView 
+          onOpenCustomer360={(custId) => setSelectedCustomerIdFor360(custId)} 
+        />
+      )}
+
+      {/* Module 5: Settlement & Diskon Pelunasan (3 Types) */}
+      {activeModule === 'settlement' && (
+        <SettlementWorkflowView 
+          onOpenCustomer360={(custId) => setSelectedCustomerIdFor360(custId)} 
+        />
+      )}
 
       {/* Modal Aktivitas */}
       {selectedAccountForModal && (
