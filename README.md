@@ -15,7 +15,127 @@
 
 ---
 
-## 🏛️ Arsitektur Sistem (5-Tier Enterprise System Architecture)
+## 🌐 Diagram Ekosistem Lending Perbankan (Level-0 Ecosystem)
+
+Diagram Level-0 di bawah ini menggambarkan posisi strategis **CRMS** di dalam arsitektur digital lending perbankan end-to-end yang mengintegrasikan seluruh siklus kredit:
+
+```mermaid
+flowchart TB
+    subgraph OVERVIEW["CRMS ENTERPRISE BANKING PLATFORM OVERVIEW — LEVEL-0 ECOSYSTEM"]
+        direction TB
+        
+        subgraph TOP_BAR["PORTFOLIO SEGMENTATION & OPEN API INTEGRATION HUB"]
+            direction LR
+            SEG1["🏦 Retail Lending<br/>(KPR, KTA, CC, KUR)"]
+            SEG2["🏢 Commercial & Corporate<br/>(KMK, KI, Sindikasi)"]
+            SEG3["🏛️ Payroll ASN / PNS<br/>(Pemprov DKI & BUMD)"]
+            SEG4["🚗 Leasing & Multifinance<br/>(Kendaraan & Alat Berat)"]
+            API_HUB["🔌 80+ Enterprise Plug & Play APIs<br/>(RESTful / ISO-8583 / BI-FAST / Webhooks)"]
+        end
+
+        subgraph LIFECYCLE_PILLARS["6 PILAR UTAMA SIKLUS HIDUP PINJAMAN (LENDING LIFECYCLE PILLARS)"]
+            direction LR
+            
+            CAS["1. CUSTOMER ACQUISITION<br/>(CAS / LOS)<br/>───────────────<br/>• Party & CIF Master<br/>• Dukcapil Identity Verification<br/>• SLIK OJK & Credit Scoring<br/>• Limit Setup & Disbursal Approval"]
+            
+            LMS["2. LOAN MANAGEMENT<br/>(LMS / Core Banking)<br/>───────────────<br/>• Servicing Post-Origination<br/>• Schedule & Billing Accrual<br/>• CASA Autodebet Engine<br/>• Payoff & Termination Ledger"]
+            
+            CRMS["3. LOAN COLLECTIONS & RECOVERY<br/>★ CRMS CORE FOCUS ★<br/>───────────────<br/>• Pre-Delinquency DPD 0 (PDM)<br/>• Scoring Engine (0-1000 Poin)<br/>• Overdue Matrix (Action Path 1-8)<br/>• 6-Stage Settlement & Tranches<br/>• mCollect PWA & GeoTracker GPS<br/>• Legal Litigation & KPKNL Auction"]
+            
+            ECM["4. ENTERPRISE CONTENT<br/>(ECM / DMS)<br/>───────────────<br/>• Digital PK & Notarial Deeds<br/>• APHT & SKMHT Binding<br/>• Surat Peringatan (SP 1-3)<br/>• Court Filings & Risalah Lelang"]
+            
+            CMS["5. COLLATERAL MANAGEMENT<br/>(CMS)<br/>───────────────<br/>• Asset Register (SHM/BPKB)<br/>• KJPP Valuation (FMV & Liquidation)<br/>• Custody Vault Management<br/>• Stockyard & Repo Tracking"]
+            
+            DFE["6. DIGITAL FRONT END<br/>(Omnichannel Touchpoints)<br/>───────────────<br/>• Web Operations Portal<br/>• mCollect Field PWA<br/>• WhatsApp Cloud Gateway<br/>• Smart IVR Robo-Call Dialer<br/>• Self-Service Payment Link (VA/QRIS)"]
+        end
+
+        TOP_BAR ==> LIFECYCLE_PILLARS
+        CAS -->|Disbursed Loan Contracts| LMS
+        LMS -->|Delinquent & Pre-Delinquent Accounts| CRMS
+        CRMS -->|Archived Notices & Legal Proofs| ECM
+        CRMS <-->|Collateral Status & Valuation| CMS
+        CRMS <-->|Staff & Customer Interaction| DFE
+        CRMS -.->|Takeout Task & Clearance Webhook| LMS
+    end
+```
+
+---
+
+## 🔄 Diagram Aliran Data ETL Core System ke CRMS (Level-1 Pipeline)
+
+Diagram Level-1 memetakan transfer data berkala (*Nightly EOD Batch*) dan aliran transaksi real-time (*CDC / Webhook*) dari core systems ke dalam repositori CRMS:
+
+```mermaid
+flowchart TB
+    subgraph SOURCES["CORE SOURCE SYSTEMS (SISTEM SUMBER DATA PERBANKAN)"]
+        direction LR
+        SRC_CAS["1. Customer Acquisition (CAS/LOS)<br/>• CIF Master, NIK KTP, Profil Nasabah<br/>• Instansi ASN / Payroll Employer<br/>• Kontak Telepon & Emergency Contact<br/>• SLIK Score & Approved Limit"]
+        SRC_LMS["2. Loan Management (LMS/CBS)<br/>• No Kontrak, Baki Debet, Tenor<br/>• DPD, Tunggakan Pokok/Bunga/Denda<br/>• CASA Autodebet & Tukin Calendar<br/>• Historical Repayment Ledger"]
+        SRC_CMS["3. Collateral Management (CMS)<br/>• Agunan SHM/SHGB/BPKB, LTV<br/>• Penilaian KJPP (Pasar & Likuidasi)<br/>• Akta APHT & Fidusia Notariil<br/>• Lokasi Fisik Agunan & Vault"]
+        SRC_ECM["4. Content Management (ECM)<br/>• Berkas Digital Perjanjian Kredit<br/>• Sertifikat Agunan & Surat Kuasa<br/>• Arsip Somasi & Berkas Hukum"]
+        SRC_PAY["5. Payment Switch (BI-FAST/VA)<br/>• Real-Time Payment Transaction Stream<br/>• Setoran M-Banking / QRIS Dinamis<br/>• Webhook Event Settlement"]
+    end
+
+    subgraph ETL_PIPELINE["INTEGRATION & ETL PIPELINE LAYER (CRMS DATA INTEGRATOR)"]
+        direction TB
+        
+        subgraph INGESTION["1. EXTRACTION & INGESTION STAGE"]
+            EXT_BATCH["Nightly EOD Batch Extractor<br/>(Cron 02:00 WIB / SFTP & REST mTLS)"]
+            EXT_CDC["Real-Time Event Listener / Webhook<br/>(Payment Stream & CASA Balance)"]
+        end
+
+        subgraph CLEANSING["2. STAGING & DATA CLEANSING"]
+            CLEAN_VAL["Schema Validation & Type Normalization"]
+            CLEAN_MASK["UU PDP Masking Guard (PII Protection)"]
+            CLEAN_DEDUP["Deduplication & Anomaly Cleansing"]
+        end
+
+        subgraph ENRICHMENT["3. TRANSFORMATION & ENRICHMENT ENGINES"]
+            ENR_360["Customer 360 Aggregator<br/>(Cross-Facility Liability Consolidation)"]
+            ENR_STAMP["Case Stamping Engine<br/>(Combo 1: KPR+KPA, Combo 2: KTA+CC)"]
+            ENR_PDM["Pre-Delinquency Evaluator<br/>(CASA Balance Sufficiency & ASN Payroll Watcher)"]
+            ENR_SCORE["Behavioral Scoring Engine<br/>(Calculates Risk Score: 0 - 1000 Poin)"]
+            ENR_PATH["Action Path Classifier<br/>(AP Grade 1 - 8 & Champion vs Challenger)"]
+        end
+
+        subgraph LOADING["4. PERSISTENCE LOADING (crms_db)"]
+            LOAD_UPSERT["Transactional Batch Upsert Engine<br/>• public.customers<br/>• public.agreements<br/>• public.pre_delinquency_accounts<br/>• public.overdue_accounts"]
+        end
+
+        INGESTION ==> CLEANSING
+        CLEANSING ==> ENRICHMENT
+        ENRICHMENT ==> LOADING
+    end
+
+    subgraph TARGET_QUEUES["CRMS OPERATIONAL WORK QUEUES & WORKBENCHES"]
+        direction LR
+        Q_PDM["Queue DPD 0 (PDM)<br/>• Gentle WA Auto-Reminder<br/>• CASA Insufficiency Alert"]
+        Q_DIGITAL["Queue DPD 1-14 (Low Risk)<br/>• WhatsApp Bot Blaster<br/>• Smart IVR Robo-Call"]
+        Q_DESK["Queue DPD 4-30 (Medium Risk)<br/>• Desk Telephony CRM<br/>• Guided Dialogue Script"]
+        Q_FIELD["Queue DPD 14-90 (High Risk)<br/>• mCollect Field Queue<br/>• GeoTracker Real-Time GPS"]
+        Q_REMEDIAL["Queue DPD 90+ (Remedial)<br/>• 6-Stage Legal Recourse<br/>• 8-Stage KPKNL Auction<br/>• 6-Stage Settlement Tranches"]
+    end
+
+    subgraph REVERSE_SYNC["REAL-TIME REVERSE SYNC & TAKEOUT TASK"]
+        direction LR
+        REV_PAY["Debitur Bayar via VA / BI-FAST"] --> REV_HOOK["Instant Webhook POST /confins/simulate-payment"]
+        REV_HOOK --> REV_CLEAR["Auto Clearance Saldo Tunggakan = Rp 0"]
+        REV_CLEAR --> REV_CANCEL["Instant Takeout Task: Cabut Akun dari Antrean Kolektor (<5 Menit)"]
+        REV_CANCEL --> REV_RECEIPT["Kirim Bukti Bayar Resmi (PIS) via WhatsApp ke Nasabah"]
+    end
+
+    SRC_CAS & SRC_LMS & SRC_CMS & SRC_ECM --> EXT_BATCH
+    SRC_PAY --> EXT_CDC
+    LOADING ==> TARGET_QUEUES
+    TARGET_QUEUES -.->|Interaksi Penagihan & Janji Bayar PTP| ETL_PIPELINE
+    SRC_PAY ==> REVERSE_SYNC
+    REVERSE_SYNC -.->|Update Status Akun Lunas| LOADING
+    REVERSE_SYNC -.->|Notifikasi Pembatalan Kunjungan Lapangan| Q_FIELD
+```
+
+---
+
+## 🏛️ Arsitektur Sistem 5-Tier (5-Tier Enterprise System Architecture)
 
 Sistem CRMS dibangun dengan pendekatan *surrounding intelligent layer* yang menghubungkan Core Banking System (CBS) dengan saluran digital omnichannel dan armada penagihan lapangan:
 

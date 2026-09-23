@@ -53,15 +53,17 @@
     - 10.2. Branch Operational (Field Officers & Collateral Specialists)
     - 10.3. Remedial & Special Asset Management (Litigasi, Lelang KPKNL & Agency)
 11. [Desain Arsitektur Sistem, Komponen & Aliran Data (Enterprise System Architecture)](#11-desain-arsitektur-sistem-komponen--aliran-data-enterprise-system-architecture)
-    - 11.1. Diagram & Model Arsitektur Enterprise 5-Tier (High-Level 5-Tier Architecture Model)
-    - 11.2. Arsitektur Komponen Layanan Modular Backend (Domain Micro-Services Topology)
-    - 11.3. Diagram Aliran Data End-to-End & Siklus Sinkronisasi
-    - 11.4. Decision Engine (Scoring Model & Rule Engine)
-    - 11.5. Gerbang Omnichannel & Arsitektur Pesan Pintar
-    - 11.6. Arsitektur Workbench Lapangan (mCollect) & Sistem Telemetri GeoTracker
-    - 11.7. Arsitektur Settlement 6-Stage & Supervisory Control Engine
-    - 11.8. Arsitektur Keamanan, Kepatuhan UU PDP No. 27/2022 & Audit Trail
-    - 11.9. Arsitektur Jaringan, Topologi Infrastruktur & Deployment (Production Stack)
+    - 11.1. Diagram Ekosistem Perbankan CRMS Level-0 (Platform Overview & Lending Lifecycle Pillars)
+    - 11.2. Diagram Aliran Data ETL Level-1 (Core System Integration & Data Transfer Pipeline)
+    - 11.3. Diagram & Model Arsitektur Enterprise 5-Tier (High-Level 5-Tier Architecture Model)
+    - 11.4. Arsitektur Komponen Layanan Modular Backend (Domain Micro-Services Topology)
+    - 11.5. Diagram Aliran Data End-to-End & Siklus Sinkronisasi
+    - 11.6. Decision Engine (Scoring Model & Rule Engine)
+    - 11.7. Gerbang Omnichannel & Arsitektur Pesan Pintar
+    - 11.8. Arsitektur Workbench Lapangan (mCollect) & Sistem Telemetri GeoTracker
+    - 11.9. Arsitektur Settlement 6-Stage & Supervisory Control Engine
+    - 11.10. Arsitektur Keamanan, Kepatuhan UU PDP No. 27/2022 & Audit Trail
+    - 11.11. Arsitektur Jaringan, Topologi Infrastruktur & Deployment (Production Stack)
 12. [Spesifikasi Teknis & Skema Basis Data (Technical Specs & Data Model)](#12-spesifikasi-teknis--skema-basis-data-technical-specs--data-model)
     - 12.1. Arsitektur Komponen Terimplementasi (Production Stack)
     - 12.2. Entity Relationship Model (ERD) & Kamus Data Tabel Fisik
@@ -452,7 +454,171 @@ Sistem **Collection & Recovery Management System (CRMS)** dibangun dengan standa
 
 ---
 
-### 11.1. Diagram & Model Arsitektur Enterprise 5-Tier (High-Level 5-Tier Architecture Model)
+### 11.1. Diagram Ekosistem Perbankan CRMS Level-0 (Platform Overview & Lending Lifecycle Pillars)
+
+Diagram Level-0 di bawah ini menggambarkan posisi strategis **Collection & Recovery Management System (CRMS)** di dalam arsitektur platform digital lending perbankan end-to-end. Sistem terintegrasi dengan seluruh siklus fasilitas kredit—mulai dari akuisisi nasabah, tata kelola pinjaman, pemulihan piutang, hingga manajemen agunan dan dokumen hukum:
+
+```mermaid
+flowchart TB
+    subgraph OVERVIEW["CRMS ENTERPRISE BANKING PLATFORM OVERVIEW — LEVEL-0 ECOSYSTEM"]
+        direction TB
+        
+        subgraph TOP_BAR["PORTFOLIO SEGMENTATION & OPEN API INTEGRATION HUB"]
+            direction LR
+            SEG1["🏦 Retail Lending<br/>(KPR, KTA, CC, KUR)"]
+            SEG2["🏢 Commercial & Corporate<br/>(KMK, KI, Sindikasi)"]
+            SEG3["🏛️ Payroll ASN / PNS<br/>(Pemprov DKI & BUMD)"]
+            SEG4["🚗 Leasing & Multifinance<br/>(Kendaraan & Alat Berat)"]
+            API_HUB["🔌 80+ Enterprise Plug & Play APIs<br/>(RESTful / ISO-8583 / BI-FAST / Webhooks)"]
+        end
+
+        subgraph LIFECYCLE_PILLARS["6 PILAR UTAMA SIKLUS HIDUP PINJAMAN (LENDING LIFECYCLE PILLARS)"]
+            direction LR
+            
+            CAS["1. CUSTOMER ACQUISITION<br/>(CAS / LOS)<br/>───────────────<br/>• Party & CIF Master<br/>• Dukcapil Identity Verification<br/>• SLIK OJK & Credit Scoring<br/>• Limit Setup & Disbursal Approval"]
+            
+            LMS["2. LOAN MANAGEMENT<br/>(LMS / Core Banking)<br/>───────────────<br/>• Servicing Post-Origination<br/>• Schedule & Billing Accrual<br/>• CASA Autodebet Engine<br/>• Payoff & Termination Ledger"]
+            
+            CRMS["3. LOAN COLLECTIONS & RECOVERY<br/>★ CRMS CORE FOCUS ★<br/>───────────────<br/>• Pre-Delinquency DPD 0 (PDM)<br/>• Scoring Engine (0-1000 Poin)<br/>• Overdue Matrix (Action Path 1-8)<br/>• 6-Stage Settlement & Tranches<br/>• mCollect PWA & GeoTracker GPS<br/>• Legal Litigation & KPKNL Auction"]
+            
+            ECM["4. ENTERPRISE CONTENT<br/>(ECM / DMS)<br/>───────────────<br/>• Digital PK & Notarial Deeds<br/>• APHT & SKMHT Binding<br/>• Surat Peringatan (SP 1-3)<br/>• Court Filings & Risalah Lelang"]
+            
+            CMS["5. COLLATERAL MANAGEMENT<br/>(CMS)<br/>───────────────<br/>• Asset Register (SHM/BPKB)<br/>• KJPP Valuation (FMV & Liquidation)<br/>• Custody Vault Management<br/>• Stockyard & Repo Tracking"]
+            
+            DFE["6. DIGITAL FRONT END<br/>(Omnichannel Touchpoints)<br/>───────────────<br/>• Web Operations Portal<br/>• mCollect Field PWA<br/>• WhatsApp Cloud Gateway<br/>• Smart IVR Robo-Call Dialer<br/>• Self-Service Payment Link (VA/QRIS)"]
+        end
+
+        TOP_BAR ==> LIFECYCLE_PILLARS
+        CAS -->|Disbursed Loan Contracts| LMS
+        LMS -->|Delinquent & Pre-Delinquent Accounts| CRMS
+        CRMS -->|Archived Notices & Legal Proofs| ECM
+        CRMS <-->|Collateral Status & Valuation| CMS
+        CRMS <-->|Staff & Customer Interaction| DFE
+        CRMS -.->|Takeout Task & Clearance Webhook| LMS
+    end
+```
+
+#### Rincian 6 Pilar Siklus Hidup Pinjaman (Lending Lifecycle Pillars):
+
+1. **Customer Acquisition (CAS / LOS - Customer Acquisition System)**:
+   - Mengelola tata kelola pihak pemohon (*party management*), pendaftaran nomor CIF terpusat, dan verifikasi biometrik/NIK KTP melalui integrasi Ditjen Dukcapil Kemendagri.
+   - Melakukan evaluasi kelayakan kredit awal melalui integrasi riwayat SLIK OJK, analisis rasio kemampuan mencicil (*Debt Service Ratio* / DSR), penentuan skor persetujuan (*application underwriting score*), penetapan pagu limit fasilitas kredit (*limit setup and maintenance*), hingga pengesahan pencairan dana (*funding approval*).
+2. **Loan Management System (LMS / Core Banking System)**:
+   - Mengelola siklus fasilitas pinjaman pasca-pencairan (*post-origination*) hingga kredit lunas tuntas (*termination*).
+   - Menghasilkan jadwal angsuran (*repayment billing schedule*), perhitungan akrual bunga harian, administrasi biaya provisi dan denda keterlambatan, penarikan saldo rekening tabungan secara otomatis (*CASA autodebet*), serta rekonsiliasi mutasi rekening koran pinjaman.
+3. **Loan Collections & Recovery (CRMS - Fokus Utama Platform)**:
+   - Bertindak sebagai motor intelijen utama perbankan dalam memantau dan memulihkan kredit bermasalah di seluruh kontinum risiko.
+   - Mencakup pengawasan dini H-3 s.d H-0 (*Pre-Delinquency Management* / PDM DPD 0), pemantauan autodebet tabungan dan kalender rapel Tunjangan Kinerja (Tukin) ASN Pemprov DKI, perhitungan skor risiko perilaku (*Behavioral Risk Scoring 0–1000 Poin*), alokasi penugasan antrean otomatis (Action Path Grade 1–8), pengujian *Champion vs Challenger*, alur kompromi pelunasan berjenjang (*6-Stage Settlement Lifecycle & Multi-Tranches*), aplikasi penagihan lapangan (*mCollect Workbench*), pemantauan GPS telemetri (*GeoTracker Real-Time Monitoring*), somasi hukum (SP 1, SP 2, SP 3), litigasi perdata pengadilan (6 tahapan), dan lelang eksekusi agunan Hak Tanggungan/Fidusia di KPKNL (8 tahapan).
+4. **Enterprise Content Management (ECM / Document Management System)**:
+   - Mengotomatiskan penyimpanan, pengindeksan, pengarsipan aman, dan penelusuran dokumen legal di seluruh siklus kredit.
+   - Mengelola dokumen digital: Akta Perjanjian Kredit (PK) notariil, Akta Pembebanan Hak Tanggungan (APHT), Surat Kuasa Membebankan Hak Tanggungan (SKMHT), Sertifikat Jaminan Fidusia, tanda terima penyerahan agunan, salinan Surat Peringatan (SP 1, SP 2, Somasi), berkas gugatan Pengadilan Negeri, dan Risalah Lelang KPKNL berkekuatan hukum.
+5. **Collateral Management System (CMS)**:
+   - Mengotomatiskan manajemen agunan secara komprehensif dari awal pengikatan hingga pelepasan hak (*roya*) atau eksekusi sita lelang.
+   - Mencakup pendaftaran fisik agunan (Sertifikat Hak Milik / SHM, SHGB, BPKB kendaraan bermotor), pencatatan taksiran Nilai Pasar Wajar (*Fair Market Value*) dan Nilai Likuidasi oleh Kantor Jasa Penilai Publik (KJPP) independen rekanan bank, pemantauan batas rasio *Loan-to-Value* (LTV), tata kelola brankas fisik (*custody vault management*), serta pengawasan barang sitaan jaminan bergerak di *Stockyard* resmi perbankan.
+6. **Digital Front End (Omnichannel Touchpoints)**:
+   - Saluran portal web terintegrasi dan aplikasi mobile bagi nasabah dan seluruh staf lintas unit operasional perbankan.
+   - Menyediakan antarmuka operasional: Operations Portal meja penagihan (*Desk Collector*), portal eksklusif nasabah prioritas (*VIP Desk AR Head*), workbench kolektor lapangan ramah seluler (*mCollect PWA*), gerbang notifikasi otomatis WhatsApp Business API, robot pemanggil pintar (*Smart IVR Robo-Call*), dan fasilitas pembayaran mandiri 24 jam berbasis Virtual Account Bank dan QRIS Dinamis.
+
+---
+
+### 11.2. Diagram Aliran Data ETL Level-1 (Core System Integration & Data Transfer Pipeline)
+
+Diagram Level-1 berikut memetakan arsitektur pemindahan data (*Data Transfer Architecture*) menggunakan *Extract, Transform, Load (ETL)* dari sistem-sistem inti perbankan (*Customer Acquisition, Loan Management, Collateral Management, ECM, Payment Switch*) ke dalam repositori data operasional CRMS:
+
+```mermaid
+flowchart TB
+    subgraph SOURCES["CORE SOURCE SYSTEMS (SISTEM SUMBER DATA PERBANKAN)"]
+        direction LR
+        SRC_CAS["1. Customer Acquisition (CAS/LOS)<br/>• CIF Master, NIK KTP, Profil Nasabah<br/>• Instansi ASN / Payroll Employer<br/>• Kontak Telepon & Emergency Contact<br/>• SLIK Score & Approved Limit"]
+        SRC_LMS["2. Loan Management (LMS/CBS)<br/>• No Kontrak, Baki Debet, Tenor<br/>• DPD, Tunggakan Pokok/Bunga/Denda<br/>• CASA Autodebet & Tukin Calendar<br/>• Historical Repayment Ledger"]
+        SRC_CMS["3. Collateral Management (CMS)<br/>• Agunan SHM/SHGB/BPKB, LTV<br/>• Penilaian KJPP (Pasar & Likuidasi)<br/>• Akta APHT & Fidusia Notariil<br/>• Lokasi Fisik Agunan & Vault"]
+        SRC_ECM["4. Content Management (ECM)<br/>• Berkas Digital Perjanjian Kredit<br/>• Sertifikat Agunan & Surat Kuasa<br/>• Arsip Somasi & Berkas Hukum"]
+        SRC_PAY["5. Payment Switch (BI-FAST/VA)<br/>• Real-Time Payment Transaction Stream<br/>• Setoran M-Banking / QRIS Dinamis<br/>• Webhook Event Settlement"]
+    end
+
+    subgraph ETL_PIPELINE["INTEGRATION & ETL PIPELINE LAYER (CRMS DATA INTEGRATOR)"]
+        direction TB
+        
+        subgraph INGESTION["1. EXTRACTION & INGESTION STAGE"]
+            EXT_BATCH["Nightly EOD Batch Extractor<br/>(Cron 02:00 WIB / SFTP & REST mTLS)"]
+            EXT_CDC["Real-Time Event Listener / Webhook<br/>(Payment Stream & CASA Balance)"]
+        end
+
+        subgraph CLEANSING["2. STAGING & DATA CLEANSING"]
+            CLEAN_VAL["Schema Validation & Type Normalization"]
+            CLEAN_MASK["UU PDP Masking Guard (PII Protection)"]
+            CLEAN_DEDUP["Deduplication & Anomaly Cleansing"]
+        end
+
+        subgraph ENRICHMENT["3. TRANSFORMATION & ENRICHMENT ENGINES"]
+            ENR_360["Customer 360 Aggregator<br/>(Cross-Facility Liability Consolidation)"]
+            ENR_STAMP["Case Stamping Engine<br/>(Combo 1: KPR+KPA, Combo 2: KTA+CC)"]
+            ENR_PDM["Pre-Delinquency Evaluator<br/>(CASA Balance Sufficiency & ASN Payroll Watcher)"]
+            ENR_SCORE["Behavioral Scoring Engine<br/>(Calculates Risk Score: 0 - 1000 Poin)"]
+            ENR_PATH["Action Path Classifier<br/>(AP Grade 1 - 8 & Champion vs Challenger)"]
+        end
+
+        subgraph LOADING["4. PERSISTENCE LOADING (crms_db)"]
+            LOAD_UPSERT["Transactional Batch Upsert Engine<br/>• public.customers<br/>• public.agreements<br/>• public.pre_delinquency_accounts<br/>• public.overdue_accounts"]
+        end
+
+        INGESTION ==> CLEANSING
+        CLEANSING ==> ENRICHMENT
+        ENRICHMENT ==> LOADING
+    end
+
+    subgraph TARGET_QUEUES["CRMS OPERATIONAL WORK QUEUES & WORKBENCHES"]
+        direction LR
+        Q_PDM["Queue DPD 0 (PDM)<br/>• Gentle WA Auto-Reminder<br/>• CASA Insufficiency Alert"]
+        Q_DIGITAL["Queue DPD 1-14 (Low Risk)<br/>• WhatsApp Bot Blaster<br/>• Smart IVR Robo-Call"]
+        Q_DESK["Queue DPD 4-30 (Medium Risk)<br/>• Desk Telephony CRM<br/>• Guided Dialogue Script"]
+        Q_FIELD["Queue DPD 14-90 (High Risk)<br/>• mCollect Field Queue<br/>• GeoTracker Real-Time GPS"]
+        Q_REMEDIAL["Queue DPD 90+ (Remedial)<br/>• 6-Stage Legal Recourse<br/>• 8-Stage KPKNL Auction<br/>• 6-Stage Settlement Tranches"]
+    end
+
+    subgraph REVERSE_SYNC["REAL-TIME REVERSE SYNC & TAKEOUT TASK"]
+        direction LR
+        REV_PAY["Debitur Bayar via VA / BI-FAST"] --> REV_HOOK["Instant Webhook POST /confins/simulate-payment"]
+        REV_HOOK --> REV_CLEAR["Auto Clearance Saldo Tunggakan = Rp 0"]
+        REV_CLEAR --> REV_CANCEL["Instant Takeout Task: Cabut Akun dari Antrean Kolektor (<5 Menit)"]
+        REV_CANCEL --> REV_RECEIPT["Kirim Bukti Bayar Resmi (PIS) via WhatsApp ke Nasabah"]
+    end
+
+    SRC_CAS & SRC_LMS & SRC_CMS & SRC_ECM --> EXT_BATCH
+    SRC_PAY --> EXT_CDC
+    LOADING ==> TARGET_QUEUES
+    TARGET_QUEUES -.->|Interaksi Penagihan & Janji Bayar PTP| ETL_PIPELINE
+    SRC_PAY ==> REVERSE_SYNC
+    REVERSE_SYNC -.->|Update Status Akun Lunas| LOADING
+    REVERSE_SYNC -.->|Notifikasi Pembatalan Kunjungan Lapangan| Q_FIELD
+```
+
+#### Rincian Data yang Ditransfer dari Tiap Sistem Sumber:
+
+| Sistem Sumber (*Source*) | Entitas & Variabel Data yang Diekstrak | Protokol & Frekuensi Transfer | Peran & Penggunaan di CRMS |
+|:---|:---|:---:|:---|
+| **Customer Acquisition (CAS / LOS)** | • Nomor CIF Nasabah<br>• NIK KTP (dimasking)<br>• Nama Lengkap & Alamat Domisili<br>• Instansi Payroll (ASN DKI / SKPD / BUMD)<br>• Nomor Handphone & No WA<br>• Nomor Kontak Darurat (*Emergency*)<br>• Skor SLIK Awal & Catatan Underwriting | Batch EOD (02:00 WIB) via REST mTLS / SFTP JSON | Membentuk profil debitur terpadu (*Customer Master*), penentuan segmentasi ASN DKI, serta penyediaan kanal kontak untuk skrip penagihan terpandu. |
+| **Loan Management (LMS / CBS)** | • Nomor Rekening Pinjaman / Kontrak<br>• Plafon Fasilitas & Suku Bunga<br>• Baki Debet Pokok (*Outstanding*)<br>• Rincian Tunggakan Pokok, Bunga, Denda<br>• Hari Keterlambatan (DPD) & Kolektibilitas<br>• Saldo Rekening Autodebet (CASA)<br>• Tanggal Transfer Gaji & Rapel Tukin ASN | Batch EOD Harian (02:00 WIB) & Sinkronisasi Near-Real-Time REST | Input utama perhitungan DPD, pembentukan bucket penagihan (DPD 1–30, DPD 30+), evaluasi Early Warning DPD 0 (PDM), serta penentuan level risiko. |
+| **Collateral Management (CMS)** | • Nomor ID Agunan<br>• Tipe Jaminan (SHM, SHGB, BPKB)<br>• Nilai Pasar Wajar (FMV) & Likuidasi KJPP<br>• Rasio Pinjaman terhadap Agunan (LTV)<br>• Nomor Akta APHT / SKMHT / Fidusia<br>• Nama Notaris Rekanan<br>• Lokasi Penyimpanan Brankas / Stockyard | Batch EOD Harian via Database View / REST JSON | Memetakan bobot kualitas agunan (15% dalam skoring risiko), penentuan prioritas lelang KPKNL (DPD 90+), serta pembuatan berkas eksekusi agunan. |
+| **Enterprise Content Management (ECM)** | • ID Berkas Digital Dokumen<br>• URL / Endpoint Berkas PK Notariil<br>• Salinan Pindai Sertifikat Agunan<br>• Arsip Riwayat Surat Peringatan (SP 1–3)<br>• Dokumen Gugatan & Risalah Lelang | Terjadwal EOD & On-Demand REST API | Menampilkan lampiran dokumen legal secara instan di Customer 360°, modul litigasi hukum (6 tahapan), dan modul lelang agunan (8 tahapan). |
+| **Payment Switch (BI-FAST & VA)** | • ID Transaksi Settlement<br>• Nomor Virtual Account Bank<br>• Nominal Pembayaran<br>• Kanal Bayar (BI-FAST / VA / QRIS / ATM)<br>• Timestamp Transaksi (Presisi Detik) | **Real-Time Event Stream** (Webhook Push Listener) | Menjalankan **Instant Takeout Task**: mengosongkan saldo tunggakan, mencabut akun dari antrean kerja kolektor (< 5 menit), dan mengirim bukti bayar WhatsApp. |
+
+#### Tahapan Pemrosesan Pipeline ETL (ETL Processing Stages):
+1. **Tahap 1 - Ingestion & Extraction**: Mengekstrak data inkremental harian (delta records) setiap malam pukul 02:00 WIB dan menangkap event pembayaran real-time 24/7.
+2. **Tahap 2 - Staging & Data Cleansing**: Normalisasi tipe data, eliminasi duplikasi akun, serta penerapan perlindungan privasi data sesuai UU PDP No. 27/2022 (masking nomor NIK KTP dan nomor telepon nasabah).
+3. **Tahap 3 - Transformation, Case Stamping & Scoring Enrichment**:
+   - *Customer 360 Aggregator*: Menyatukan seluruh fasilitas kredit aktif nasabah (KPR, KMK, KTA, Kartu Kredit) dalam satu nomor CIF.
+   - *Case Stamping Engine*: Mengelompokkan pinjaman menjadi Combo 1 Properti, Combo 2 Non-Collateral, atau Combo 3 Komersial.
+   - *Pre-Delinquency Evaluator*: Mendeteksi defisit saldo autodebet CASA (H-3..H-0) dan tanggal transfer rapel Tukin ASN.
+   - *Behavioral Scoring Engine*: Menghitung skor risiko kredit (0–1000 poin) secara objektif.
+   - *Action Path Classifier*: Menetapkan kode penanganan (AP 1–8) dan mengalokasikan akun ke grup Champion atau Challenger.
+4. **Tahap 4 - Persistence Loading**: Memasukkan data terenkripsi ke tabel basis data PostgreSQL `crms_db`.
+5. **Tahap 5 - Queue Dispatching**: Menyajikan antrean kerja siap aksi pada dashboard kolektor meja, bot WhatsApp, smart IVR, dan aplikasi lapangan mCollect.
+6. **Tahap 6 - Real-Time Reverse Sync & Takeout**: Menyelesaikan pelunasan seketika saat debitur membayar via kanal digital, memastikan petugas penagihan tidak menghubungi nasabah yang sudah melunasi kewajibannya (*anti-overcollection*).
+
+---
+
+### 11.3. Diagram & Model Arsitektur Enterprise 5-Tier (High-Level 5-Tier Architecture Model)
 
 Arsitektur CRMS dibagi menjadi lima lapisan modular (*5-Tier Architecture*) yang terisolasi secara logis dan fisik:
 
@@ -562,7 +728,7 @@ flowchart TB
 
 ---
 
-### 11.2. Arsitektur Komponen Layanan Modular Backend (Domain Micro-Services Topology)
+### 11.4. Arsitektur Komponen Layanan Modular Backend (Domain Micro-Services Topology)
 
 Diagram berikut mengilustrasikan topologi internal komponen modular backend Golang Gin, pemisahan layer controller/handler, domain service, dan data access repository:
 
@@ -609,7 +775,7 @@ graph TD
 
 ---
 
-### 11.3. Diagram Aliran Data End-to-End & Siklus Sinkronisasi
+### 11.5. Diagram Aliran Data End-to-End & Siklus Sinkronisasi
 
 Aliran data dalam sistem CRMS terbagi menjadi dua siklus fundamental: **Siklus Batch Harian EOD (Nightly Batch Data Sync)** dan **Siklus Real-Time Event-Driven (Instant Payment Takeout & Telemetry)**.
 
@@ -653,7 +819,7 @@ sequenceDiagram
 
 ---
 
-### 11.4. Decision Engine (Scoring Model & Rule Engine)
+### 11.6. Decision Engine (Scoring Model & Rule Engine)
 
 Decision Engine CRMS adalah otak analitis cerdas yang mengevaluasi setiap akun kredit tertunggak pada siklus harian EOD maupun pembaruan transaksi *near-real-time*. Arsitektur engine ini memadukan dua subsistem inti: **Collection Scoring Model (Behavioral & Risk Scoring)** dan **Rule-Based Allocation Engine (Action Path Matrix)**.
 
@@ -688,11 +854,11 @@ graph TD
     F --> G["Penugasan PIC Otomatis<br>(WA, Robot, DC, FC, SFC, Senior Field)"]
 ```
 
-#### 11.4.1. Filosofi & Perbedaan Collection Scoring vs Application Scoring
+#### 11.6.1. Filosofi & Perbedaan Collection Scoring vs Application Scoring
 * **Application Scoring (Credit Origination)**: Menilai kelayakan calon debitur saat permohonan kredit diajukan berdasarkan data historis statis (slip gaji, rekening koran, riwayat SLIK OJK). Tujuannya adalah keputusan biner: *Approve* atau *Reject*.
 * **Collection Scoring (Behavioral Recovery Scoring)**: Menilai **kemungkinan debitur memulihkan pembayarannya (*Cure Probability*)** dan **probabilitas akun melompat ke bucket keterlambatan yang lebih dalam (*Roll Rate Probability*)** setelah debitur mengalami keterlambatan pembayaran (DPD 1+). Tujuannya adalah menentukan **rekomendasi kanal penagihan paling hemat biaya** dan **urgensi intervensi petugas penagih lapangan**.
 
-#### 11.4.2. Parameter & Bobot Pembentuk Skor Koleksi (Collection Scoring Variables)
+#### 11.6.2. Parameter & Bobot Pembentuk Skor Koleksi (Collection Scoring Variables)
 CRMS menerapkan algoritma pembobotan multi-faktor standar industri perbankan dengan rentang skor **0 s/d 1000 Poin**:
 
 $$\text{Risk Score} = \sum_{i=1}^{n} (w_i \times S_i)$$
@@ -704,7 +870,7 @@ $$\text{Risk Score} = \sum_{i=1}^{n} (w_i \times S_i)$$
 | **Profil Demografi & Pekerjaan** | **20%** | • Jenis instansi pemberi kerja<br>• Mekanisme pembayaran cicilan<br>• Status kepegawaian | ASN/PNS Pemprov DKI Jakarta, pegawai tetap BUMN, skema potong gaji otomatis (*payroll autodebet*). | Pekerja kontrak/lepas, wiraswasta dengan omzet fluktuatif, pembayaran manual transfer. |
 | **Kualitas & Nilai Agunan (*Collateral Coverage*)** | **15%** | • Ada/tidaknya agunan fisik<br>• Rasio nilai pinjaman terhadap taksiran agunan (*LTV*)<br>• Legalitas sertifikat (SHM/SHGB/BPKB) | Agunan properti bernilai likuid tinggi dengan $LTV \le 60\%$, sertifikat SHM terikat Hak Tanggungan sempurna. | Kredit tanpa agunan (unsecured) atau agunan bergerak dengan depresiasi tinggi ($LTV > 90\%$). |
 
-#### 11.4.3. Matriks Klasifikasi Level Risiko & Strategi Penagihan
+#### 11.6.3. Matriks Klasifikasi Level Risiko & Strategi Penagihan
 
 | Level Risiko | Rentang Skor | Karakteristik Debitur | Saluran Rekomendasi Utama | Tindakan Decision Engine | Estimasi Efisiensi Biaya |
 |---|:---:|---|---|---|:---:|
@@ -713,7 +879,7 @@ $$\text{Risk Score} = \sum_{i=1}^{n} (w_i \times S_i)$$
 | **`HIGH_RISK`** | **0 – 449** | Debitur kronis, riwayat *broken PTP* berulang, nomor telepon kerap tidak aktif, agunan mengalami sengketa/depresiasi. | **Field Collector (FC)** & **Senior Field (SFC)** | Masuk ke **Grade 7 atau 8** (Challenger Intensive Field). Langsung dilakukan verifikasi fisik sejak DPD 1–7. | **Baseline Field** |
 | **`VIP`** | **Khusus** | Nasabah simpanan besar / High Net Worth Individuals / Kredit Korporasi & Komersial penting. | **Dedicated Special Team (AR Head)** | Tidak melalui bot digital / outbound call center. Dikelola melalui Portal Eksklusif AR Head. | N/A (Preservasi Hubungan Nasabah) |
 
-#### 11.4.4. Matriks Pemetaan Action Path (Grade 1–8) x 9 Bucket DPD
+#### 11.6.4. Matriks Pemetaan Action Path (Grade 1–8) x 9 Bucket DPD
 Berdasarkan kombinasi Traffic (Champion vs Challenger) dan Risk Level dari scoring, Decision Engine menentukan petugas (PIC) penangan:
 
 | Action Path (Grade) | Segmentasi & Dasar Penentuan | DPD 1–3 | DPD 4–7 | DPD 8–13 | DPD 14–18 | DPD 19–25 | DPD 26–30 | DPD 31–60 | DPD 61–150 | DPD >150 |
@@ -728,13 +894,13 @@ Berdasarkan kombinasi Traffic (Champion vs Challenger) dan Risk Level dari scori
 | **AP 8** | Challenger — High Risk | **FC** | **FC** | SFC | SFC | SFC | SFC | Senior Field | Senior Field | Senior Field |
 | **VIP** | VIP Portfolio | **Special** | **Special** | **Special** | **Special** | **Special** | **Special** | **Special** | **Special** | **Special** |
 
-#### 11.4.5. Simulasi Evaluasi Ulang Dinamis (A/B Testing Champion vs Challenger)
+#### 11.6.5. Simulasi Evaluasi Ulang Dinamis (A/B Testing Champion vs Challenger)
 * Sistem CRMS memungkinkan manajemen risiko melakukan **A/B Testing** perbandingan performa antara strategi penagihan konvensional (`CHAMPION`) dengan strategi cerdas berbasis skor risiko (`CHALLENGER`).
 * Endpoint `POST /api/v1/overdue-accounts/:id/reevaluate` memungkinkan evaluasi instan jika terjadi perubahan profil debitur (misalnya penambahan komitmen PTP, perbaikan riwayat bayar, atau perubahan data kontak).
 
 ---
 
-### 11.5. Gerbang Omnichannel & Arsitektur Pesan Pintar
+### 11.7. Gerbang Omnichannel & Arsitektur Pesan Pintar
 
 1. **WhatsApp Enterprise Messaging Gateway (Arsitektur Teruji)**:
    - Terkoneksi dengan HTTP API Gateway (Meta Cloud API / Fonnte Provider) dan protokol direct URL fallback (`https://wa.me/...`).
@@ -750,7 +916,7 @@ Berdasarkan kombinasi Traffic (Champion vs Challenger) dan Risk Level dari scori
 
 ---
 
-### 11.6. Arsitektur Workbench Lapangan (mCollect) & Sistem Telemetri GeoTracker
+### 11.8. Arsitektur Workbench Lapangan (mCollect) & Sistem Telemetri GeoTracker
 
 ```mermaid
 graph LR
@@ -791,7 +957,7 @@ graph LR
 
 ---
 
-### 11.7. Arsitektur Settlement 6-Stage & Supervisory Control Engine
+### 11.9. Arsitektur Settlement 6-Stage & Supervisory Control Engine
 
 1. **6-Stage Settlement Lifecycle**:
    - **Stage 1 (Initiate Settlement)**: Pengajuan diskon kompromi (Net Settlement, Charge-Wise Waive, atau Auto Charge Allocation).
@@ -812,7 +978,7 @@ graph LR
 
 ---
 
-### 11.8. Arsitektur Keamanan, Kepatuhan UU PDP No. 27/2022 & Audit Trail
+### 11.10. Arsitektur Keamanan, Kepatuhan UU PDP No. 27/2022 & Audit Trail
 
 Keamanan sistem CRMS dirancang selaras dengan regulasi Otoritas Jasa Keuangan (POJK Tata Kelola Teknologi Informasi) dan Undang-Undang Perlindungan Data Pribadi (UU PDP No. 27 Tahun 2022):
 
@@ -829,7 +995,7 @@ Keamanan sistem CRMS dirancang selaras dengan regulasi Otoritas Jasa Keuangan (P
 
 ---
 
-### 11.9. Arsitektur Jaringan, Topologi Infrastruktur & Deployment (Production Stack)
+### 11.11. Arsitektur Jaringan, Topologi Infrastruktur & Deployment (Production Stack)
 
 Diagram berikut menampilkan topologi fisik dan jaringan implementasi server produksi CRMS pada lingkungan Virtual Private Server (VPS) atau On-Premise Data Center Bank:
 
