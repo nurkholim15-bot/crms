@@ -196,25 +196,30 @@ type RepossessionCase struct {
 	UpdatedAt         time.Time  `json:"updated_at"`
 }
 
-// SettlementProposal merepresentasikan program kompromi / diskon pelunasan (3 Tipe)
+// SettlementProposal merepresentasikan program kompromi / diskon pelunasan (6 Tahap Lifecycle)
 type SettlementProposal struct {
-	ID                  uint       `gorm:"primaryKey" json:"id"`
-	ProposalNo          string     `gorm:"uniqueIndex;size:50;not null" json:"proposal_no"`
-	AgreementNo         string     `gorm:"size:50;not null;index" json:"agreement_no"`
-	Agreement           Agreement  `gorm:"foreignKey:AgreementNo;references:AgreementNo;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"agreement"`
-	CustomerID          uint       `gorm:"not null;index" json:"customer_id"`
-	Customer            Customer   `gorm:"foreignKey:CustomerID" json:"customer"`
-	SettlementType      string     `gorm:"size:50;not null" json:"settlement_type"` // NET_SETTLEMENT, CHARGE_WISE_SETTLEMENT, AUTO_CHARGE_ALLOCATION
-	OriginalOverdue     float64    `gorm:"type:numeric(15,2);not null" json:"original_overdue"`
-	WaivedPenalty       float64    `gorm:"type:numeric(15,2);default:0" json:"waived_penalty"`
-	WaivedInterest      float64    `gorm:"type:numeric(15,2);default:0" json:"waived_interest"`
-	NetSettlementAmount float64    `gorm:"type:numeric(15,2);not null" json:"net_settlement_amount"`
-	ApprovalStatus      string     `gorm:"size:50;default:'PENDING_APPROVAL'" json:"approval_status"` // PENDING_APPROVAL, APPROVED_BY_COMMITTEE, REJECTED, PAID_OFF
-	ApprovedBy          string     `gorm:"size:100" json:"approved_by"`
-	PaymentDueDate      *time.Time `json:"payment_due_date"`
-	Notes               string     `gorm:"type:text" json:"notes"`
-	CreatedAt           time.Time  `json:"created_at"`
-	UpdatedAt           time.Time  `json:"updated_at"`
+	ID                  uint                `gorm:"primaryKey" json:"id"`
+	ProposalNo          string              `gorm:"uniqueIndex;size:50;not null" json:"proposal_no"`
+	AgreementNo         string              `gorm:"size:50;not null;index" json:"agreement_no"`
+	Agreement           Agreement           `gorm:"foreignKey:AgreementNo;references:AgreementNo;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"agreement"`
+	CustomerID          uint                `gorm:"not null;index" json:"customer_id"`
+	Customer            Customer            `gorm:"foreignKey:CustomerID" json:"customer"`
+	SettlementStage     string              `gorm:"size:50;default:'STAGE_INITIATE'" json:"settlement_stage"` // STAGE_INITIATE, STAGE_SCHEDULE, STAGE_PLAN, STAGE_RECOMMEND_APPROVAL, STAGE_PAYMENT_TRACKING, STAGE_CLOSURE
+	SettlementType      string              `gorm:"size:50;not null" json:"settlement_type"` // NET_SETTLEMENT, CHARGE_WISE_SETTLEMENT, AUTO_CHARGE_ALLOCATION
+	OriginalOverdue     float64             `gorm:"type:numeric(15,2);not null" json:"original_overdue"`
+	WaivedPenalty       float64             `gorm:"type:numeric(15,2);default:0" json:"waived_penalty"`
+	WaivedInterest      float64             `gorm:"type:numeric(15,2);default:0" json:"waived_interest"`
+	NetSettlementAmount float64             `gorm:"type:numeric(15,2);not null" json:"net_settlement_amount"`
+	ApprovalStatus      string              `gorm:"size:50;default:'PENDING_APPROVAL'" json:"approval_status"` // PENDING_APPROVAL, RECOMMENDED, APPROVED_BY_COMMITTEE, REJECTED, SENT_BACK, PAID_OFF
+	RecommendationTier  string              `gorm:"size:50;default:'COLLECTOR'" json:"recommendation_tier"` // COLLECTOR, BRANCH_MANAGER, AR_HEAD, DIRECTOR
+	RecommendedTo       string              `gorm:"size:100" json:"recommended_to"`
+	ApprovedBy          string              `gorm:"size:100" json:"approved_by"`
+	PaymentDueDate      *time.Time          `json:"payment_due_date"`
+	TotalTranches       int                 `gorm:"default:1" json:"total_tranches"`
+	Tranches            []SettlementTranche `gorm:"foreignKey:SettlementProposalID;constraint:OnDelete:CASCADE;" json:"tranches"`
+	Notes               string              `gorm:"type:text" json:"notes"`
+	CreatedAt           time.Time           `json:"created_at"`
+	UpdatedAt           time.Time           `json:"updated_at"`
 }
 
 // SkipTracingCase merepresentasikan investigasi pelacakan kontak debitur yang hilang kontak
@@ -235,4 +240,115 @@ type SkipTracingCase struct {
 	CreatedAt     time.Time  `json:"created_at"`
 	UpdatedAt     time.Time  `json:"updated_at"`
 }
+
+// SettlementTranche merepresentasikan jadwal termin pembayaran settlement bertahap
+type SettlementTranche struct {
+	ID                  uint       `gorm:"primaryKey" json:"id"`
+	SettlementProposalID uint       `gorm:"not null;index" json:"settlement_proposal_id"`
+	TrancheNo           int        `gorm:"not null" json:"tranche_no"`
+	DueDate             time.Time  `json:"due_date"`
+	Amount              float64    `gorm:"type:numeric(15,2);not null" json:"amount"`
+	PaymentMethod       string     `gorm:"size:50;default:'ONLINE_VA'" json:"payment_method"` // CASH, CHEQUE, ONLINE_VA, QRIS
+	PaidAmount          float64    `gorm:"type:numeric(15,2);default:0" json:"paid_amount"`
+	PaidAt              *time.Time `json:"paid_at"`
+	PaymentStatus       string     `gorm:"size:50;default:'PENDING'" json:"payment_status"` // PENDING, PAID, OVERDUE
+	ReceiptNo           string     `gorm:"size:50" json:"receipt_no"`
+	CreatedAt           time.Time  `json:"created_at"`
+	UpdatedAt           time.Time  `json:"updated_at"`
+}
+
+// CollectorGeoLocation merepresentasikan pemantauan GPS live real-time petugas lapangan
+type CollectorGeoLocation struct {
+	ID                  uint      `gorm:"primaryKey" json:"id"`
+	CollectorUsername   string    `gorm:"uniqueIndex;size:100;not null" json:"collector_username"`
+	CollectorName       string    `gorm:"size:100;not null" json:"collector_name"`
+	AgencyName          string    `gorm:"size:100" json:"agency_name"`
+	CurrentLat          float64   `gorm:"type:numeric(10,6);not null" json:"current_lat"`
+	CurrentLng          float64   `gorm:"type:numeric(10,6);not null" json:"current_lng"`
+	AccuracyMeters      float64   `gorm:"type:numeric(6,2);default:10" json:"accuracy_meters"`
+	Status              string    `gorm:"size:50;default:'IDLE'" json:"status"` // VISITING, IN_TRANSIT, IDLE
+	CurrentLocationName string    `gorm:"size:255" json:"current_location_name"`
+	LastHeartbeat       time.Time `json:"last_heartbeat"`
+	TodayVisitsCount    int       `gorm:"default:0" json:"today_visits_count"`
+	TodayIdleMinutes    int       `gorm:"default:0" json:"today_idle_minutes"`
+	TodaySpentMinutes   int       `gorm:"default:0" json:"today_spent_minutes"`
+	TransitTimeMinutes  int       `gorm:"default:0" json:"transit_time_minutes"`
+	AnomalyFlag         bool      `gorm:"default:false" json:"anomaly_flag"` // Deteksi transaksi mencurigakan / GPS spoofing
+	AnomalyReason       string    `gorm:"size:255" json:"anomaly_reason"`
+	BatteryPct          int       `gorm:"default:85" json:"battery_pct"`
+	CreatedAt           time.Time `json:"created_at"`
+	UpdatedAt           time.Time `json:"updated_at"`
+}
+
+// CollectorRoutePoint merepresentasikan rekam jejak titik rute perjalanan harian (Location History & Animated Route)
+type CollectorRoutePoint struct {
+	ID                uint      `gorm:"primaryKey" json:"id"`
+	CollectorUsername string    `gorm:"size:100;not null;index" json:"collector_username"`
+	SequenceOrder     int       `gorm:"not null" json:"sequence_order"`
+	Lat               float64   `gorm:"type:numeric(10,6);not null" json:"lat"`
+	Lng               float64   `gorm:"type:numeric(10,6);not null" json:"lng"`
+	LocationName      string    `gorm:"size:255" json:"location_name"`
+	ActivityType      string    `gorm:"size:50;not null" json:"activity_type"` // CHECKIN, PAYMENT, RTS, PTP, TRANSIT, IDLE
+	AgreementNo       string    `gorm:"size:50" json:"agreement_no"`
+	DebtorName        string    `gorm:"size:100" json:"debtor_name"`
+	RecordedAt        time.Time `json:"recorded_at"`
+	DurationMinutes   int       `gorm:"default:0" json:"duration_minutes"`
+	SpeedKmh          float64   `gorm:"type:numeric(5,2);default:0" json:"speed_kmh"`
+	Notes             string    `gorm:"type:text" json:"notes"`
+}
+
+// PaymentReceiptSlip merepresentasikan modul PIS (Payment Information Slip / Kuitansi Digital Mobile)
+type PaymentReceiptSlip struct {
+	ID                uint      `gorm:"primaryKey" json:"id"`
+	ReceiptNo         string    `gorm:"uniqueIndex;size:50;not null" json:"receipt_no"`
+	AgreementNo       string    `gorm:"size:50;not null;index" json:"agreement_no"`
+	CustomerID        uint      `gorm:"not null;index" json:"customer_id"`
+	Customer          Customer  `gorm:"foreignKey:CustomerID" json:"customer"`
+	AmountPaid        float64   `gorm:"type:numeric(15,2);not null" json:"amount_paid"`
+	PaymentMethod     string    `gorm:"size:50;not null" json:"payment_method"` // CASH, QRIS, ONLINE_VA
+	TrancheNumber     int       `gorm:"default:1" json:"tranche_number"`
+	CollectorUsername string    `gorm:"size:100;not null" json:"collector_username"`
+	CollectorName     string    `gorm:"size:100;not null" json:"collector_name"`
+	ReceiptURL        string    `gorm:"size:255" json:"receipt_url"`
+	WhatsAppSent      bool      `gorm:"default:false" json:"whatsapp_sent"`
+	GeotagLat         float64   `gorm:"type:numeric(10,6)" json:"geotag_lat"`
+	GeotagLng         float64   `gorm:"type:numeric(10,6)" json:"geotag_lng"`
+	Notes             string    `gorm:"type:text" json:"notes"`
+	IssuedAt          time.Time `json:"issued_at"`
+}
+
+// CollectionAgency merepresentasikan agensi penagihan eksternal (External Agency Onboarding)
+type CollectionAgency struct {
+	ID                     uint       `gorm:"primaryKey" json:"id"`
+	AgencyCode             string     `gorm:"uniqueIndex;size:50;not null" json:"agency_code"`
+	AgencyName             string     `gorm:"size:150;not null" json:"agency_name"`
+	ContractNo             string     `gorm:"size:100;not null" json:"contract_no"`
+	LicenseExpiry          *time.Time `json:"license_expiry"`
+	ActiveCollectorsCount  int        `gorm:"default:0" json:"active_collectors_count"`
+	AssignedAccountsCount  int        `gorm:"default:0" json:"assigned_accounts_count"`
+	RecoveryRate           float64    `gorm:"type:numeric(5,2);default:0" json:"recovery_rate"`
+	CommissionRate         float64    `gorm:"type:numeric(5,2);default:10" json:"commission_rate"`
+	ContactPerson          string     `gorm:"size:100" json:"contact_person"`
+	Phone                  string     `gorm:"size:50" json:"phone"`
+	Status                 string     `gorm:"size:50;default:'ACTIVE'" json:"status"` // ACTIVE, SUSPENDED
+	CreatedAt              time.Time  `json:"created_at"`
+	UpdatedAt              time.Time  `json:"updated_at"`
+}
+
+// AuthorityDelegation merepresentasikan pendelegasian wewenang saat pejabat berhalangan (Out of Office Enablement)
+type AuthorityDelegation struct {
+	ID                 uint      `gorm:"primaryKey" json:"id"`
+	DelegatorUsername  string    `gorm:"size:100;not null" json:"delegator_username"`
+	DelegatorName      string    `gorm:"size:100;not null" json:"delegator_name"`
+	DelegateUsername   string    `gorm:"size:100;not null" json:"delegate_username"`
+	DelegateName       string    `gorm:"size:100;not null" json:"delegate_name"`
+	StartDate          time.Time `json:"start_date"`
+	EndDate            time.Time `json:"end_date"`
+	ApprovalLimitAmount float64  `gorm:"type:numeric(15,2);not null" json:"approval_limit_amount"`
+	Reason             string    `gorm:"size:255" json:"reason"`
+	IsActive           bool      `gorm:"default:true" json:"is_active"`
+	CreatedAt          time.Time `json:"created_at"`
+	UpdatedAt          time.Time `json:"updated_at"`
+}
+
 

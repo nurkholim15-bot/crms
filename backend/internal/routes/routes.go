@@ -58,12 +58,42 @@ func SetupRoutes(r *gin.Engine) {
 		v1.GET("/repo/cases", advH.GetRepossessionCases)
 		v1.PUT("/repo/cases/:id/stage", advH.UpdateRepoStage)
 
-		// 4. Settlement Management (3 Types: Net, Charge-Wise, Auto-Charge)
+		// 4. Settlement Management (6-Stage Lifecycle & Multi-Tranches)
 		v1.GET("/settlement/proposals", advH.GetSettlementProposals)
+		v1.POST("/settlement/proposals", advH.CreateSettlementProposal)
+		v1.PUT("/settlement/proposals/:id/stage", advH.UpdateSettlementStage)
+		v1.POST("/settlement/proposals/:id/tranches", advH.SaveSettlementTranches)
+		v1.POST("/settlement/tranches/:id/pay", advH.PaySettlementTranche)
+		v1.POST("/settlement/proposals/:id/recommend", advH.RecommendSettlementProposal)
 		v1.PUT("/settlement/proposals/:id/action", advH.ApproveSettlementProposal)
 
 		// 5. Skip Tracing Management
 		v1.GET("/skip-tracing/cases", advH.GetSkipTracingCases)
 		v1.PUT("/skip-tracing/cases/:id/feedback", advH.UpdateSkipTracingFeedback)
+
+		// 6. GeoTracker (GPS Field Monitoring & Route Playback)
+		geoH := handlers.NewGeoTrackerHandler(database.DB)
+		v1.GET("/geotracker/collectors", geoH.GetLiveCollectors)
+		v1.GET("/geotracker/collectors/:username/route", geoH.GetCollectorRouteHistory)
+		v1.POST("/geotracker/ping", geoH.PingLocation)
+
+		// 7. mCollect (Mobile Field Collections Workbench & Digital Receipts)
+		mCollectH := handlers.NewMCollectHandler(database.DB)
+		v1.GET("/mcollect/accounts", mCollectH.GetMCollectAccounts)
+		v1.POST("/mcollect/record-payment", mCollectH.RecordPayment)
+		v1.POST("/mcollect/request-payment-link", mCollectH.RequestPaymentLink)
+		v1.GET("/mcollect/receipts", mCollectH.GetReceipts)
+		v1.POST("/mcollect/receipts/:id/send-whatsapp", mCollectH.SendReceiptWhatsApp)
+		v1.POST("/mcollect/foreclosure-simulate", mCollectH.SimulateForeclosure)
+
+		// 8. External Agency Onboarding
+		v1.GET("/agencies", advH.GetAgencies)
+		v1.POST("/agencies", advH.CreateAgency)
+
+		// 9. Authority Delegation (Out-of-Office) & Capacity Planning
+		v1.GET("/delegations", advH.GetDelegations)
+		v1.POST("/delegations", advH.CreateDelegation)
+		v1.DELETE("/delegations/:id", advH.CancelDelegation)
+		v1.GET("/capacity-planning", advH.GetCapacityPlanning)
 	}
 }

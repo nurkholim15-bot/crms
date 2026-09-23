@@ -53,6 +53,24 @@ func InitDB(databaseURL string) (*gorm.DB, error) {
 	if err := db.AutoMigrate(&models.SkipTracingCase{}); err != nil {
 		return nil, err
 	}
+	if err := db.AutoMigrate(&models.SettlementTranche{}); err != nil {
+		return nil, err
+	}
+	if err := db.AutoMigrate(&models.CollectorGeoLocation{}); err != nil {
+		return nil, err
+	}
+	if err := db.AutoMigrate(&models.CollectorRoutePoint{}); err != nil {
+		return nil, err
+	}
+	if err := db.AutoMigrate(&models.PaymentReceiptSlip{}); err != nil {
+		return nil, err
+	}
+	if err := db.AutoMigrate(&models.CollectionAgency{}); err != nil {
+		return nil, err
+	}
+	if err := db.AutoMigrate(&models.AuthorityDelegation{}); err != nil {
+		return nil, err
+	}
 
 	DB = db
 	log.Println("PostgreSQL connection and migration successful!")

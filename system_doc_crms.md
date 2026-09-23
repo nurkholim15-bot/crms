@@ -1349,11 +1349,98 @@ Tata kelola pemulihan aset agunan yang transparan dan akuntabel dalam 8 tahapan:
 7. **STAGE 7 - ASSET SALE**: Penetapan pemenang lelang, verifikasi pembayaran uang lelang, dan bea lelang negara.
 8. **STAGE 8 - ASSET RELEASE**: Penerbitan Risalah Lelang resmi oleh Pejabat Lelang KPKNL, penghapusan hak tanggungan (roya), dan penyetoran hasil lelang untuk pelunasan baki debet pinjaman.
 
-### 18.5 Manajemen Kompromi & Diskon (Settlement Management)
-Tiga skema resolusi pembayaran kompromi dengan matriks batas wewenang komite (*Approval Authority Limit*):
-1. **Net Settlement**: Negosiasi nominal bersih pelunasan sekaligus secara tunai (*lump sum*) dengan diskon total denda keterlambatan dan sebagian bunga.
-2. **Charge-Wise Settlement**: Keringanan terperinci per komponen kewajiban (penghapusan denda 100%, diskon biaya penagihan, pengurangan bunga tunggakan, pelunasan pokok penuh).
-3. **Auto Charge Allocation**: Penerimaan pembayaran sekaligus dari debitur yang langsung didistribusikan secara otomatis oleh mesin *recovery* perbankan dengan prioritas: **Pokok Pinjaman -> Bunga Berjalan/Tunggakan -> Biaya Administrasi & Denda**.
+### 18.5 Manajemen Kompromi & Diskon (Settlement Management - 6-Stage Lifecycle & Multi-Tranches)
+Siklus komprehensif penyelesaian kredit bermasalah melalui skema kompromi pelunasan terstruktur (berdasarkan arsitektur *Settlement Workflow*):
+
+```mermaid
+graph TD
+    S1["1. Initiate Settlement<br/>(Verifikasi Kapasitas Debitur)"] --> S2["2. Generate Schedule<br/>(Single / Multi-Tranches)"]
+    S2 --> S3["3. Draw Payment Plan<br/>(Alokasi Pokok vs Denda)"]
+    S3 --> S4["4. Recommend & Approval Matrix<br/>(Jenjang Limit Komite)"]
+    S4 --> S5["5. Payment Tracking<br/>(Realisasi Setoran & Bukti Bayar)"]
+    S5 --> S6["6. Settlement Closure<br/>(Match-off & Penutupan Rekening)"]
+```
+
+1. **Stage 1 - INITIATE SETTLEMENT**: Inisiasi pengajuan permohonan diskon kompromi oleh kolektor/debitur. Mengakomodasi 3 skema:
+   - **Net Settlement**: Kesepakatan nominal bersih lump-sum pelunasan dengan diskon total denda dan sebagian bunga tunggakan.
+   - **Charge-Wise Settlement**: Keringanan spesifik per komponen (penghapusan denda keterlambatan 100%, potongan biaya penagihan, pelunasan pokok penuh).
+   - **Auto Charge Allocation**: Penerimaan pembayaran sekaligus dari debitur yang langsung didistribusikan secara otomatis oleh mesin *recovery* perbankan dengan prioritas: **Pokok Pinjaman -> Bunga Berjalan/Tunggakan -> Biaya Administrasi & Denda**.
+2. **Stage 2 - GENERATE SETTLEMENT SCHEDULE**: Pembuatan jadwal termin pembayaran bertahap (*Single* atau *Multi-Tranches* 1 s.d 6 termin), dengan penetapan tanggal jatuh tempo, metode pembayaran per termin (CASH, ONLINE_VA, QRIS, CHEQUE), dan nominal terinci.
+3. **Stage 3 - DRAW PAYMENT PLAN**: Penyusunan matriks simulasi alokasi pelunasan kredit, pemisahan porsi pokok terbayar (*Principal Write-off Balance*), dan mitigasi risiko gagal bayar termin lanjutan.
+4. **Stage 4 - RECOMMEND & APPROVAL MATRIX**: Proses eskalasi berjenjang sesuai batas kewenangan pemutus kredit (*Approval Authority Limit Matrix*):
+   - **Collector / Staff**: Limit s.d Rp 10 Juta (Rekomendasi inisial)
+   - **Branch Manager**: Limit s.d Rp 50 Juta (Persetujuan tingkat cabang)
+   - **AR Head / Head of Recovery**: Limit s.d Rp 150 Juta (Persetujuan tingkat wilayah)
+   - **Board of Directors / Komite Remedial Wilayah**: Limit > Rp 150 Juta atau diskon pokok > 30%
+5. **Stage 5 - SETTLEMENT PAYMENT TRACKING**: Pemantauan real-time status setoran debitur per termin (*PAID* vs *PENDING* vs *OVERDUE*), integrasi notifikasi pengingat H-3 sebelum jatuh tempo termin, dan pencatatan nomor kuitansi resmi pelunasan.
+6. **Stage 6 - SETTLEMENT CLOSURE & MATCH-OFF**: Rekonsiliasi akuntansi akhir, *match-off* pembukuan baki debet pada *Core Banking System*, penghapusan status tunggakan ke `STAGE_CLOSED` / `PAID_OFF`, penerbitan Surat Keterangan Lunas (SKL), dan pengembalian dokumen agunan (SHM/BPKB).
+
+---
+
+### 18.6 Fitur Pembeda Enterprise (Value Differentiators)
+Fitur tata kelola strategis pengawasan tim penagihan internal dan agensi eksternal:
+
+1. **Agency & Agent Onboarding (Alih Daya Penagihan)**:
+   - Pendaftaran dan standarisasi agensi penagihan pihak ketiga (*External Collection Agencies*).
+   - Pencatatan nomor kontrak kerja sama, masa berlaku izin operasional (*license expiry tracking*), jumlah tenaga kolektor aktif, tarif komisi sukses (*commission rate*), dan pemantauan performa rasio pemulihan (*recovery rate %*).
+2. **Supervisory Review & Escalation**:
+   - Peringatan otomatis bagi supervisor jika terdapat akun dengan DPD tinggi tanpa aktivitas penagihan melebihi SLA (*Action SLA Breached*).
+   - Pengalihan antrean (*re-assignment*) instan secara massal (*bulk transfer*) antar kolektor.
+3. **Authority Delegation (Out of Office / OOO Enablement)**:
+   - Pendelegasian sementara hak persetujuan (*approval authority*) dari pejabat berwenang (misal: AR Head) kepada pejabat pelaksana tugas (misal: Senior Remedial Officer) saat cuti atau dinas luar kota.
+   - Dilengkapi batas tanggal mulai & berakhir serta plafon limit wewenang maksimal (misal: limit s.d Rp 100 Juta).
+4. **Round-Robin Allocation & Capacity Planning**:
+   - Algoritma pembagian antrean penagihan secara dinamis dan seimbang (*Balanced Round-Robin Distribution*).
+   - Pemantauan utilisasi kapasitas penagihan per petugas (standar optimal: 25 akun aktif per kolektor), dengan indikator status kesehatan beban: **OPTIMAL** (<70%), **NEAR CAPACITY** (70-90%), dan **OVERLOADED** (>90%).
+5. **Frontend Easy Rule Creation (No-Code Rule Engine)**:
+   - Konfigurasi parameter strategi penagihan secara visual tanpa memerlukan penulisan ulang kode program sumber (*source code*).
+
+---
+
+### 18.7 mCollect - Workbench Penagihan Lapangan Digital
+Modul operasional *mobile-first* terpadu bagi petugas kolektor lapangan (*Field Collector* / *Field Recovery Officer*):
+
+1. **Field Accounts Management**: Tampilan antrean kunjungan harian yang dioptimalkan untuk perangkat bergerak (*mobile/tablet*), dilengkapi informasi kontak debitur, riwayat DPD, dan rincian agunan.
+2. **Pencatatan Pembayaran Lapangan (Payment Recording)**:
+   - Pencatatan penerimaan pembayaran tunai (*CASH*), transfer *Virtual Account*, atau scan *QRIS*.
+   - Perekaman koordinat GPS (*Geotagging*) dan cap waktu seketika saat uang diterima untuk mencegah *fraud*.
+3. **Penerbitan Bukti Setor Digital Resmi (Payment Information Slip / PIS)**:
+   - Penerbitan kuitansi digital elektronik (PIS) berstandar perbankan lengkap dengan nomor kuitansi unik berurutan, rincian pembayaran, kode validasi QR, dan nama kolektor.
+   - Pengiriman otomatis bukti bayar PIS ke nomor WhatsApp nasabah seketika (*Instant WhatsApp Receipt*).
+4. **Permintaan Tautan Bayar Mandiri (Request Payment Link - QRIS & VA)**:
+   - Debitur yang tidak memegang uang tunai dapat meminta dibuatkan tautan bayar mandiri.
+   - Sistem men-*generate* kode QRIS dinamis atau nomor Virtual Account instan 24 jam dan langsung mengirimkan pesan instruksi bayar ke WhatsApp debitur.
+5. **Simulator Pelunasan Dipercepat (Foreclosure / Early Payoff Calculator)**:
+   - Menjawab pertanyaan debitur: *"Berapa total yang harus saya bayar jika melunasi kredit hari ini?"*.
+   - Menghitung secara otomatis:
+     - Sisa Pokok Pinjaman (*Outstanding Principal*)
+     - Bunga Berjalan Belum Jatuh Tempo (*Unbilled Interest*)
+     - Potongan Keringanan Bunga (*Interest Rebate Rule 78*)
+     - Biaya Penalti Pelunasan Dipercepat (*Early Termination Fee* standar 3.5%)
+     - Denda Keterlambatan Terhutang (*Late Fee Arrears*)
+     - Total Bersih Pelunasan Dipercepat (*Total Net Payoff Amount*)
+   - Mengirimkan lembar penawaran resmi estimasi pelunasan langsung ke WhatsApp debitur dengan masa berlaku 7 hari kalender.
+
+---
+
+### 18.8 GeoTracker - Pemantauan GPS Lapangan Real-Time
+Modul pengawasan posisi dan audit kepatuhan rute petugas lapangan bagi supervisor penagihan:
+
+1. **Peta Interaktif Koridor DKI Jakarta (Interactive Vector Map)**:
+   - Menampilkan posisi *live* seluruh armada kolektor internal dan agensi rekanan di wilayah operasional DKI Jakarta dan sekitarnya.
+   - Penandaan warna status:
+     - 🟢 **VISITING**: Petugas sedang melakukan kunjungan tatap muka di lokasi debitur (*Pulse marker*).
+     - 🔵 **IN TRANSIT**: Petugas sedang dalam perjalanan bergerak menuju lokasi tujuan.
+     - 🟡 **IDLE**: Petugas sedang diam/istirahat.
+     - 🔴 **ANOMALY ALERT**: Terdeteksi indikasi anomali lapangan.
+2. **Rekam Jejak Titik Rute & Animated Route Playback**:
+   - Menampilkan kronologi seluruh titik perjalanan harian petugas (dari *Check-in* awal di kantor cabang, kunjungan 1 PTP, kunjungan 2 pembayaran, hingga negosiasi terkini).
+   - Fitur *Playback* animasi: Mensimulasikan pergerakan petugas menyusuri rute harian secara berurutan dengan indikator kecepatan (*km/jam*), waktu tiba, dan durasi berhenti (*stop duration*).
+3. **Analitik Waktu Produktif (Time Analytics)**:
+   - Menganalisis alokasi waktu petugas: *Today Visits Count*, *Today Spent Minutes* (waktu efektif interaksi), *Transit Time Minutes* (waktu tempuh perjalanan), dan *Today Idle Minutes* (waktu tidak produktif).
+4. **Deteksi Anomali Waktu Jeda & Kecepatan (Anomaly Detection Engine)**:
+   - **Idle Time Outlier**: Memberikan tanda peringatan (*alert*) otomatis kepada supervisor jika durasi *idle* petugas melampaui batas wajar (> 120 menit) tanpa adanya pencatatan aktivitas kunjungan.
+   - **Speed / Location Jump Outlier**: Mendeteksi lompatan titik koordinat yang tidak realistis atau kecepatan melebihi batas wajar (> 120 km/jam) untuk mencegah manipulasi GPS (*anti-GPS spoofing*).
 
 ---
 
@@ -1363,12 +1450,18 @@ Tabel berikut menyajikan ringkasan perbedaan mendasar arsitektur CRMS sebelum da
 
 | Parameter Evaluasi | Sebelum Patching (Sistem Eksisting) | Sesudah Patching (Enterprise CRMS Engine) |
 |:---|:---|:---|
-| **Cakupan Lifecycle Penagihan** | Hanya DPD 1 s.d DPD 180 (Penagihan harian desk & field collection). | Menyeluruh dari **DPD 0 (Pre-Delinquency)** hingga litigasi hukum, lelang KPKNL, dan settlement. |
+| **Cakupan Lifecycle Penagihan** | Hanya DPD 1 s.d DPD 180 (Penagihan harian desk & field collection sederhana). | Menyeluruh dari **DPD 0 (Pre-Delinquency)** hingga litigasi hukum, lelang KPKNL, settlement 6 tahapan, dan match-off penutupan rekening. |
+| **Siklus Settlement & Diskon** | Memo diskon manual ad-hoc tanpa pembagian tahapan dan tanpa jadwal cicilan bertahap. | **6-Stage Settlement Lifecycle**: Inisiasi, penjadwalan multi-tranches (1-6 termin), rencana bayar, approval matrix, payment tracking, & closure match-off. |
 | **Pencegahan DPD 0 (Pre-Delinquency)** | Tidak ada pengawasan sebelum jatuh tempo. Akun baru ditangani saat DPD 1. | **Aktif Terintegrasi**: Pengecekan saldo CASA, kalender Tukin/Payroll ASN, dan alert FPD (Early Warning H-3 s.d H-0). |
 | **Penanganan Multi-Fasilitas** | Terfragmentasi per nomor kontrak pinjaman. Tidak ada konsolidasi eksposur. | **Unified Customer 360° & Case Stamping**: Combo 1 Properti (KPR+KPA), Combo 2 (KTA+CC), single queue cross-facility. |
 | **Alur Hukum (Legal Recourse)** | Dokumen hukum manual di luar sistem. Tidak terpantau tahapan persidangan. | **6-Stage Legal Recourse Workflow**: Somasi, alokasi lawyer, audit berkas APHT, jadwal sidang PN, hingga putusan Inkrah. |
 | **Eksekusi Agunan & Lelang** | Penarikan aset sporadis tanpa standar pencatatan nilai pasar dan lelang. | **8-Stage Repossession & Auction Workflow**: Penandaan, stockyard tracking, appraisal KJPP, open bidding KPKNL, risalah lelang. |
-| **Program Keringanan / Diskon** | Negosiasi ad-hoc via memo manual cabang tanpa aturan pembagian jelas. | **3 Structured Settlement Types**: Net Settlement, Charge-Wise Waive, dan Auto Charge Allocation Engine. |
+| **Workbench Lapangan (mCollect)** | Kolektor membawa lembar tagihan fisik (*hardcopy*) dan kuitansi manual kertas. | **mCollect Digital Workbench**: Perekaman bayar lapangan instan, penerbitan kuitansi resmi digital (PIS), dan tautan bayar mandiri QRIS/VA ke WA debitur. |
+| **Simulasi Pelunasan Dipercepat** | Debitur harus datang ke kantor cabang dan menunggu perhitungan manual petugas CS. | **Foreclosure Simulator Instan**: Hitung sisa pokok, rebate bunga Rule 78, penalti, denda, dan kirim surat penawaran pelunasan langsung ke WhatsApp. |
+| **Pengawasan GPS Kolektor (GeoTracker)** | Posisi kolektor tidak terpantau secara real-time. Tidak ada riwayat rute harian. | **GeoTracker Live GPS**: Peta interaktif DKI Jakarta, pemantauan status real-time, animated route playback, dan deteksi anomali waktu idle (>120 mnt). |
+| **Manajemen Agensi Eksternal** | Penugasan agensi dilakukan melalui email/surat manual tanpa integrasi sistem. | **Agency & Agent Onboarding**: Monitoring kontrak, izin, jumlah kolektor, recovery rate, dan tarif komisi sukses. |
+| **Delegasi Wewenang (Out of Office)** | Pengajuan persetujuan macet saat pejabat komite cuti atau dinas luar kota. | **Authority Delegation (OOO)**: Pelimpahan hak persetujuan kompromi sementara dengan limit plafon dan batas waktu terkonfigurasi. |
+| **Alokasi Beban Kerja Tim** | Pembagian akun tidak merata, berpotensi overload pada kolektor tertentu. | **Balanced Round-Robin & Capacity Planning**: Visualisasi utilitas kapasitas per kolektor (optimal 25 akun) dengan status optimal vs overloaded. |
 | **Pelacakan Nasabah (Skip Tracing)** | Informasi debitur hilang kontak hanya di catatan kunjungan kolektor. | **Dedicated Skip Tracing Workflow**: Pelacak assigned, integrasi Dukcapil, mutasi CASA, dan verifikasi geo-tagging. |
 | **Skrip & Personalisasi Komunikasi** | Template penagihan seragam tanpa mempertimbangkan profil risiko. | **Dynamic Persona Guidance Script**: Skrip dinamis adaptif profil risiko (Rendah/Sedang/Tinggi) & WhatsApp API gateway. |
 | **Efisiensi Biaya Operasional** | Biaya lapangan tinggi akibat kunjungan fisik pada debitur berkategori ringan. | **Cost Efficiency Optimizer**: Hemat biaya hingga 95% dengan memprioritaskan kanal digital terarah pada DPD 0-14. |

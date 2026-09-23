@@ -55,10 +55,36 @@ export const getRepoCases = (params) => api.get('/repo/cases', { params });
 export const updateRepoStage = (id, data) => api.put(`/repo/cases/${id}/stage`, data);
 
 export const getSettlementProposals = (params) => api.get('/settlement/proposals', { params });
+export const createSettlementProposal = (data) => api.post('/settlement/proposals', data);
+export const updateSettlementStage = (id, data) => api.put(`/settlement/proposals/${id}/stage`, data);
+export const saveSettlementTranches = (id, data) => api.post(`/settlement/proposals/${id}/tranches`, data);
+export const paySettlementTranche = (id, data) => api.post(`/settlement/tranches/${id}/pay`, data);
+export const recommendSettlementProposal = (id, data) => api.post(`/settlement/proposals/${id}/recommend`, data);
 export const processSettlementProposal = (id, data) => api.put(`/settlement/proposals/${id}/action`, data);
 
 export const getSkipTracingCases = (params) => api.get('/skip-tracing/cases', { params });
 export const updateSkipTracingFeedback = (id, data) => api.put(`/skip-tracing/cases/${id}/feedback`, data);
+
+// GeoTracker (GPS Field Monitoring & Route Playback)
+export const getLiveCollectors = (params) => api.get('/geotracker/collectors', { params });
+export const getCollectorRouteHistory = (username) => api.get(`/geotracker/collectors/${username}/route`);
+export const pingLocation = (data) => api.post('/geotracker/ping', data);
+
+// mCollect (Mobile Field Collections Workbench & Digital Receipts)
+export const getMCollectAccounts = (params) => api.get('/mcollect/accounts', { params });
+export const recordMCollectPayment = (data) => api.post('/mcollect/record-payment', data);
+export const requestPaymentLink = (data) => api.post('/mcollect/request-payment-link', data);
+export const getMCollectReceipts = (params) => api.get('/mcollect/receipts', { params });
+export const sendReceiptWhatsApp = (id) => api.post(`/mcollect/receipts/${id}/send-whatsapp`);
+export const simulateForeclosure = (data) => api.post('/mcollect/foreclosure-simulate', data);
+
+// Supervisory Control, External Agency & Authority Delegation (OOO)
+export const getAgencies = () => api.get('/agencies');
+export const createAgency = (data) => api.post('/agencies', data);
+export const getDelegations = () => api.get('/delegations');
+export const createDelegation = (data) => api.post('/delegations', data);
+export const cancelDelegation = (id) => api.delete(`/delegations/${id}`);
+export const getCapacityPlanning = () => api.get('/capacity-planning');
 
 export default api;
 

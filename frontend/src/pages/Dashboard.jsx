@@ -7,6 +7,9 @@ import PreDelinquencyView from '../components/PreDelinquencyView';
 import LegalWorkflowView from '../components/LegalWorkflowView';
 import RepoWorkflowView from '../components/RepoWorkflowView';
 import SettlementWorkflowView from '../components/SettlementWorkflowView';
+import GeoTrackerView from '../components/GeoTrackerView';
+import MCollectWorkbench from '../components/MCollectWorkbench';
+import SupervisoryControlView from '../components/SupervisoryControlView';
 import { 
   getDashboardSummary, 
   getOverdueAccounts, 
@@ -33,7 +36,11 @@ import {
   Warehouse,
   Layers,
   BadgePercent,
-  ShieldAlert
+  ShieldAlert,
+  Radio,
+  Smartphone,
+  MapPin,
+  UserCheck
 } from 'lucide-react';
 
 export default function Dashboard({ companyInfo }) {
@@ -214,7 +221,52 @@ export default function Dashboard({ companyInfo }) {
           <BadgePercent className="w-4 h-4" />
           <span>Settlement & Diskon Pelunasan</span>
           <span className={`px-1.5 py-0.2 rounded text-[10px] ${activeModule === 'settlement' ? 'bg-teal-500 text-white' : 'bg-teal-100 text-teal-700'}`}>
-            3 Skema
+            6-Stage & Tranches
+          </span>
+        </button>
+
+        <button
+          onClick={() => setActiveModule('geotracker')}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition ${
+            activeModule === 'geotracker'
+              ? 'bg-indigo-600 text-white shadow-md'
+              : 'text-slate-600 hover:text-indigo-600 hover:bg-indigo-50'
+          }`}
+        >
+          <Radio className="w-4 h-4 animate-pulse" />
+          <span>GeoTracker (GPS Monitoring)</span>
+          <span className={`px-1.5 py-0.2 rounded text-[10px] ${activeModule === 'geotracker' ? 'bg-indigo-500 text-white' : 'bg-emerald-100 text-emerald-700 font-bold'}`}>
+            Live GPS
+          </span>
+        </button>
+
+        <button
+          onClick={() => setActiveModule('mcollect')}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition ${
+            activeModule === 'mcollect'
+              ? 'bg-emerald-600 text-white shadow-md'
+              : 'text-slate-600 hover:text-emerald-600 hover:bg-emerald-50'
+          }`}
+        >
+          <Smartphone className="w-4 h-4" />
+          <span>mCollect Field Workbench</span>
+          <span className={`px-1.5 py-0.2 rounded text-[10px] ${activeModule === 'mcollect' ? 'bg-emerald-500 text-white' : 'bg-emerald-100 text-emerald-700 font-bold'}`}>
+            PIS Digital
+          </span>
+        </button>
+
+        <button
+          onClick={() => setActiveModule('supervisory')}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition ${
+            activeModule === 'supervisory'
+              ? 'bg-purple-600 text-white shadow-md'
+              : 'text-slate-600 hover:text-purple-600 hover:bg-purple-50'
+          }`}
+        >
+          <UserCheck className="w-4 h-4" />
+          <span>Supervisory & Agency</span>
+          <span className={`px-1.5 py-0.2 rounded text-[10px] ${activeModule === 'supervisory' ? 'bg-purple-500 text-white' : 'bg-purple-100 text-purple-700 font-bold'}`}>
+            OOO & Capacity
           </span>
         </button>
       </div>
@@ -571,11 +623,26 @@ export default function Dashboard({ companyInfo }) {
         />
       )}
 
-      {/* Module 5: Settlement & Diskon Pelunasan (3 Types) */}
+      {/* Module 5: Settlement & Diskon Pelunasan (6-Stage Lifecycle) */}
       {activeModule === 'settlement' && (
         <SettlementWorkflowView 
           onOpenCustomer360={(custId) => setSelectedCustomerIdFor360(custId)} 
         />
+      )}
+
+      {/* Module 6: GeoTracker (GPS Field Monitoring & Route Playback) */}
+      {activeModule === 'geotracker' && (
+        <GeoTrackerView />
+      )}
+
+      {/* Module 7: mCollect (Field Workbench, PIS Receipts, WA Links & Payoff Simulator) */}
+      {activeModule === 'mcollect' && (
+        <MCollectWorkbench />
+      )}
+
+      {/* Module 8: Supervisory Control (Agency Onboarding, OOO Delegation & Capacity Planning) */}
+      {activeModule === 'supervisory' && (
+        <SupervisoryControlView />
       )}
 
       {/* Modal Aktivitas */}

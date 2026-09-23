@@ -26,27 +26,27 @@ func SeedInitialData(db *gorm.DB) {
 
 	var seedVer models.GlobalParameter
 	needReseed := false
-	if err := db.Where("param_key = ?", "BANKING_SEED_VERSION").First(&seedVer).Error; err != nil || seedVer.ParamValue != "2026.09.23_v5_enterprise_architecture" {
+	if err := db.Where("param_key = ?", "BANKING_SEED_VERSION").First(&seedVer).Error; err != nil || seedVer.ParamValue != "2026.09.23_v6_geotracker_mcollect" {
 		needReseed = true
 	}
 
 	if toyotaCount > 0 || needReseed {
-		log.Println("Pembaruan portofolio perbankan: Menghapus dan feeding ulang data perbankan multi-fasilitas & arsitektur enterprise lengkap...")
-		db.Exec("TRUNCATE TABLE collection_activities, overdue_accounts, decision_rules, agreements, customers, pre_delinquency_accounts, legal_cases, repossession_cases, settlement_proposals, skip_tracing_cases RESTART IDENTITY CASCADE")
+		log.Println("Pembaruan portofolio perbankan: Menghapus dan feeding ulang data perbankan multi-fasilitas, GeoTracker, mCollect, 6-stage Settlement & arsitektur enterprise lengkap...")
+		db.Exec("TRUNCATE TABLE collection_activities, overdue_accounts, decision_rules, agreements, customers, pre_delinquency_accounts, legal_cases, repossession_cases, settlement_proposals, skip_tracing_cases, settlement_tranches, collector_geo_locations, collector_route_points, payment_receipt_slips, collection_agencies, authority_delegations RESTART IDENTITY CASCADE")
 		count = 0
 		if err := db.Where("param_key = ?", "BANKING_SEED_VERSION").First(&seedVer).Error; err == nil {
-			seedVer.ParamValue = "2026.09.23_v5_enterprise_architecture"
+			seedVer.ParamValue = "2026.09.23_v6_geotracker_mcollect"
 			db.Save(&seedVer)
 		} else {
 			db.Create(&models.GlobalParameter{
 				ParamKey:    "BANKING_SEED_VERSION",
-				ParamValue:  "2026.09.23_v5_enterprise_architecture",
-				Description: "Versi Seeder Portofolio Perbankan Multi-Fasilitas Enterprise",
+				ParamValue:  "2026.09.23_v6_geotracker_mcollect",
+				Description: "Versi Seeder Portofolio Perbankan Multi-Fasilitas Enterprise, GeoTracker & mCollect",
 				CreatedUser: "SYSTEM",
 			})
 		}
 	} else if count > 0 {
-		log.Println("Database already seeded with banking portfolio data (v4 multi-facility). Skipping initial seed.")
+		log.Println("Database already seeded with banking portfolio data (v6 geotracker & mcollect). Skipping initial seed.")
 		return
 	}
 
@@ -630,6 +630,9 @@ func SeedInitialData(db *gorm.DB) {
 	SeedRepossessionCases(db)
 	SeedSettlementProposals(db)
 	SeedSkipTracingCases(db)
+	SeedGeoTrackerData(db)
+	SeedMCollectData(db)
+	SeedAgenciesAndDelegations(db)
 }
 
 func SeedUsers(db *gorm.DB) {
@@ -999,31 +1002,39 @@ func SeedSettlementProposals(db *gorm.DB) {
 			ProposalNo:          "SETTLE-2026-001",
 			AgreementNo:         agrs[0].AgreementNo,
 			CustomerID:          agrs[0].CustomerID,
+			SettlementStage:     "STAGE_PAYMENT_TRACKING",
 			SettlementType:      "NET_SETTLEMENT",
 			OriginalOverdue:     145000000,
 			WaivedPenalty:       18000000,
 			WaivedInterest:      22000000,
 			NetSettlementAmount: 105000000,
-			ApprovalStatus:      "PENDING_APPROVAL",
-			ApprovedBy:          "-",
+			ApprovalStatus:      "APPROVED_BY_COMMITTEE",
+			RecommendationTier:  "AR_HEAD",
+			RecommendedTo:       "Head of Consumer Recovery",
+			ApprovedBy:          "Head of Consumer Recovery",
 			PaymentDueDate:      &due1,
-			Notes:               "Pengajuan Program Keringanan Net Settlement: Diskon denda keterlambatan 100% dan diskon bunga tunggakan 65%. Nasabah sanggup bayar net Rp 105 Juta tunai.",
-			CreatedAt:           now.AddDate(0, 0, -3),
+			TotalTranches:       3,
+			Notes:               "Pengajuan Program Keringanan Net Settlement 3 Termin: Diskon denda keterlambatan 100% dan diskon bunga tunggakan 65%. Termin 1 telah lunas, termin 2 & 3 dalam pemantauan.",
+			CreatedAt:           now.AddDate(0, 0, -12),
 			UpdatedAt:           now,
 		},
 		{
 			ProposalNo:          "SETTLE-2026-002",
 			AgreementNo:         agrs[1%len(agrs)].AgreementNo,
 			CustomerID:          agrs[1%len(agrs)].CustomerID,
+			SettlementStage:     "STAGE_CLOSURE",
 			SettlementType:      "CHARGE_WISE_SETTLEMENT",
 			OriginalOverdue:     62000000,
 			WaivedPenalty:       12000000,
 			WaivedInterest:      5000000,
 			NetSettlementAmount: 45000000,
-			ApprovalStatus:      "APPROVED_BY_COMMITTEE",
+			ApprovalStatus:      "PAID_OFF",
+			RecommendationTier:  "BRANCH_MANAGER",
+			RecommendedTo:       "Branch Manager Sudirman",
 			ApprovedBy:          "Bambang Wijaya (AR Head & Komite Remedial)",
 			PaymentDueDate:      &due2,
-			Notes:               "Charge-Wise: Penghapusan biaya denda 100% (Rp 12 Juta), bunga diskon Rp 5 Juta. Pokok pinjaman dibayar penuh Rp 45 Juta. Disetujui Komite Remedial Cabang.",
+			TotalTranches:       1,
+			Notes:               "Charge-Wise: Penghapusan biaya denda 100% (Rp 12 Juta), bunga diskon Rp 5 Juta. Pokok pinjaman dibayar penuh Rp 45 Juta lunas dalam 1 kali bayar. Rekening ditutup.",
 			CreatedAt:           now.AddDate(0, 0, -8),
 			UpdatedAt:           now,
 		},
@@ -1031,30 +1042,38 @@ func SeedSettlementProposals(db *gorm.DB) {
 			ProposalNo:          "SETTLE-2026-003",
 			AgreementNo:         agrs[2%len(agrs)].AgreementNo,
 			CustomerID:          agrs[2%len(agrs)].CustomerID,
+			SettlementStage:     "STAGE_RECOMMEND_APPROVAL",
 			SettlementType:      "AUTO_CHARGE_ALLOCATION",
 			OriginalOverdue:     85000000,
 			WaivedPenalty:       0,
 			WaivedInterest:      0,
 			NetSettlementAmount: 85000000,
-			ApprovalStatus:      "PAID_OFF",
-			ApprovedBy:          "Sistem Otomatis Settlement Engine",
+			ApprovalStatus:      "RECOMMENDED",
+			RecommendationTier:  "BRANCH_MANAGER",
+			RecommendedTo:       "Branch Manager Thamrin",
+			ApprovedBy:          "-",
 			PaymentDueDate:      &due3,
-			Notes:               "Auto-Charge Allocation: Debitur menyetor pembayaran lump-sum Rp 85 Juta. Alokasi otomatis mesin: Pokok Rp 72 Jt -> Bunga Rp 9.5 Jt -> Denda/Biaya Rp 3.5 Jt. Rekening lunas.",
-			CreatedAt:           now.AddDate(0, 0, -14),
+			TotalTranches:       2,
+			Notes:               "Auto-Charge Allocation: Menunggu persetujuan komite untuk pemotongan bertahap otomatis rekening CASA debitur.",
+			CreatedAt:           now.AddDate(0, 0, -4),
 			UpdatedAt:           now,
 		},
 		{
 			ProposalNo:          "SETTLE-2026-004",
 			AgreementNo:         agrs[3%len(agrs)].AgreementNo,
 			CustomerID:          agrs[3%len(agrs)].CustomerID,
+			SettlementStage:     "STAGE_RECOMMEND_APPROVAL",
 			SettlementType:      "NET_SETTLEMENT",
 			OriginalOverdue:     210000000,
 			WaivedPenalty:       35000000,
 			WaivedInterest:      45000000,
 			NetSettlementAmount: 130000000,
 			ApprovalStatus:      "REJECTED",
+			RecommendationTier:  "DIRECTOR",
+			RecommendedTo:       "Direktur Konsumer",
 			ApprovedBy:          "Komite Kredit Wilayah",
 			PaymentDueDate:      nil,
+			TotalTranches:       1,
 			Notes:               "Proposal ditolak karena potongan melebihi batas kewenangan cabang (>40%) dan debitur memiliki aset agunan likuid bernilai tinggi.",
 			CreatedAt:           now.AddDate(0, 0, -21),
 			UpdatedAt:           now,
@@ -1063,15 +1082,19 @@ func SeedSettlementProposals(db *gorm.DB) {
 			ProposalNo:          "SETTLE-2026-005",
 			AgreementNo:         agrs[4%len(agrs)].AgreementNo,
 			CustomerID:          agrs[4%len(agrs)].CustomerID,
+			SettlementStage:     "STAGE_SCHEDULE",
 			SettlementType:      "CHARGE_WISE_SETTLEMENT",
 			OriginalOverdue:     38000000,
 			WaivedPenalty:       8000000,
 			WaivedInterest:      0,
 			NetSettlementAmount: 30000000,
 			ApprovalStatus:      "PENDING_APPROVAL",
+			RecommendationTier:  "COLLECTOR",
+			RecommendedTo:       "Field Collector Team Lead",
 			ApprovedBy:          "-",
 			PaymentDueDate:      &due1,
-			Notes:               "Keringanan biaya penagihan dan denda (Waive Penalty Rp 8 Jt), pokok dan bunga dibayarkan penuh dalam 2 termin.",
+			TotalTranches:       2,
+			Notes:               "Keringanan biaya penagihan dan denda (Waive Penalty Rp 8 Jt), pokok dan bunga dibayarkan penuh dalam 2 termin bertahap.",
 			CreatedAt:           now.AddDate(0, 0, -2),
 			UpdatedAt:           now,
 		},
@@ -1079,8 +1102,115 @@ func SeedSettlementProposals(db *gorm.DB) {
 
 	for _, p := range proposals {
 		db.Create(&p)
+
+		// Seed termin tranches untuk masing-masing proposal
+		if p.ProposalNo == "SETTLE-2026-001" {
+			paidTime := now.AddDate(0, 0, -10)
+			db.Create(&models.SettlementTranche{
+				SettlementProposalID: p.ID,
+				TrancheNo:           1,
+				DueDate:             now.AddDate(0, 0, -10),
+				Amount:              35000000,
+				PaymentMethod:       "ONLINE_VA",
+				PaidAmount:          35000000,
+				PaidAt:              &paidTime,
+				PaymentStatus:       "PAID",
+				ReceiptNo:           "STL-RCP-20260910-01",
+				CreatedAt:           now.AddDate(0, 0, -12),
+				UpdatedAt:           now,
+			})
+			db.Create(&models.SettlementTranche{
+				SettlementProposalID: p.ID,
+				TrancheNo:           2,
+				DueDate:             now.AddDate(0, 0, 4),
+				Amount:              35000000,
+				PaymentMethod:       "ONLINE_VA",
+				PaidAmount:          0,
+				PaymentStatus:       "PENDING",
+				ReceiptNo:           "",
+				CreatedAt:           now.AddDate(0, 0, -12),
+				UpdatedAt:           now,
+			})
+			db.Create(&models.SettlementTranche{
+				SettlementProposalID: p.ID,
+				TrancheNo:           3,
+				DueDate:             now.AddDate(0, 0, 18),
+				Amount:              35000000,
+				PaymentMethod:       "ONLINE_VA",
+				PaidAmount:          0,
+				PaymentStatus:       "PENDING",
+				ReceiptNo:           "",
+				CreatedAt:           now.AddDate(0, 0, -12),
+				UpdatedAt:           now,
+			})
+		} else if p.ProposalNo == "SETTLE-2026-002" {
+			paidTime := now.AddDate(0, 0, -5)
+			db.Create(&models.SettlementTranche{
+				SettlementProposalID: p.ID,
+				TrancheNo:           1,
+				DueDate:             now.AddDate(0, 0, -5),
+				Amount:              45000000,
+				PaymentMethod:       "CASH",
+				PaidAmount:          45000000,
+				PaidAt:              &paidTime,
+				PaymentStatus:       "PAID",
+				ReceiptNo:           "STL-RCP-20260914-02",
+				CreatedAt:           now.AddDate(0, 0, -8),
+				UpdatedAt:           now,
+			})
+		} else if p.ProposalNo == "SETTLE-2026-003" {
+			db.Create(&models.SettlementTranche{
+				SettlementProposalID: p.ID,
+				TrancheNo:           1,
+				DueDate:             now.AddDate(0, 0, 7),
+				Amount:              42500000,
+				PaymentMethod:       "ONLINE_VA",
+				PaidAmount:          0,
+				PaymentStatus:       "PENDING",
+				ReceiptNo:           "",
+				CreatedAt:           now.AddDate(0, 0, -4),
+				UpdatedAt:           now,
+			})
+			db.Create(&models.SettlementTranche{
+				SettlementProposalID: p.ID,
+				TrancheNo:           2,
+				DueDate:             now.AddDate(0, 0, 21),
+				Amount:              42500000,
+				PaymentMethod:       "ONLINE_VA",
+				PaidAmount:          0,
+				PaymentStatus:       "PENDING",
+				ReceiptNo:           "",
+				CreatedAt:           now.AddDate(0, 0, -4),
+				UpdatedAt:           now,
+			})
+		} else if p.ProposalNo == "SETTLE-2026-005" {
+			db.Create(&models.SettlementTranche{
+				SettlementProposalID: p.ID,
+				TrancheNo:           1,
+				DueDate:             now.AddDate(0, 0, 10),
+				Amount:              15000000,
+				PaymentMethod:       "QRIS",
+				PaidAmount:          0,
+				PaymentStatus:       "PENDING",
+				ReceiptNo:           "",
+				CreatedAt:           now.AddDate(0, 0, -2),
+				UpdatedAt:           now,
+			})
+			db.Create(&models.SettlementTranche{
+				SettlementProposalID: p.ID,
+				TrancheNo:           2,
+				DueDate:             now.AddDate(0, 0, 24),
+				Amount:              15000000,
+				PaymentMethod:       "QRIS",
+				PaidAmount:          0,
+				PaymentStatus:       "PENDING",
+				ReceiptNo:           "",
+				CreatedAt:           now.AddDate(0, 0, -2),
+				UpdatedAt:           now,
+			})
+		}
 	}
-	log.Println("Settlement proposals (3 settlement types) successfully seeded.")
+	log.Println("Settlement proposals with 6-stage lifecycle & multi-tranches successfully seeded.")
 }
 
 func SeedSkipTracingCases(db *gorm.DB) {
@@ -1161,4 +1291,327 @@ func SeedSkipTracingCases(db *gorm.DB) {
 		db.Create(&sc)
 	}
 	log.Println("Skip Tracing cases successfully seeded.")
+}
+
+func SeedGeoTrackerData(db *gorm.DB) {
+	var count int64
+	db.Model(&models.CollectorGeoLocation{}).Count(&count)
+	if count > 0 {
+		return
+	}
+
+	now := time.Now()
+
+	collectors := []models.CollectorGeoLocation{
+		{
+			CollectorUsername:   "field_rso_1",
+			CollectorName:       "Budi Santoso (RSO - Jakarta Pusat)",
+			AgencyName:          "Internal Field Force - Jakarta Area",
+			CurrentLat:          -6.195042,
+			CurrentLng:          106.823145,
+			AccuracyMeters:      6.5,
+			Status:              "VISITING",
+			CurrentLocationName: "Menara Thamrin Lt. 12, Jl. MH Thamrin No. 9, Jakarta Pusat",
+			LastHeartbeat:       now.Add(-3 * time.Minute),
+			TodayVisitsCount:    6,
+			TodayIdleMinutes:    18,
+			TodaySpentMinutes:   45,
+			TransitTimeMinutes:  52,
+			AnomalyFlag:         false,
+			AnomalyReason:       "",
+			BatteryPct:          78,
+			CreatedAt:           now.AddDate(0, 0, -1),
+			UpdatedAt:           now,
+		},
+		{
+			CollectorUsername:   "field_fro_1",
+			CollectorName:       "Rian Pratama (FRO - Jakarta Selatan)",
+			AgencyName:          "Internal Field Force - Jakarta Area",
+			CurrentLat:          -6.225381,
+			CurrentLng:          106.800185,
+			AccuracyMeters:      8.2,
+			Status:              "IN_TRANSIT",
+			CurrentLocationName: "Jl. Senopati Menuju Sudirman Kav. 52, SCBD",
+			LastHeartbeat:       now.Add(-1 * time.Minute),
+			TodayVisitsCount:    5,
+			TodayIdleMinutes:    25,
+			TodaySpentMinutes:   30,
+			TransitTimeMinutes:  40,
+			AnomalyFlag:         false,
+			AnomalyReason:       "",
+			BatteryPct:          64,
+			CreatedAt:           now.AddDate(0, 0, -1),
+			UpdatedAt:           now,
+		},
+		{
+			CollectorUsername:   "agency_col_1",
+			CollectorName:       "Hendra Wijaya (Collector Mitra Prima)",
+			AgencyName:          "PT Mitra Prima Solusindo",
+			CurrentLat:          -6.168341,
+			CurrentLng:          106.786520,
+			AccuracyMeters:      12.0,
+			Status:              "IDLE",
+			CurrentLocationName: "Rest Area Jl. Kyai Tapa, Grogol, Jakarta Barat",
+			LastHeartbeat:       now.Add(-8 * time.Minute),
+			TodayVisitsCount:    3,
+			TodayIdleMinutes:    135,
+			TodaySpentMinutes:   20,
+			TransitTimeMinutes:  35,
+			AnomalyFlag:         true,
+			AnomalyReason:       "Durasi IDLE melampaui batas wajar (>120 menit) tanpa aktivitas penagihan di lapangan",
+			BatteryPct:          89,
+			CreatedAt:           now.AddDate(0, 0, -1),
+			UpdatedAt:           now,
+		},
+		{
+			CollectorUsername:   "field_fro_2",
+			CollectorName:       "Doni Setiawan (FRO - Jakarta Timur)",
+			AgencyName:          "Internal Field Force - Jakarta Area",
+			CurrentLat:          -6.215284,
+			CurrentLng:          106.870321,
+			AccuracyMeters:      5.0,
+			Status:              "VISITING",
+			CurrentLocationName: "Ruko Matraman Raya No. 42, Jatinegara, Jakarta Timur",
+			LastHeartbeat:       now.Add(-2 * time.Minute),
+			TodayVisitsCount:    8,
+			TodayIdleMinutes:    12,
+			TodaySpentMinutes:   55,
+			TransitTimeMinutes:  60,
+			AnomalyFlag:         false,
+			AnomalyReason:       "",
+			BatteryPct:          91,
+			CreatedAt:           now.AddDate(0, 0, -1),
+			UpdatedAt:           now,
+		},
+	}
+
+	for _, c := range collectors {
+		db.Create(&c)
+	}
+
+	// Seed titik rute perjalanan harian (Location History & Animated Route) untuk "field_rso_1"
+	routePoints := []models.CollectorRoutePoint{
+		{
+			CollectorUsername: "field_rso_1",
+			SequenceOrder:     1,
+			Lat:               -6.181820,
+			Lng:               106.828450,
+			LocationName:      "Check-in Kantor Cabang Utama Thamrin (Start Duty)",
+			ActivityType:      "CHECKIN",
+			AgreementNo:       "",
+			DebtorName:        "",
+			RecordedAt:        now.Add(-4 * time.Hour),
+			DurationMinutes:   15,
+			SpeedKmh:          0,
+			Notes:             "Briefing target penagihan debitur area Menteng & Kebon Sirih",
+		},
+		{
+			CollectorUsername: "field_rso_1",
+			SequenceOrder:     2,
+			Lat:               -6.185200,
+			Lng:               106.823900,
+			LocationName:      "Jl. Sabang No. 18, Menteng (Kunjungan Lapangan 1)",
+			ActivityType:      "PTP",
+			AgreementNo:       "BANK-KPR-2025-108191",
+			DebtorName:        "Dr. Ratna Juwita",
+			RecordedAt:        now.Add(-3 * time.Hour),
+			DurationMinutes:   25,
+			SpeedKmh:          28.5,
+			Notes:             "Bertemu debitur langsung. Janji bayar PTP via m-Banking sebelum pk 17:00",
+		},
+		{
+			CollectorUsername: "field_rso_1",
+			SequenceOrder:     3,
+			Lat:               -6.191240,
+			Lng:               106.822100,
+			LocationName:      "Jl. Sunda No. 5, Kebon Sirih (Kunjungan Lapangan 2)",
+			ActivityType:      "PAYMENT",
+			AgreementNo:       "BANK-KMK-2025-103829",
+			DebtorName:        "Ir. Hendra Gunawan",
+			RecordedAt:        now.Add(-2 * time.Hour),
+			DurationMinutes:   20,
+			SpeedKmh:          32.0,
+			Notes:             "Penerimaan pembayaran tunai angsuran Rp 6.800.000 (Kuitansi digital PIS diterbitkan)",
+		},
+		{
+			CollectorUsername: "field_rso_1",
+			SequenceOrder:     4,
+			Lat:               -6.195042,
+			Lng:               106.823145,
+			LocationName:      "Menara Thamrin Lt. 12, Kebon Sirih (Kunjungan Lapangan 3 - Current)",
+			ActivityType:      "CHECKIN",
+			AgreementNo:       "BANK-KTA-2025-104920",
+			DebtorName:        "Kurnia Pratama",
+			RecordedAt:        now.Add(-30 * time.Minute),
+			DurationMinutes:   18,
+			SpeedKmh:          15.0,
+			Notes:             "Negosiasi penyelesaian tunggakan 45 DPD, debitur minta keringanan denda",
+		},
+	}
+
+	for _, rp := range routePoints {
+		db.Create(&rp)
+	}
+
+	log.Println("GeoTracker collectors and daily route history successfully seeded.")
+}
+
+func SeedMCollectData(db *gorm.DB) {
+	var count int64
+	db.Model(&models.PaymentReceiptSlip{}).Count(&count)
+	if count > 0 {
+		return
+	}
+
+	var agrs []models.Agreement
+	db.Preload("Customer").Limit(5).Find(&agrs)
+	if len(agrs) == 0 {
+		return
+	}
+
+	now := time.Now()
+
+	slips := []models.PaymentReceiptSlip{
+		{
+			ReceiptNo:         "PIS-20260920-0081",
+			AgreementNo:       agrs[0].AgreementNo,
+			CustomerID:        agrs[0].CustomerID,
+			AmountPaid:        6800000,
+			PaymentMethod:     "CASH",
+			TrancheNumber:     1,
+			CollectorUsername: "field_rso_1",
+			CollectorName:     "Budi Santoso (RSO)",
+			ReceiptURL:        "/api/v1/mcollect/receipts/PIS-20260920-0081",
+			WhatsAppSent:      true,
+			GeotagLat:         -6.191240,
+			GeotagLng:         106.822100,
+			Notes:             "Penerimaan tunai di lokasi kantor debitur. Lembar kuitansi PIS digital dan SMS/WA tanda terima telah terkirim.",
+			IssuedAt:          now.Add(-2 * time.Hour),
+		},
+		{
+			ReceiptNo:         "PIS-20260921-0094",
+			AgreementNo:       agrs[1%len(agrs)].AgreementNo,
+			CustomerID:        agrs[1%len(agrs)].CustomerID,
+			AmountPaid:        12500000,
+			PaymentMethod:     "QRIS",
+			TrancheNumber:     1,
+			CollectorUsername: "field_fro_1",
+			CollectorName:     "Rian Pratama (FRO)",
+			ReceiptURL:        "/api/v1/mcollect/receipts/PIS-20260921-0094",
+			WhatsAppSent:      true,
+			GeotagLat:         -6.225381,
+			GeotagLng:         106.800185,
+			Notes:             "Pembayaran via scan QRIS dinamis di aplikasi mCollect saat penagihan lapangan.",
+			IssuedAt:          now.AddDate(0, 0, -1),
+		},
+		{
+			ReceiptNo:         "PIS-20260922-0105",
+			AgreementNo:       agrs[2%len(agrs)].AgreementNo,
+			CustomerID:        agrs[2%len(agrs)].CustomerID,
+			AmountPaid:        4200000,
+			PaymentMethod:     "ONLINE_VA",
+			TrancheNumber:     1,
+			CollectorUsername: "field_fro_2",
+			CollectorName:     "Doni Setiawan (FRO)",
+			ReceiptURL:        "/api/v1/mcollect/receipts/PIS-20260922-0105",
+			WhatsAppSent:      false,
+			GeotagLat:         -6.215284,
+			GeotagLng:         106.870321,
+			Notes:             "Debitur melunasi via Virtual Account bank setelah tautan bayar diterbitkan oleh kolektor.",
+			IssuedAt:          now.AddDate(0, 0, -2),
+		},
+	}
+
+	for _, s := range slips {
+		db.Create(&s)
+	}
+	log.Println("mCollect digital payment receipts (PIS) successfully seeded.")
+}
+
+func SeedAgenciesAndDelegations(db *gorm.DB) {
+	var count int64
+	db.Model(&models.CollectionAgency{}).Count(&count)
+	if count > 0 {
+		return
+	}
+
+	now := time.Now()
+	expiry1 := now.AddDate(1, 6, 0)
+	expiry2 := now.AddDate(1, 0, 0)
+	expiry3 := now.AddDate(0, 10, 0)
+
+	agencies := []models.CollectionAgency{
+		{
+			AgencyCode:            "AGY-MPS-01",
+			AgencyName:            "PT Mitra Prima Solusindo",
+			ContractNo:            "KTR/COLL/2025/088",
+			LicenseExpiry:         &expiry1,
+			ActiveCollectorsCount: 18,
+			AssignedAccountsCount: 45,
+			RecoveryRate:          92.4,
+			CommissionRate:        8.5,
+			ContactPerson:         "Irfan Bachdim (Operations Head)",
+			Phone:                 "021-57901122",
+			Status:                "ACTIVE",
+			CreatedAt:             now.AddDate(0, -6, 0),
+			UpdatedAt:             now,
+		},
+		{
+			AgencyCode:            "AGY-SST-02",
+			AgencyName:            "PT Sentra Solusi Tagih Nusantara",
+			ContractNo:            "KTR/COLL/2025/112",
+			LicenseExpiry:         &expiry2,
+			ActiveCollectorsCount: 24,
+			AssignedAccountsCount: 60,
+			RecoveryRate:          88.1,
+			CommissionRate:        9.0,
+			ContactPerson:         "Rahmat Hidayat (General Manager)",
+			Phone:                 "021-83709944",
+			Status:                "ACTIVE",
+			CreatedAt:             now.AddDate(0, -4, 0),
+			UpdatedAt:             now,
+		},
+		{
+			AgencyCode:            "AGY-GSF-03",
+			AgencyName:            "PT Garda Solutif Finansial",
+			ContractNo:            "KTR/COLL/2026/015",
+			LicenseExpiry:         &expiry3,
+			ActiveCollectorsCount: 12,
+			AssignedAccountsCount: 30,
+			RecoveryRate:          85.0,
+			CommissionRate:        10.0,
+			ContactPerson:         "Denny Sumargo (Agency Director)",
+			Phone:                 "021-29557788",
+			Status:                "ACTIVE",
+			CreatedAt:             now.AddDate(0, -2, 0),
+			UpdatedAt:             now,
+		},
+	}
+
+	for _, a := range agencies {
+		db.Create(&a)
+	}
+
+	// Seed delegasi wewenang (Out of Office Enablement)
+	delegations := []models.AuthorityDelegation{
+		{
+			DelegatorUsername:   "ar_head",
+			DelegatorName:       "Ahmad Fauzi (AR Head Wilayah)",
+			DelegateUsername:    "sro_bambang",
+			DelegateName:        "Bambang Setyadi (Senior Remedial Officer)",
+			StartDate:           now.AddDate(0, 0, -2),
+			EndDate:             now.AddDate(0, 0, 12),
+			ApprovalLimitAmount: 100000000,
+			Reason:              "Cuti Tahunan / Out-of-Office: Pelimpahan hak persetujuan diskon kompromi settlement & jadwal restrukturisasi limit s.d Rp 100 Juta",
+			IsActive:            true,
+			CreatedAt:           now.AddDate(0, 0, -2),
+			UpdatedAt:           now,
+		},
+	}
+
+	for _, d := range delegations {
+		db.Create(&d)
+	}
+
+	log.Println("External collection agencies and authority delegations successfully seeded.")
 }
