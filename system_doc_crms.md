@@ -52,11 +52,16 @@
     - 10.1. Head Office (Digital Automation & Centralized Desk)
     - 10.2. Branch Operational (Field Officers & Collateral Specialists)
     - 10.3. Remedial & Special Asset Management (Litigasi, Lelang KPKNL & Agency)
-11. [Desain Arsitektur Sistem & Aliran Data (Architecture & Data Flow)](#11-desain-arsitektur-sistem--aliran-data-architecture--data-flow)
-    - 11.1. Diagram Aliran Data End-to-End
-    - 11.2. Decision Engine (Scoring Model & Rule Engine)
-    - 11.3. Integrasi Core Banking System (EOD Batch & Near-Real-Time Sync)
-    - 11.4. Gerbang Omnichannel (WA Business API, Smart IVR Robo Call, Desk CRM, Field App)
+11. [Desain Arsitektur Sistem, Komponen & Aliran Data (Enterprise System Architecture)](#11-desain-arsitektur-sistem-komponen--aliran-data-enterprise-system-architecture)
+    - 11.1. Diagram & Model Arsitektur Enterprise 5-Tier (High-Level 5-Tier Architecture Model)
+    - 11.2. Arsitektur Komponen Layanan Modular Backend (Domain Micro-Services Topology)
+    - 11.3. Diagram Aliran Data End-to-End & Siklus Sinkronisasi
+    - 11.4. Decision Engine (Scoring Model & Rule Engine)
+    - 11.5. Gerbang Omnichannel & Arsitektur Pesan Pintar
+    - 11.6. Arsitektur Workbench Lapangan (mCollect) & Sistem Telemetri GeoTracker
+    - 11.7. Arsitektur Settlement 6-Stage & Supervisory Control Engine
+    - 11.8. Arsitektur Keamanan, Kepatuhan UU PDP No. 27/2022 & Audit Trail
+    - 11.9. Arsitektur Jaringan, Topologi Infrastruktur & Deployment (Production Stack)
 12. [Spesifikasi Teknis & Skema Basis Data (Technical Specs & Data Model)](#12-spesifikasi-teknis--skema-basis-data-technical-specs--data-model)
     - 12.1. Arsitektur Komponen Terimplementasi (Production Stack)
     - 12.2. Entity Relationship Model (ERD) & Kamus Data Tabel Fisik
@@ -74,7 +79,17 @@
 14. [Kepatuhan Regulasi Perbankan & Manajemen Risiko (POJK & Bank Indonesia)](#14-kepatuhan-regulasi-perbankan--manajemen-risiko-pojk--bank-indonesia)
 15. [Rencana Implementasi & Roadmap Bertahap (Quick Wins hingga 24 Bulan)](#15-rencana-implementasi--roadmap-bertahap-quick-wins-hingga-24-bulan)
 16. [Analisis Kelayakan Finansial & Dampak Bisnis (ROI Analysis)](#16-analisis-kelayakan-finansial--dampak-bisnis-roi-analysis)
-17. [Penutup & Lembar Persetujuan Dokumen](#17-penutup--lembar-persetujuan-dokumen)
+17. [Arsitektur Enterprise Lengkap (Enterprise Collections Architecture Patching)](#17-arsitektur-enterprise-lengkap-enterprise-collections-architecture-patching)
+    - 17.1. Pre-Delinquency Management (PDM) - DPD 0 Early Warning
+    - 17.2. Functional Journey & Case Stamping
+    - 17.3. Alur Penanganan Hukum (6-Stage Legal Recourse Workflow)
+    - 17.4. Eksekusi Agunan & Pelelangan (8-Stage Repossession & Auction Workflow)
+    - 17.5. Manajemen Kompromi & Diskon (Settlement Management - 6-Stage Lifecycle & Multi-Tranches)
+    - 17.6. Fitur Pembeda Enterprise (Value Differentiators)
+    - 17.7. mCollect - Workbench Penagihan Lapangan Digital
+    - 17.8. GeoTracker - Pemantauan GPS Lapangan Real-Time
+18. [Matriks Perbandingan Komprehensif: Sebelum vs Sesudah Patching](#18-matriks-perbandingan-komprehensif-sebelum-vs-sesudah-patching)
+19. [Penutup & Lembar Persetujuan Dokumen](#19-penutup--lembar-persetujuan-dokumen)
 
 ---
 
@@ -431,55 +446,214 @@ graph TD
 
 ---
 
-## 11. Desain Arsitektur Sistem & Aliran Data (Architecture & Data Flow)
+## 11. Desain Arsitektur Sistem, Komponen & Aliran Data (Enterprise System Architecture)
 
-### 11.1. Diagram Aliran Data End-to-End
+Sistem **Collection & Recovery Management System (CRMS)** dibangun dengan standar arsitektur perbankan berskala enterprise (*Tier-1 Enterprise Banking Architecture*). Arsitektur dirancang dengan prinsip *high cohesion, low coupling, high resilience*, dan *strict regulatory compliance* (POJK & UU Perlindungan Data Pribadi No. 27/2022). Sistem ini bertindak sebagai *intelligent surrounding system* yang menghubungkan *Core Banking System (CBS)*, infrastruktur pembayaran nasional (BI-FAST & Virtual Account Bank), dan saluran omnichannel digital.
+
+---
+
+### 11.1. Diagram & Model Arsitektur Enterprise 5-Tier (High-Level 5-Tier Architecture Model)
+
+Arsitektur CRMS dibagi menjadi lima lapisan modular (*5-Tier Architecture*) yang terisolasi secara logis dan fisik:
+
+```mermaid
+flowchart TB
+    subgraph TIER1["TIER 1: PRESENTATION & TOUCHPOINTS (FRONTEND CLIENTS)"]
+        direction LR
+        UI_SPA["Web SPA Operations Portal<br/>(React 18 + Vite + Tailwind CSS)<br/>• Overdue Matrix DPD 1-30<br/>• Unified Customer 360°<br/>• VIP Desk (AR Head Portal)<br/>• Pre-Delinquency DPD 0 Dashboard<br/>• Legal (6-Stage) & Repo (8-Stage)"]
+        UI_MOB["mCollect Field Workbench (PWA)<br/>• Mobile Field Visit Queue<br/>• Payment Recording & Geotagging<br/>• Digital PIS WhatsApp Slip<br/>• QRIS / VA Link Generator<br/>• Foreclosure Payoff Calculator"]
+        UI_GEO["GeoTracker Command Center<br/>• Live Jakarta Vector Map<br/>• Animated Route Playback<br/>• Time Analytics & Velocity<br/>• Idle Outlier Alert (>120m)"]
+        UI_SUP["Supervisory & Admin Console<br/>• Agency Onboarding & SLA<br/>• Balanced Round-Robin Queue<br/>• Out of Office (OOO) Delegation<br/>• Easy Rule & Scoring Config"]
+    end
+
+    subgraph TIER2["TIER 2: API GATEWAY & SECURITY ROUTING LAYER"]
+        direction TB
+        NGINX["Nginx Reverse Proxy & SSL Offloader<br/>(External HTTPS Port 3030 / WSS WebSocket / TLS 1.3)"]
+        GW_SEC["Security Middleware & Traffic Controller<br/>• JWT Token Verification & Session State<br/>• Strict CORS & HTTP Security Headers<br/>• RBAC Guard (ADMIN, AR_HEAD, COLLECTOR)<br/>• Rate Limiting & DoS Mitigation<br/>• JSON Audit Logger with Client Tracing"]
+        NGINX --> GW_SEC
+    end
+
+    subgraph TIER3["TIER 3: CORE DOMAIN APPLICATION SERVICES (GOLANG GIN ENGINE)"]
+        direction TB
+        subgraph ENGINES["Modular Domain Engines (:8030)"]
+            DE_ENG["Decision & Scoring Engine<br/>• 0-1000 Behavioral Scoring<br/>• Action Path Matrix (Grade 1-8)<br/>• Champion vs Challenger Router<br/>• Dynamic Re-Evaluation Sandbox"]
+            PDM_ENG["Pre-Delinquency Engine (PDM)<br/>• CASA Balance Watcher (H-3..H-0)<br/>• ASN Tukin/Payroll Calendar<br/>• First Payment Default (FPD) Alert"]
+            SETTLE_ENG["Settlement & Rebate Engine<br/>• 6-Stage Lifecycle State Machine<br/>• Multi-Tranches Allocator (1-6)<br/>• Rule 78 Rebate Calculator<br/>• Approval Authority Limit Matrix"]
+            SUPER_ENG["Supervisory & Workforce Engine<br/>• Balanced Round-Robin Allocator<br/>• Capacity Tracker (Opt/Overload)<br/>• Out-of-Office (OOO) Delegator<br/>• Agency SLA & Recovery Monitor"]
+            FIELD_ENG["mCollect & Telemetry Service<br/>• GPS Heartbeat Telemetry Ingestion<br/>• Anomaly Detection (Idle/Jump)<br/>• Route Point Aggregator & Playback<br/>• Digital Receipt Slip (PIS) Engine"]
+            OMNI_ENG["Omnichannel Messaging Gateway<br/>• WhatsApp Cloud API / Fonnte<br/>• Smart IVR Robo-Call Dialer<br/>• SMS Failover Gateway<br/>• Dynamic Persona Script Parser"]
+            LEGAL_ENG["Legal & Liquidation Manager<br/>• 6-Stage Litigation Workflow<br/>• 8-Stage Auction & Repossession<br/>• Stockyard & KJPP Appraisal Tracker"]
+            RECON_ENG["Payment Recon & Takeout Engine<br/>• Real-Time Webhook Listener<br/>• Instant Balance Match-off<br/>• <5 Min Task Cancellation (Anti-Overcollect)"]
+        end
+    end
+
+    subgraph TIER4["TIER 4: PERSISTENCE & DATA GOVERNANCE LAYER"]
+        direction TB
+        DB_PG[("PostgreSQL 14+ / 18+ Relational Database (crms_db)<br/>Connection Pool (MaxOpen: 50, MaxIdle: 10, Lifetime: 1h)")]
+        subgraph TABLES["Core Relational Schemas & Entities"]
+            T_CUST["Customers, Agreements, Overdue Accounts, Pre-Delinquency"]
+            T_ACT["Collection Activities, Payment Slips (PIS), Decision Rules"]
+            T_LEGAL["Legal Cases, Repo Cases, Settlement Proposals & Tranches"]
+            T_GEO["Collector Geo Locations, Route Points, Agencies, Delegations"]
+            T_SEC["Users, Global Parameters, Audit Log Trails"]
+        end
+        DB_PG --- TABLES
+    end
+
+    subgraph TIER5["TIER 5: EXTERNAL ENTERPRISE INTEGRATION BACKBONE"]
+        direction LR
+        EXT_CBS["Core Banking System (CBS)<br/>• Batch EOD 02:00 AM Sync<br/>• Real-Time Loan Ledger REST API"]
+        EXT_PAY["Payment Infrastructure<br/>• BI-FAST Payment Switching<br/>• Bank Virtual Account (VA)<br/>• Dynamic QRIS Gateway"]
+        EXT_COMM["Communication Networks<br/>• WhatsApp Business API<br/>• Telecom Smart IVR / PSTN<br/>• National SMS Center"]
+        EXT_GOV["Registry & Judicial Panels<br/>• Dukcapil KTP Identity API<br/>• ATR/BPN Hak Tanggungan<br/>• KPKNL Balai Lelang Negara<br/>• Panel KJPP & Law Firm Rekanan"]
+    end
+
+    TIER1 ==>|HTTPS REST / WSS| TIER2
+    TIER2 ==>|Internal HTTP Proxy :8030| TIER3
+    TIER3 ==>|GORM / SQL Connection Pool :5432| TIER4
+    TIER3 <==>|Mutual TLS / REST / Webhooks| TIER5
+```
+
+#### Rincian Spesifikasi & Peran Tiap Lapisan (Tier Breakdown):
+
+1. **Tier 1: Presentation & Touchpoints (Frontend Clients)**
+   - **Teknologi**: React 18.3+, Vite Compiler, Tailwind CSS 3.4, Lucide React Icons.
+   - **Karakteristik**: Single Page Application (SPA) responsif multi-platform (Desktop PC, Tablet, dan Smartphone Android/iOS).
+   - **Antarmuka Utama**:
+     - *Operations Portal*: Matriks Overdue DPD 1-30, Dynamic Filters, Penomoran Urut (Row Number), VIP Portal, PDM Dashboard, Legal & Repo steppers.
+     - *mCollect Workbench*: Antarmuka lapangan ramah jempol (*thumb-friendly*), PWA offline-ready, perekaman pelunasan tunai/transfer, generator tautan QRIS/VA, dan simulator pelunasan dipercepat (Rule 78).
+     - *GeoTracker Visualizer*: Peta vektor interaktif DKI Jakarta (Jakarta Pusat, Barat, Selatan, Timur, Utara & Bodetabek), visualisasi status gerak kolektor (*pulse markers*), pemutaran ulang rute (*route playback*), dan indikator anomali waktu diam.
+     - *Supervisory Portal*: Monitoring agensi eksternal, kapasitas kolektor, pendelegasian wewenang OOO, dan simulasi aturan baru.
+
+2. **Tier 2: API Gateway & Security Routing Layer**
+   - **Teknologi**: Nginx Web Server (Reverse Proxy), OpenSSL (TLS 1.3 / HTTP/2), Gin Engine Middleware Pipeline.
+   - **Port Operasional**: Eksternal Port `3030` (HTTPS SSL), Internal Routing Port `8030` (Golang HTTP Service).
+   - **Tugas Utama**:
+     - *SSL Termination*: Enkripsi ujung-ke-ujung (*end-to-end encryption*) menggunakan sertifikat digital X.509.
+     - *Security Middlewares*: Validasi JWT Token, proteksi Cross-Origin Resource Sharing (CORS), filtering Cross-Site Scripting (XSS), Content Security Policy (CSP).
+     - *Rate Limiting*: Proteksi DoS/Brute-force dengan pembatasan frekuensi request per alamat IP (120 req/menit untuk API publik, unlimited untuk subnet CBS internal).
+     - *Distributed Tracing*: Penyematan `X-Request-ID` unik di setiap request untuk kemudahan penelusuran (*traceability*) lintas log sistem.
+
+3. **Tier 3: Core Domain Application Services (Backend Golang Gin Engine)**
+   - **Teknologi**: Go 1.24+ (Compiled Machine Code), Gin Web Framework, GORM Object-Relational Mapping.
+   - **Karakteristik**: Arsitektur modular *Domain-Driven Services* dengan pemrosesan *concurrency* tinggi melalui Go Goroutines, konsumsi memori rendah (< 45 MB RAM idle), dan *sub-millisecond latency*.
+   - **8 Domain Engine Terintegrasi**:
+     - *Decision & Scoring Engine*: Perhitungan skor risiko kredit (0-1000), penentuan Action Path (Grade 1-8), pemisahan Champion vs Challenger, dan evaluasi ulang dinamis.
+     - *Pre-Delinquency Management Engine (PDM)*: Pengawasan DPD 0, deteksi saldo rekening autodebet (CASA) H-3 s.d H-0, pemantauan tanggal transfer gaji/tukin ASN DKI, dan peringatan FPD (*First Payment Default*).
+     - *Settlement & Rebate Engine*: Pengelolaan siklus 6 tahapan kompromi kredit, penjadwalan *multi-tranches* (1-6 termin), perhitungan potongan bunga Rule 78, dan eskalasi persetujuan berjenjang.
+     - *Supervisory & Workforce Engine*: Distribusi antrean berimbang (*Balanced Round-Robin*), pemantauan beban kerja (optimal 25 akun/kolektor), pendelegasian wewenang sementara (*Out of Office*), dan audit SLA agensi penagihan.
+     - *mCollect & Telemetry Service*: Penyerapan koordinat GPS telemetri kolektor harian, pencatatan titik rute (*route points*), deteksi anomali waktu diam (>120 menit), dan penerbitan kuitansi elektronik (PIS).
+     - *Omnichannel Messaging Gateway*: Integrasi WhatsApp API (Fonnte/Meta Cloud API), Smart IVR Robo-Call, dan SMS fallback dengan skrip pesan dinamis ter-encode.
+     - *Legal & Asset Liquidation Engine*: Pelacakan alur perkara perdata perbankan (6 tahapan) dan eksekusi lelang agunan SHM/BPKB di KPKNL (8 tahapan).
+     - *Payment Reconciliation & Takeout Task Engine*: Pendengar webhook pembayaran instan (BI-FAST & VA) yang seketika mematikan antrean penagihan aktif (*instant task cancellation*) dalam tempo < 5 menit.
+
+4. **Tier 4: Persistence & Data Governance Layer**
+   - **Teknologi**: PostgreSQL 14+ / 18+ Enterprise RDBMS (`crms_db`), GORM Database Abstraction.
+   - **Integritas & Keamanan**:
+     - *Connection Pooling*: Pengaturan `MaxOpenConns = 50`, `MaxIdleConns = 10`, `ConnMaxLifetime = 1 Hour` untuk efisiensi koneksi *multi-threaded*.
+     - *Indeks Khusus Performa*: B-Tree indexes pada kolom pencarian intensif (`cif`, `agreement_no`, `account_no`, `dpd`, `risk_level`, `collector_id`, `created_at`).
+     - *Perlindungan Data Pribadi (UU PDP No. 27/2022)*: Masking otomatis nomor KTP/NIK (`3171************`), nomor HP (`0812****8890`), dan nomor rekening; penyimpanan data terenkripsi *at-rest*; pencatatan audit log tak terhapuskan (*append-only immutable audit trail*).
+
+5. **Tier 5: External Enterprise Integration Backbone**
+   - **Core Banking System (CBS)**: Sinkronisasi data saldo dan DPD harian (*Batch EOD* pukul 02:00 WIB) serta sinkronisasi *near-real-time* status pinjaman melalui REST API terproteksi mTLS.
+   - **Payment Infrastructure (BI-FAST & Virtual Account)**: Jalur verifikasi dan notifikasi pembayaran digital 24/7/365 untuk pemulihan kredit tanpa batas waktu operasional bank.
+   - **Communication Networks**: Meta WhatsApp Cloud API / Mitra Resmi BSP (Fonnte), SIP/PSTN Telephony Provider untuk Smart IVR Robo Call.
+   - **Registry & Judicial Panels**: API Kependudukan Kemendagri (Dukcapil) untuk validasi KTP & skip tracing, portal lelang DJKN Kemenkeu (KPKNL) untuk lelang hak tanggungan, dan Sistem Informasi Penelusuran Perkara (SIPP) Pengadilan Negeri.
+
+---
+
+### 11.2. Arsitektur Komponen Layanan Modular Backend (Domain Micro-Services Topology)
+
+Diagram berikut mengilustrasikan topologi internal komponen modular backend Golang Gin, pemisahan layer controller/handler, domain service, dan data access repository:
+
+```mermaid
+graph TD
+    ClientReq["Incoming HTTP/HTTPS Request<br/>(:3030 -> :8030)"] --> GinRouter["Gin Router Engine (/api/v1)"]
+    
+    subgraph MIDDLEWARES["Security & Filter Middleware Pipeline"]
+        GinRouter --> M_CORS["CORS Middleware"]
+        M_CORS --> M_RATE["Rate Limiter (Token Bucket)"]
+        M_RATE --> M_AUTH["JWT Auth & Session Validator"]
+        M_AUTH --> M_RBAC["RBAC Authorizer (Role Guard)"]
+        M_RBAC --> M_LOG["Request Tracing & JSON Audit Logger"]
+    end
+
+    subgraph HANDLERS["API Route Controllers (Handlers Layer)"]
+        M_LOG --> H_OVERDUE["Overdue & Account Handler"]
+        M_LOG --> H_DECISION["Decision Engine Handler"]
+        M_LOG --> H_PDM["Pre-Delinquency Handler"]
+        M_LOG --> H_SETTLE["Settlement & Rebate Handler"]
+        M_LOG --> H_MCOLLECT["mCollect & Payment Handler"]
+        M_LOG --> H_GEO["GeoTracker Telemetry Handler"]
+        M_LOG --> H_SUPER["Supervisory & Agency Handler"]
+        M_LOG --> H_LEGAL["Legal & Repo Auction Handler"]
+        M_LOG --> H_PAY["Payment Webhook Handler"]
+    end
+
+    subgraph SERVICES["Core Domain Business Services"]
+        H_OVERDUE --> S_ACCOUNT["Account & Customer 360 Aggregator"]
+        H_DECISION --> S_SCORING["0-1000 Scoring & Action Path Service"]
+        H_PDM --> S_PDM["CASA Watcher & Payroll Tukin Service"]
+        H_SETTLE --> S_SETTLE["6-Stage Settlement & Rule 78 Service"]
+        H_MCOLLECT --> S_MCOLLECT["Field Slip & QRIS Link Service"]
+        H_GEO --> S_GEO["GPS Telemetry & Anomaly Detector"]
+        H_SUPER --> S_SUPER["Round-Robin Queue & Delegation Service"]
+        H_LEGAL --> S_LEGAL["Litigation & Repossession Service"]
+        H_PAY --> S_RECON["Takeout Task & Instant Match-off Service"]
+    end
+
+    subgraph REPOSITORIES["Data Persistence Repositories (GORM Engine)"]
+        S_ACCOUNT & S_SCORING & S_PDM & S_SETTLE & S_MCOLLECT & S_GEO & S_SUPER & S_LEGAL & S_RECON --> DB_CONN["PostgreSQL Connection Pool (crms_db)"]
+    end
+```
+
+---
+
+### 11.3. Diagram Aliran Data End-to-End & Siklus Sinkronisasi
+
+Aliran data dalam sistem CRMS terbagi menjadi dua siklus fundamental: **Siklus Batch Harian EOD (Nightly Batch Data Sync)** dan **Siklus Real-Time Event-Driven (Instant Payment Takeout & Telemetry)**.
 
 ```mermaid
 sequenceDiagram
     autonumber
-    participant CBS as Core Banking System
-    participant DE as CRMS Decision Engine
-    participant Channel as Omnichannel Engine (WA/ROBO/DC)
-    participant Field as Mobile CRMS (Field/Remedial)
-    participant Portal as VIP & Executive Portal
+    actor Customer as Debitur (Nasabah)
+    participant FieldApp as mCollect / Collector
+    participant CRMS_API as CRMS Backend API (:8030)
+    participant DecisionEng as Decision & Scoring Engine
+    participant DB as PostgreSQL (crms_db)
+    participant CoreBank as Core Banking System (CBS)
+    participant PaymentGW as BI-FAST / Virtual Account
+    participant WAGateway as WhatsApp Cloud Gateway
 
-    Note over CBS,DE: Siklus Harian End of Day (EOD)
-    CBS->>DE: Sinkronisasi Data Rekening Tertunggak (CIF, Baki Debet, DPD, VIP Flag)
-    
-    alt Akun adalah Nasabah VIP / Priority
-        DE->>Portal: Alokasikan ke Portal Eksklusif AR Head (Blokir Auto-blast)
-        Portal->>Portal: AR Head tentukan perlakuan personal & restrukturisasi bilateral
-    else DPD 1 - 30 (Fase Decision Engine)
-        DE->>DE: Hitung Skor Risiko & Evaluasi Channel Recommendation
-        alt Champion Group (Baseline Core Banking)
-            DE->>Channel: Alokasikan AP 1 / 2 (DC / Field)
-        else Challenger Group (Inovasi Decision Engine)
-            alt Low Risk (Non-Field Digital First)
-                DE->>Channel: Alokasikan AP 3 / 4 (WA Bot -> Robo Call -> DC)
-            alt Medium Risk (Hybrid)
-                DE->>Channel: Alokasikan AP 5 / 6 (Robo Call / DC -> Field Visit)
-            alt High Risk (Direct Field)
-                DE->>Field: Alokasikan AP 7 / 8 (Field Officer Langsung DPD 1)
-            end
-        end
-    else DPD > 30 (Fase Lanjutan & Remedial)
-        alt DPD 31 - 60
-            DE->>Field: Penugasan Senior Field & Somasi I (SP 1)
-        alt DPD 61 - 150
-            DE->>Field: Investigasi Agunan, Somasi II & Tawaran Restrukturisasi
-        alt DPD > 150
-            DE->>Field: Litigasi Pengadilan, Pendaftaran Lelang KPKNL, atau Settlement
-        end
+    %% SIKLUS 1: EOD BATCH CYCLE
+    rect rgb(240, 248, 255)
+        Note over CRMS_API,CoreBank: SIKLUS 1: Siklus Batch Harian End of Day (EOD - 02:00 WIB)
+        CoreBank->>CRMS_API: 1. Transmit Data Rekening Tertunggak EOD (CIF, DPD, Pokok, Bunga, Denda)
+        CRMS_API->>DecisionEng: 2. Kirim Data Rekening untuk Evaluasi Koleksi
+        DecisionEng->>DecisionEng: 3. Kalkulasi Skor Risiko (0-1000) & Penentuan Action Path (AP 1-8)
+        DecisionEng->>DecisionEng: 4. A/B Testing Segmentasi: Champion (Baseline) vs Challenger (Cerdas)
+        DecisionEng->>DB: 5. Simpan Status Rekening, Bucket DPD Baru, & Penugasan PIC Antrean
+        CRMS_API->>WAGateway: 6. Trigger Otomatis Gentle Reminder DPD 0 (PDM) & Blast DPD 1-7 (AP 3/4)
+        WAGateway-->>Customer: 7. Notifikasi Tagihan Personal Ramah (+ Tautan Bayar VA/QRIS)
     end
 
-    Note over Channel,CBS: Umpan Balik Hasil Penagihan & Pembayaran
-    Channel-->>DE: Update Status Kontak, Janji Bayar (PTP), Skrip Dialog
-    Field-->>DE: Berita Acara Kunjungan, Geotagging GPS, Cek Fisik Agunan
-    DE-->>CBS: Sinkronisasi Status Pemulihan & Rekonsiliasi Pelunasan
+    %% SIKLUS 2: REAL-TIME PAYMENT TAKEOUT
+    rect rgb(240, 255, 240)
+        Note over Customer,CRMS_API: SIKLUS 2: Siklus Pembayaran Real-Time & Takeout Task (< 5 Menit)
+        Customer->>PaymentGW: 8. Nasabah Membayar via BI-FAST / M-Banking Virtual Account
+        PaymentGW->>CoreBank: 9. Setoran Berhasil & Pembukuan Mutasi Kredit
+        CoreBank->>CRMS_API: 10. Webhook Instan Notifikasi Pelunasan (POST /confins/simulate-payment)
+        CRMS_API->>DB: 11. Update Saldo Tunggakan = 0, Status = 'PAID', Catat Audit Trail
+        CRMS_API->>CRMS_API: 12. Instant Task Takeout: Hapus Rekening dari Antrean Kerja Kolektor
+        CRMS_API->>WAGateway: 13. Kirim Kuitansi Digital (PIS) & Ucapan Terima Kasih via WhatsApp
+        WAGateway-->>Customer: 14. Bukti Bayar Digital Diterima Nasabah Seketika
+        CRMS_API-->>FieldApp: 15. Notifikasi Push ke Kolektor: "Tugas Dibatalkan - Nasabah Telah Bayar"
+    end
 ```
 
-### 11.2. Decision Engine (Scoring Model & Rule Engine)
+---
+
+### 11.4. Decision Engine (Scoring Model & Rule Engine)
 
 Decision Engine CRMS adalah otak analitis cerdas yang mengevaluasi setiap akun kredit tertunggak pada siklus harian EOD maupun pembaruan transaksi *near-real-time*. Arsitektur engine ini memadukan dua subsistem inti: **Collection Scoring Model (Behavioral & Risk Scoring)** dan **Rule-Based Allocation Engine (Action Path Matrix)**.
 
@@ -514,11 +688,11 @@ graph TD
     F --> G["Penugasan PIC Otomatis<br>(WA, Robot, DC, FC, SFC, Senior Field)"]
 ```
 
-#### 11.2.1. Filosofi & Perbedaan Collection Scoring vs Application Scoring
+#### 11.4.1. Filosofi & Perbedaan Collection Scoring vs Application Scoring
 * **Application Scoring (Credit Origination)**: Menilai kelayakan calon debitur saat permohonan kredit diajukan berdasarkan data historis statis (slip gaji, rekening koran, riwayat SLIK OJK). Tujuannya adalah keputusan biner: *Approve* atau *Reject*.
 * **Collection Scoring (Behavioral Recovery Scoring)**: Menilai **kemungkinan debitur memulihkan pembayarannya (*Cure Probability*)** dan **probabilitas akun melompat ke bucket keterlambatan yang lebih dalam (*Roll Rate Probability*)** setelah debitur mengalami keterlambatan pembayaran (DPD 1+). Tujuannya adalah menentukan **rekomendasi kanal penagihan paling hemat biaya** dan **urgensi intervensi petugas penagih lapangan**.
 
-#### 11.2.2. Parameter & Bobot Pembentuk Skor Koleksi (Collection Scoring Variables)
+#### 11.4.2. Parameter & Bobot Pembentuk Skor Koleksi (Collection Scoring Variables)
 CRMS menerapkan algoritma pembobotan multi-faktor standar industri perbankan dengan rentang skor **0 s/d 1000 Poin**:
 
 $$\text{Risk Score} = \sum_{i=1}^{n} (w_i \times S_i)$$
@@ -530,7 +704,7 @@ $$\text{Risk Score} = \sum_{i=1}^{n} (w_i \times S_i)$$
 | **Profil Demografi & Pekerjaan** | **20%** | • Jenis instansi pemberi kerja<br>• Mekanisme pembayaran cicilan<br>• Status kepegawaian | ASN/PNS Pemprov DKI Jakarta, pegawai tetap BUMN, skema potong gaji otomatis (*payroll autodebet*). | Pekerja kontrak/lepas, wiraswasta dengan omzet fluktuatif, pembayaran manual transfer. |
 | **Kualitas & Nilai Agunan (*Collateral Coverage*)** | **15%** | • Ada/tidaknya agunan fisik<br>• Rasio nilai pinjaman terhadap taksiran agunan (*LTV*)<br>• Legalitas sertifikat (SHM/SHGB/BPKB) | Agunan properti bernilai likuid tinggi dengan $LTV \le 60\%$, sertifikat SHM terikat Hak Tanggungan sempurna. | Kredit tanpa agunan (unsecured) atau agunan bergerak dengan depresiasi tinggi ($LTV > 90\%$). |
 
-#### 11.2.3. Matriks Klasifikasi Level Risiko & Strategi Penagihan
+#### 11.4.3. Matriks Klasifikasi Level Risiko & Strategi Penagihan
 
 | Level Risiko | Rentang Skor | Karakteristik Debitur | Saluran Rekomendasi Utama | Tindakan Decision Engine | Estimasi Efisiensi Biaya |
 |---|:---:|---|---|---|:---:|
@@ -539,7 +713,7 @@ $$\text{Risk Score} = \sum_{i=1}^{n} (w_i \times S_i)$$
 | **`HIGH_RISK`** | **0 – 449** | Debitur kronis, riwayat *broken PTP* berulang, nomor telepon kerap tidak aktif, agunan mengalami sengketa/depresiasi. | **Field Collector (FC)** & **Senior Field (SFC)** | Masuk ke **Grade 7 atau 8** (Challenger Intensive Field). Langsung dilakukan verifikasi fisik sejak DPD 1–7. | **Baseline Field** |
 | **`VIP`** | **Khusus** | Nasabah simpanan besar / High Net Worth Individuals / Kredit Korporasi & Komersial penting. | **Dedicated Special Team (AR Head)** | Tidak melalui bot digital / outbound call center. Dikelola melalui Portal Eksklusif AR Head. | N/A (Preservasi Hubungan Nasabah) |
 
-#### 11.2.4. Matriks Pemetaan Action Path (Grade 1–8) x 9 Bucket DPD
+#### 11.4.4. Matriks Pemetaan Action Path (Grade 1–8) x 9 Bucket DPD
 Berdasarkan kombinasi Traffic (Champion vs Challenger) dan Risk Level dari scoring, Decision Engine menentukan petugas (PIC) penangan:
 
 | Action Path (Grade) | Segmentasi & Dasar Penentuan | DPD 1–3 | DPD 4–7 | DPD 8–13 | DPD 14–18 | DPD 19–25 | DPD 26–30 | DPD 31–60 | DPD 61–150 | DPD >150 |
@@ -554,35 +728,155 @@ Berdasarkan kombinasi Traffic (Champion vs Challenger) dan Risk Level dari scori
 | **AP 8** | Challenger — High Risk | **FC** | **FC** | SFC | SFC | SFC | SFC | Senior Field | Senior Field | Senior Field |
 | **VIP** | VIP Portfolio | **Special** | **Special** | **Special** | **Special** | **Special** | **Special** | **Special** | **Special** | **Special** |
 
-#### 11.2.5. Simulasi Evaluasi Ulang Dinamis (A/B Testing Champion vs Challenger)
+#### 11.4.5. Simulasi Evaluasi Ulang Dinamis (A/B Testing Champion vs Challenger)
 * Sistem CRMS memungkinkan manajemen risiko melakukan **A/B Testing** perbandingan performa antara strategi penagihan konvensional (`CHAMPION`) dengan strategi cerdas berbasis skor risiko (`CHALLENGER`).
 * Endpoint `POST /api/v1/overdue-accounts/:id/reevaluate` memungkinkan evaluasi instan jika terjadi perubahan profil debitur (misalnya penambahan komitmen PTP, perbaikan riwayat bayar, atau perubahan data kontak).
 
 ---
 
-### 11.3. Integrasi Core Banking System (EOD Batch & Near-Real-Time Sync)
+### 11.5. Gerbang Omnichannel & Arsitektur Pesan Pintar
 
-1. **Sinkronisasi Batch Harian End of Day (EOD)**:
-   - Backend CRMS mengeksekusi integrasi data setiap pergantian hari kerja melalui proses batch (`POST /api/v1/confins/eod-sync`).
-   - Memperbarui hari keterlambatan ($DPD = DPD + 1$), menyesuaikan nilai bunga berjalan dan denda (*penalty calculation*), serta mengevaluasi ulang bucket keterlambatan secara otomatis.
-2. **Instant Takeout Task via Webhook Pembayaran**:
-   - Begitu debitur melakukan pembayaran via Virtual Account Bank, BI-FAST, atau autodebet rekening, Core Banking System menembakkan webhook transaksi ke endpoint CRMS (`POST /api/v1/confins/simulate-payment`).
-   - Sistem seketika mengupdate saldo tertunggak menjadi Rp 0, mengubah status menjadi `PAID`, mencatat aktivitas ke audit trail, dan **seketika mengeluarkan rekening tersebut dari antrean kerja kolektor** guna mencegah kesalahan penagihan ulang (*post-payment disturbance*).
+1. **WhatsApp Enterprise Messaging Gateway (Arsitektur Teruji)**:
+   - Terkoneksi dengan HTTP API Gateway (Meta Cloud API / Fonnte Provider) dan protokol direct URL fallback (`https://wa.me/...`).
+   - Mesin parser pesan otomatis melakukan substitusi token: nama nasabah, nomor kontrak, baki debet, rincian bunga dan denda, nomor Virtual Account Bank, tautan QRIS dinamis, dan tanggal jatuh tempo.
+   - Perekaman otomatis ke audit trail kronologis pada tabel `collection_activities` seketika saat pesan terkirim.
+2. **Smart IVR Interactive Robo-Call**:
+   - Panggilan otomatis robot cerdas dengan sintesis suara berbasis teks (*Text-to-Speech*) untuk mengonfirmasi komitmen bayar nasabah melalui penekanan tombol nada panggil (*Dual-Tone Multi-Frequency / DTMF response*).
+   - Jawaban nasabah (misal: Tekan 1 untuk konfirmasi bayar hari ini, Tekan 2 untuk penundaan) langsung memicu pembuatan komitmen PTP otomatis pada basis data CRMS.
+3. **Desk Telephony CRM & Skrip Dinamis Terpandu**:
+   - Dashboard kolektor meja (*desk collector*) menyajikan antarmuka terpandu 5 segmen: Pembukaan & Verifikasi Identitas, Edukasi Tagihan, Negosiasi & Komitmen Bayar, Penyampaian Nomor Rekening/VA, dan Penutup Resmi yang patuh regulasi POJK Perlindungan Konsumen.
+4. **Digital Payment Slip (PIS) Dispatcher**:
+   - Menghasilkan bukti setor digital elektronik (PIS) seketika setelah pembayaran lapangan dicatat, lengkap dengan kode QR verifikasi dan link dokumen yang langsung diteruskan ke WhatsApp nasabah.
 
 ---
 
-### 11.4. Gerbang Omnichannel (WA Business API, Smart IVR Robo Call, Desk CRM, Field App)
+### 11.6. Arsitektur Workbench Lapangan (mCollect) & Sistem Telemetri GeoTracker
 
-1. **WhatsApp Enterprise Engine (Arsitektur Kopkara-EWA)**:
-   - Terintegrasi dengan HTTP API Gateway (Fonnte / Meta Cloud API) dan direct Web URL (`https://wa.me/...`).
-   - Skrip pesan otomatis terisi (*auto-personalized*) memuat nama nasabah, rincian tagihan, nomor Virtual Account, dan batas waktu pembayaran.
-   - Setiap pengiriman tercatat otomatis ke audit trail kronologis pada tabel `collection_activities`.
-2. **Smart IVR Interactive Robo Call**:
-   - Panggilan otomatis dengan suara interaktif kecerdasan buatan untuk mengonfirmasi komitmen pembayaran via penekanan tombol dial (*DTMF response*).
-3. **Desk Telephony CRM**:
-   - Panel kerja bagi agen penagihan jarak jauh dilengkapi panduan skrip dialog dinamis 5 segmen (*script-driven dialogue*) yang patuh POJK Perlindungan Konsumen.
-4. **Mobile Field Collector App**:
-   - Penugasan kunjungan fisik bagi akun DPD 30+ dan kategori *High Risk*. Dilengkapi pelacakan rute terbaik, formulir berita acara digital, serta verifikasi anti-fraud geotagging GPS.
+```mermaid
+graph LR
+    subgraph FIELD_DEVICE["Perangkat Petugas Lapangan (Smartphone Android/iOS)"]
+        mCollectApp["mCollect Web PWA<br/>• Antrean Kunjungan Harian<br/>• Pencatatan Bayar (Cash/VA)<br/>• Foreclosure Payoff Calculator<br/>• GeoLocation Watcher (HTML5)"]
+    end
+
+    subgraph TELEMETRY_INGESTION["CRMS Telemetry Ingestion Layer (:8030)"]
+        GeoHandler["GeoTracker Handler<br/>(POST /collectors/locations)"]
+        AnomalyEngine["Anomaly Detection Engine<br/>• Idle Outlier Filter (>120 mnt)<br/>• Velocity / GPS Jump Filter"]
+    end
+
+    subgraph STORAGE_LAYER["PostgreSQL Database (crms_db)"]
+        T_LOC["collector_geo_locations<br/>(lat, lng, speed, status, idle_min)"]
+        T_ROUTE["collector_route_points<br/>(sequence_no, action, notes)"]
+    end
+
+    subgraph SUPERVISOR_MONITOR["Ruang Kontrol Supervisor (Web Console)"]
+        GeoTrackerUI["GeoTracker Command Center<br/>• Live Jakarta Vector Map<br/>• Animated Route Playback<br/>• Time Analytics Dashboard<br/>• Red Alert Anomaly Indicator"]
+    end
+
+    mCollectApp -->|Heartbeat GPS Telemetri Tiap 5 Menit| GeoHandler
+    GeoHandler --> AnomalyEngine
+    AnomalyEngine --> T_LOC & T_ROUTE
+    T_LOC & T_ROUTE -->|Real-Time Polling / Query| GeoTrackerUI
+```
+
+1. **mCollect Field Workbench**:
+   - Antarmuka *mobile-first* dirancang untuk kolektor lapangan (*Field Collector* dan *Senior Field*) dengan dukungan luring ringan (*offline resilience*).
+   - Dilengkapi generator tautan bayar mandiri (QRIS Dinamis & Virtual Account 24 jam) yang langsung dikirimkan ke WhatsApp debitur saat negosiasi tatap muka.
+   - **Simulator Pelunasan Dipercepat (Foreclosure Calculator)**: Menghitung seketika pelunasan kredit berdasarkan rumus bunga *Rule of 78*:
+     $$\text{Interest Rebate} = \text{Total Interest} \times \frac{k(k+1)}{n(n+1)}$$
+     Di mana $n$ adalah tenor total bulan, dan $k$ adalah sisa bulan yang belum dijalani. Menghitung penalti pelunasan dipercepat (standar 3.5%), potongan denda, dan total pelunasan bersih (*Total Net Payoff*).
+2. **GeoTracker Telemetry Engine**:
+   - **Perekaman Koordinat**: Mengambil posisi GPS perangkat secara presisi (Latitude, Longitude, Akurasi dalam meter, dan Kecepatan dalam km/jam).
+   - **Deteksi Anomali Waktu Diam (Idle Outlier Alert)**: Menganalisis jeda waktu antar-aktivitas kunjungan. Jika kolektor berada pada status `IDLE` melebihi ambang batas toleransi (> 120 menit) tanpa adanya pencatatan hasil kunjungan baru, sistem secara otomatis menerbitkan tanda peringatan (*anomaly alert*) berwarna merah pada dashboard supervisor.
+   - **Pencegahan GPS Palsu (Anti-Spoofing & Velocity Jump)**: Mendeteksi perpindahan lokasi yang tidak masuk akal secara fisik (kecepatan pergerakan $> 120$ km/jam di wilayah perkotaan) untuk menjamin validitas kunjungan nyata.
+
+---
+
+### 11.7. Arsitektur Settlement 6-Stage & Supervisory Control Engine
+
+1. **6-Stage Settlement Lifecycle**:
+   - **Stage 1 (Initiate Settlement)**: Pengajuan diskon kompromi (Net Settlement, Charge-Wise Waive, atau Auto Charge Allocation).
+   - **Stage 2 (Generate Schedule)**: Penjadwalan bertahap (*Single* atau *Multi-Tranches* 1 s.d 6 termin).
+   - **Stage 3 (Draw Payment Plan)**: Simulasi alokasi pelunasan pokok dan mitigasi gagal bayar termin lanjutan.
+   - **Stage 4 (Recommend & Approval Matrix)**: Eskalasi persetujuan berjenjang:
+     - Collector / Staff: Plafon rekomendasi s.d Rp 10 Juta
+     - Branch Manager: Limit persetujuan s.d Rp 50 Juta
+     - AR Head / Head of Recovery: Limit persetujuan s.d Rp 150 Juta
+     - BOD / Komite Remedial: Limit > Rp 150 Juta atau diskon pokok > 30%
+   - **Stage 5 (Payment Tracking)**: Pemantauan realisasi setoran per termin (PAID vs PENDING vs OVERDUE).
+   - **Stage 6 (Settlement Closure)**: Rekonsiliasi akuntansi akhir, *match-off* core banking, status `STAGE_CLOSED`, dan penerbitan Surat Keterangan Lunas (SKL).
+2. **Supervisory & Workforce Management Engine**:
+   - **Balanced Round-Robin Queue Allocator**: Membagi antrean akun tertunggak baru secara berimbang antar-kolektor yang aktif dalam portofolio yang sama.
+   - **Capacity Planning & Overload Guard**: Menghitung utilisasi beban kerja harian kolektor (optimal 25 akun aktif). Status terbagi menjadi: **OPTIMAL** (<70%), **NEAR CAPACITY** (70-90%), dan **OVERLOADED** (>90%).
+   - **Out of Office (OOO) Authority Delegation**: Pelimpahan wewenang persetujuan kompromi sementara dari pejabat berwenang (misal AR Head) kepada pelaksana tugas (misal Senior Remedial Officer) selama periode cuti atau dinas luar kota dengan batas limit dan tanggal kadaluarsa yang ketat.
+   - **Agency Onboarding & SLA Monitoring**: Pengelolaan mitra agensi penagihan pihak ketiga (*External Agencies*), mencakup nomor izin, masa berlaku kontrak, tarif komisi sukses, dan rasio pemulihan (*Recovery Rate %*).
+
+---
+
+### 11.8. Arsitektur Keamanan, Kepatuhan UU PDP No. 27/2022 & Audit Trail
+
+Keamanan sistem CRMS dirancang selaras dengan regulasi Otoritas Jasa Keuangan (POJK Tata Kelola Teknologi Informasi) dan Undang-Undang Perlindungan Data Pribadi (UU PDP No. 27 Tahun 2022):
+
+1. **Data Masking (Penyamaran Data Sensitif)**:
+   - Data Pribadi (PII) disamarkan di antarmuka pengguna: Nomor NIK KTP disamarkan (`317102********01`), Nomor Handphone disamarkan (`0812****8890`), dan Nomor Rekening disamarkan (`101-**-*****-9`).
+   - Pembukaan masking data hanya dapat dilakukan oleh peran `AR_HEAD` atau `ADMIN` dengan perekaman alasan pembukaan di log audit (*justified unmasking audit*).
+2. **Enkripsi Data (Data Encryption)**:
+   - *In-Transit*: Seluruh komunikasi jaringan melalui jalur aman HTTPS / TLS 1.3 dengan cipher suite modern (*AES-GCM / ChaCha20-Poly1305*).
+   - *At-Rest*: Kolom data kredensial dan informasi sensitif di database terenkripsi menggunakan AES-256.
+3. **Role-Based Access Control (RBAC)**:
+   - Pemisahan hak akses ketat antara `ADMIN`, `AR_HEAD`, `COLLECTOR`, dan `SUPERVISOR`. Kolektor hanya memiliki akses terhadap daftar akun yang ditugaskan (*assigned queue only*) dan dilarang mengekspor data massal.
+4. **Immutable Append-Only Audit Trail**:
+   - Setiap interaksi penagihan, perubahan status, pengajuan kompromi, persetujuan diskon, dan mutasi antrean dicatat ke tabel `collection_activities` dengan timestamp UTC+7, identitas pengguna, alamat IP, dan data sebelum/sesudah perubahan. Data audit trail tidak dapat diubah atau dihapus (*append-only*).
+
+---
+
+### 11.9. Arsitektur Jaringan, Topologi Infrastruktur & Deployment (Production Stack)
+
+Diagram berikut menampilkan topologi fisik dan jaringan implementasi server produksi CRMS pada lingkungan Virtual Private Server (VPS) atau On-Premise Data Center Bank:
+
+```mermaid
+graph TB
+    subgraph WAN["PUBLIC INTERNET / SECURE BANK NETWORK"]
+        BrowserUser["Users (Web Browser Desk / Admin / AR Head)<br/>IP Public / Internal VPN"]
+        MobileUser["Field Collectors (mCollect Smartphone)<br/>Mobile Cellular 4G/5G"]
+        CBS_Host["Core Banking System (CBS) Host<br/>Private Bank Network / Subnet"]
+    end
+
+    subgraph FIREWALL["Edge Firewall & Port Forwarding"]
+        FW["Hardware / Cloud Firewall<br/>Allow: Port 80 (Redirect HTTP), Port 443/3030 (HTTPS)<br/>Drop: All Other Direct Ports"]
+    end
+
+    subgraph PROD_HOST["Linux Production Server (Ubuntu / RHEL Enterprise)"]
+        direction TB
+        
+        subgraph WEB_PROXY["Web Proxy Tier"]
+            NGINX_SRV["Nginx Web Server (:3030 SSL)<br/>• TLS 1.3 Termination (SSL Cert)<br/>• Static React Dist (/dist)<br/>• Reverse Proxy /api/v1 -> :8030<br/>• Gzip / Brotli Compression"]
+        end
+
+        subgraph APP_DAEMON["Application Daemon Tier (Systemd Managed)"]
+            GIN_APP["Golang CRMS Server Daemon (:8030)<br/>• Binary: /home/crms/backend/crms-server-linux<br/>• Service: crms-backend.service (systemctl)<br/>• Auto-Restart on Failure (RestartSec=5s)<br/>• Standard Log: /home/crms/backend/backend.log"]
+        end
+
+        subgraph DB_CLUSTER["Database Tier"]
+            PG_SRV["PostgreSQL Database Server (:5432)<br/>• Cluster: crms_db (Owner: crms_user)<br/>• Listen: localhost:5432 (No External Access)<br/>• Storage: /var/lib/postgresql/data (SSD NVMe)<br/>• Automated Daily Backup (pg_dump cron 01:00)"]
+        end
+    end
+
+    BrowserUser & MobileUser -->|HTTPS :3030| FW
+    CBS_Host -->|Internal mTLS REST / Webhook| FW
+    FW --> NGINX_SRV
+    NGINX_SRV -->|Proxy Pass HTTP :8030| GIN_APP
+    GIN_APP -->|Local TCP Loopback :5432| PG_SRV
+```
+
+#### Spesifikasi Rekomendasi Mesin Produksi (Hardware & OS Specs):
+* **Sistem Operasi**: Ubuntu Server 22.04 LTS / 24.04 LTS atau Red Hat Enterprise Linux (RHEL) 9+.
+* **Processor (vCPU)**: Minimal 4 vCPU (Rekomendasi: 8 vCPU Intel Xeon / AMD EPYC).
+* **RAM**: Minimal 8 GB RAM (Rekomendasi: 16 GB RAM DDR4/DDR5).
+* **Penyimpanan (Storage)**: Minimal 100 GB NVMe SSD (Pemisahan partisi `/var/log` dan `/var/lib/postgresql`).
+* **High Availability & RPO/RTO**:
+  - *Recovery Point Objective (RPO)*: $\le 15$ Menit (Streaming WAL Archiving PostgreSQL).
+  - *Recovery Time Objective (RTO)*: $\le 2$ Jam (Automated failover / Standby instance).
+
 
 ---
 
@@ -1284,7 +1578,7 @@ PERIODE PENGEMBALIAN MODAL (PAYBACK PERIOD)                        : 3.8 Bulan
 
 ---
 
-## 18. Arsitektur Enterprise Lengkap (Enterprise Collections Architecture Patching)
+## 17. Arsitektur Enterprise Lengkap (Enterprise Collections Architecture Patching)
 
 Pembaruan arsitektur enterprise (*Enterprise Architecture Patching*) mengintegrasikan modul-modul pemulihan kredit tingkat lanjut yang diadaptasi dari arsitektur penagihan perbankan modern berskala enterprise.
 
@@ -1315,21 +1609,21 @@ Pembaruan arsitektur enterprise (*Enterprise Architecture Patching*) mengintegra
 +===================================================================================================+
 ```
 
-### 18.1 Pre-Delinquency Management (PDM) - DPD 0 Early Warning
+### 17.1 Pre-Delinquency Management (PDM) - DPD 0 Early Warning
 Modul PDM bertindak sebagai garda terdepan pencegahan kredit bermasalah sebelum rekening bergulir ke status menunggak (*prevention over cure*):
 1. **Pengecekan Saldo Tabungan (CASA Balance Check)**: Membandingkan saldo rekening autodebet dengan jumlah angsuran yang akan jatuh tempo pada H-3 s.d H-0.
 2. **Flagging Keterlambatan Gaji / Tukin ASN**: Khusus debitur ASN Pemprov DKI dan BUMD, sistem mendeteksi siklus transfer payroll dan keterlambatan pembayaran tambahan penghasilan pegawai (TPP/Tukin).
 3. **First Payment Default (FPD) Alert**: Pengawasan intensif terhadap debitur baru pada angsuran ke-1 s.d ke-3.
 4. **Gentle Reminder Otomatis via WhatsApp**: Mengirimkan notifikasi ramah tanpa nada penagihan, memfasilitasi *self-cure* debitur dengan efisiensi biaya kanal 95%.
 
-### 18.2 Functional Journey & Case Stamping
+### 17.2 Functional Journey & Case Stamping
 Mengatasi fragmentasi penanganan nasabah yang memiliki lebih dari satu fasilitas pinjaman:
 - **Combo 1 (Properti)**: KPR Griya Idaman + KPA Apartemen (Aset agunan properti sejenis dianalisis bersamaan).
 - **Combo 2 (Non-Collateral)**: Kredit Multi Guna / KTA + Kartu Kredit (Penanganan tanpa jaminan fidusia dengan strategi restrukturisasi tunai).
 - **Combo 3 (Komersial & UMKM)**: Kredit Modal Kerja (KMK) + KUR Ritel Mikro.
 - **Routing Antrean Khusus (Queues)**: Pemisahan otomatis antara antrean reguler (*digital-first*) dengan antrean *exceptional/VIP* yang ditangani langsung oleh AR Head atau Special Asset Management Team.
 
-### 18.3 Alur Penanganan Hukum (6-Stage Legal Recourse Workflow)
+### 17.3 Alur Penanganan Hukum (6-Stage Legal Recourse Workflow)
 Standar operasional litigasi perbankan dalam 6 tahapan terstruktur:
 1. **STAGE 1 - INITIATE LEGAL**: Penerbitan Surat Peringatan SP-1, SP-2, dan Somasi Hukum Formal.
 2. **STAGE 2 - LAWYER & LAW FIRM ALLOCATION**: Penunjukan Advokat In-House atau Kantor Hukum Panel Rekanan Bank dan penerbitan Surat Kuasa Khusus.
@@ -1338,7 +1632,7 @@ Standar operasional litigasi perbankan dalam 6 tahapan terstruktur:
 5. **STAGE 5 - MULTIPLE CASES & AUDIT TRAIL**: Penelusuran sengketa ganda, gugatan balik (rekonvensi), dan pencatatan audit jejak perkara hukum.
 6. **STAGE 6 - CASE JUDGEMENT / WITHDRAWAL**: Eksekusi putusan berkekuatan hukum tetap (*Inkrah*), Aanmaning, atau pencabutan perkara resmi karena adanya Akta Perdamaian (*Dading*).
 
-### 18.4 Eksekusi Agunan & Pelelangan (8-Stage Repossession & Auction Workflow)
+### 17.4 Eksekusi Agunan & Pelelangan (8-Stage Repossession & Auction Workflow)
 Tata kelola pemulihan aset agunan yang transparan dan akuntabel dalam 8 tahapan:
 1. **STAGE 1 - MARKING**: Penandaan otomatis pada sistem bagi fasilitas macet DPD > 90 hari dengan agunan bernilai ekonomis.
 2. **STAGE 2 - INITIATE REPO**: Penerbitan Surat Tugas Penarikan, SP-3 Eksekusi Agunan, dan koordinasi dengan aparat berwenang.
@@ -1349,7 +1643,7 @@ Tata kelola pemulihan aset agunan yang transparan dan akuntabel dalam 8 tahapan:
 7. **STAGE 7 - ASSET SALE**: Penetapan pemenang lelang, verifikasi pembayaran uang lelang, dan bea lelang negara.
 8. **STAGE 8 - ASSET RELEASE**: Penerbitan Risalah Lelang resmi oleh Pejabat Lelang KPKNL, penghapusan hak tanggungan (roya), dan penyetoran hasil lelang untuk pelunasan baki debet pinjaman.
 
-### 18.5 Manajemen Kompromi & Diskon (Settlement Management - 6-Stage Lifecycle & Multi-Tranches)
+### 17.5 Manajemen Kompromi & Diskon (Settlement Management - 6-Stage Lifecycle & Multi-Tranches)
 Siklus komprehensif penyelesaian kredit bermasalah melalui skema kompromi pelunasan terstruktur (berdasarkan arsitektur *Settlement Workflow*):
 
 ```mermaid
@@ -1377,7 +1671,7 @@ graph TD
 
 ---
 
-### 18.6 Fitur Pembeda Enterprise (Value Differentiators)
+### 17.6 Fitur Pembeda Enterprise (Value Differentiators)
 Fitur tata kelola strategis pengawasan tim penagihan internal dan agensi eksternal:
 
 1. **Agency & Agent Onboarding (Alih Daya Penagihan)**:
@@ -1397,7 +1691,7 @@ Fitur tata kelola strategis pengawasan tim penagihan internal dan agensi ekstern
 
 ---
 
-### 18.7 mCollect - Workbench Penagihan Lapangan Digital
+### 17.7 mCollect - Workbench Penagihan Lapangan Digital
 Modul operasional *mobile-first* terpadu bagi petugas kolektor lapangan (*Field Collector* / *Field Recovery Officer*):
 
 1. **Field Accounts Management**: Tampilan antrean kunjungan harian yang dioptimalkan untuk perangkat bergerak (*mobile/tablet*), dilengkapi informasi kontak debitur, riwayat DPD, dan rincian agunan.
@@ -1423,7 +1717,7 @@ Modul operasional *mobile-first* terpadu bagi petugas kolektor lapangan (*Field 
 
 ---
 
-### 18.8 GeoTracker - Pemantauan GPS Lapangan Real-Time
+### 17.8 GeoTracker - Pemantauan GPS Lapangan Real-Time
 Modul pengawasan posisi dan audit kepatuhan rute petugas lapangan bagi supervisor penagihan:
 
 1. **Peta Interaktif Koridor DKI Jakarta (Interactive Vector Map)**:
@@ -1444,7 +1738,7 @@ Modul pengawasan posisi dan audit kepatuhan rute petugas lapangan bagi superviso
 
 ---
 
-## 19. Matriks Perbandingan Komprehensif: Sebelum vs Sesudah Patching
+## 18. Matriks Perbandingan Komprehensif: Sebelum vs Sesudah Patching
 
 Tabel berikut menyajikan ringkasan perbedaan mendasar arsitektur CRMS sebelum dan sesudah pelaksanaan *Enterprise Architecture Patching*:
 
@@ -1470,7 +1764,7 @@ Tabel berikut menyajikan ringkasan perbedaan mendasar arsitektur CRMS sebelum da
 
 ---
 
-## 20. Penutup & Lembar Persetujuan Dokumen
+## 19. Penutup & Lembar Persetujuan Dokumen
 
 Implementasi **Collection & Recovery Management System (CRMS)** ini menjawab tuntas seluruh kebutuhan modernisasi penagihan Bank DKI / Bank Jakarta dengan mengadopsi pilar unggulan modernisasi sistem penagihan perbankan skala enterprise.
 
