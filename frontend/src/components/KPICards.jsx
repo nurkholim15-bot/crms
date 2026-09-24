@@ -24,9 +24,9 @@ export default function KPICards({ summary }) {
   };
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
       {/* Total Portfolio Overdue */}
-      <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
+      <div className="bg-white p-3.5 sm:p-4 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
         <div className="flex justify-between items-start">
           <div>
             <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Portofolio Overdue</p>
@@ -37,7 +37,7 @@ export default function KPICards({ summary }) {
               <span className="font-semibold text-slate-700 mr-1">{summary.total_accounts} Akun</span> Portofolio Aktif
             </p>
           </div>
-          <div className="w-10 h-10 rounded-lg bg-red-50 flex items-center justify-center text-red-600">
+          <div className="w-10 h-10 rounded-lg bg-red-50 flex items-center justify-center text-red-600 shrink-0">
             <DollarSign className="w-5 h-5" />
           </div>
         </div>
@@ -49,7 +49,7 @@ export default function KPICards({ summary }) {
       </div>
 
       {/* Champion vs Challenger Ratio */}
-      <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
+      <div className="bg-white p-3.5 sm:p-4 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
         <div className="flex justify-between items-start">
           <div>
             <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Champion vs Challenger</p>
@@ -66,7 +66,7 @@ export default function KPICards({ summary }) {
               {((summary.challenger_accounts / (summary.total_accounts || 1)) * 100).toFixed(0)}% Dialokasikan ke Proses Baru (DE)
             </p>
           </div>
-          <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600">
+          <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600 shrink-0">
             <Sparkles className="w-5 h-5" />
           </div>
         </div>
@@ -92,11 +92,11 @@ export default function KPICards({ summary }) {
       </div>
 
       {/* Risk Level Segmentation */}
-      <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
+      <div className="bg-white p-3.5 sm:p-4 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
         <div className="flex justify-between items-start">
           <div>
             <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Risk Level (Decision Engine)</p>
-            <div className="flex items-center space-x-2 mt-1">
+            <div className="flex flex-wrap items-center gap-1.5 mt-1">
               <span className="px-2 py-0.5 text-xs font-bold bg-emerald-100 text-emerald-700 rounded">
                 Low: {summary.low_risk_accounts}
               </span>
@@ -108,14 +108,14 @@ export default function KPICards({ summary }) {
               </span>
             </div>
             <p className="text-xs text-slate-500 mt-2">
-              Strategi bertingkat: Digital $\rightarrow$ Hybrid $\rightarrow$ Direct Field
+              Strategi bertingkat: Digital &rarr; Hybrid &rarr; Direct Field
             </p>
           </div>
-          <div className="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
+          <div className="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600 shrink-0">
             <Shield className="w-5 h-5" />
           </div>
         </div>
-        <div className="mt-2 pt-2 border-t border-slate-100 flex justify-between text-[11px]">
+        <div className="mt-2 pt-2 border-t border-slate-100 flex flex-wrap justify-between gap-1 text-[11px]">
           <span className="text-emerald-700 font-medium">Non-Field: {summary.digital_pic_count}</span>
           <span className="text-amber-700 font-medium">Desk: {summary.desk_pic_count}</span>
           <span className="text-rose-700 font-medium">Field/Rem: {summary.field_pic_count + summary.remedial_pic_count}</span>
@@ -123,7 +123,7 @@ export default function KPICards({ summary }) {
       </div>
 
       {/* Strategic KPIs & Cost Efficiency */}
-      <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
+      <div className="bg-white p-3.5 sm:p-4 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
         <div className="flex justify-between items-start">
           <div>
             <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Cure & Roll Rate Target</p>
@@ -138,13 +138,13 @@ export default function KPICards({ summary }) {
               </div>
             </div>
           </div>
-          <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
+          <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600 shrink-0">
             <TrendingDown className="w-5 h-5" />
           </div>
         </div>
-        <div className="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+        <div className="mt-3 pt-2 border-t border-slate-100 flex flex-wrap items-center justify-between gap-1 text-[11px] text-slate-500">
           <span className="flex items-center text-emerald-700 font-semibold">
-            <Zap className="w-3.5 h-3.5 mr-1" />
+            <Zap className="w-3.5 h-3.5 mr-1 shrink-0" />
             Digital Saving Est.: Rp {summary.cost_saved_est_million} Jt
           </span>
           <span className="text-slate-400">Target &le; 2.9%</span>

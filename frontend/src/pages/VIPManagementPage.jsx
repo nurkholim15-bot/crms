@@ -240,24 +240,24 @@ export default function VIPManagementPage({ companyInfo }) {
 
       {/* Modal Instruksi AR Head */}
       {selectedAcc && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-200">
-            <div className="bg-purple-950 text-white p-5 flex justify-between items-center">
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-2 sm:p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-200 max-h-[92vh] flex flex-col my-auto">
+            <div className="bg-purple-950 text-white p-4 sm:p-5 flex justify-between items-center gap-2">
               <div>
-                <h3 className="font-bold text-base flex items-center">
-                  <Crown className="w-5 h-5 mr-2 text-amber-400" />
-                  Instruksi Khusus AR Head (VIP Treatment)
+                <h3 className="font-bold text-sm sm:text-base flex items-center">
+                  <Crown className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-amber-400 shrink-0" />
+                  Instruksi Khusus AR Head (VIP)
                 </h3>
-                <p className="text-xs text-purple-300 mt-0.5">
+                <p className="text-xs text-purple-300 mt-0.5 truncate max-w-[240px] sm:max-w-none">
                   Nasabah: <strong className="text-white">{selectedAcc.agreement?.customer?.name}</strong> ({selectedAcc.agreement_no})
                 </p>
               </div>
-              <button onClick={() => setSelectedAcc(null)} className="text-purple-300 hover:text-white">
+              <button onClick={() => setSelectedAcc(null)} className="text-purple-300 hover:text-white p-1 rounded-lg shrink-0 cursor-pointer">
                 ✕
               </button>
             </div>
 
-            <form onSubmit={handleSubmitAction} className="p-6 space-y-4 text-xs">
+            <form onSubmit={handleSubmitAction} className="p-4 sm:p-6 space-y-4 text-xs overflow-y-auto flex-1">
               <div>
                 <label className="font-semibold text-slate-700 block mb-1">Rencana Tindakan Eksklusif</label>
                 <select 
@@ -286,7 +286,7 @@ export default function VIPManagementPage({ companyInfo }) {
 
               <div className="p-3 bg-purple-50 rounded-xl border border-purple-200 space-y-2">
                 <span className="font-bold text-purple-950 block">Komitmen Janji Bayar Khusus (Opsional)</span>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="text-[11px] font-semibold text-purple-900 block mb-0.5">Tanggal Janji Bayar</label>
                     <input 
@@ -302,6 +302,7 @@ export default function VIPManagementPage({ companyInfo }) {
                       type="number" 
                       value={ptpAmount} 
                       onChange={(e) => setPtpAmount(e.target.value)}
+                      placeholder="Contoh: 15000000"
                       className="w-full border border-purple-300 rounded-md p-1.5 bg-white font-semibold"
                     />
                   </div>
@@ -319,18 +320,18 @@ export default function VIPManagementPage({ companyInfo }) {
                 ></textarea>
               </div>
 
-              <div className="pt-2 flex justify-end space-x-2 border-t border-slate-200">
+              <div className="pt-2 flex flex-wrap sm:flex-nowrap justify-end gap-2 border-t border-slate-200">
                 <button 
                   type="button" 
                   onClick={() => setSelectedAcc(null)}
-                  className="px-4 py-2 text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg font-semibold"
+                  className="w-full sm:w-auto px-4 py-2 text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg font-semibold cursor-pointer"
                 >
                   Batal
                 </button>
                 <button 
                   type="submit" 
                   disabled={isSubmitting}
-                  className="px-5 py-2 bg-purple-700 hover:bg-purple-800 text-white rounded-lg font-bold shadow-md"
+                  className="w-full sm:w-auto px-5 py-2 bg-purple-700 hover:bg-purple-800 text-white rounded-lg font-bold shadow-md cursor-pointer disabled:opacity-50"
                 >
                   {isSubmitting ? 'Menyimpan...' : 'Terapkan Instruksi VIP'}
                 </button>

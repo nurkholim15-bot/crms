@@ -178,25 +178,25 @@ const MCollectWorkbench = () => {
   return (
     <div className="space-y-6">
       {/* Header & Workbench Banner */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white p-4 sm:p-5 rounded-xl border border-gray-200 shadow-sm">
         <div className="flex items-center space-x-3">
-          <div className="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl">
+          <div className="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl shrink-0">
             <Smartphone className="w-6 h-6" />
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl font-bold text-gray-900">mCollect - Mobile Field Collections Workbench</h1>
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-lg sm:text-xl font-bold text-gray-900">mCollect - Mobile Field Collections Workbench</h1>
               <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">
                 PIS Digital Ready
               </span>
             </div>
-            <p className="text-sm text-gray-500">
+            <p className="text-xs sm:text-sm text-gray-500 mt-0.5">
               Workbench koleksi lapangan: pencatatan bayar instan, bukti bayar digital (PIS), tautan bayar QRIS/VA, & simulasi early payoff
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 text-xs">
+        <div className="flex flex-wrap items-center gap-2 text-xs">
           <span className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg font-medium flex items-center gap-1.5">
             <UserCheck className="w-4 h-4 text-emerald-600" />
             Petugas: Budi Santoso (RSO)
@@ -222,49 +222,49 @@ const MCollectWorkbench = () => {
       )}
 
       {/* Quick Action Summary Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="bg-white p-3.5 sm:p-4 rounded-xl border border-gray-200 shadow-sm">
           <div className="flex items-center justify-between text-xs text-gray-500">
             <span>Daftar Kunjungan Hari Ini</span>
             <Smartphone className="w-4 h-4 text-indigo-600" />
           </div>
-          <div className="text-2xl font-bold text-gray-900 mt-2">{accounts.length}</div>
-          <div className="text-xs text-gray-500 mt-1">Akun dialokasikan ke kolektor</div>
+          <div className="text-xl sm:text-2xl font-bold text-gray-900 mt-2">{accounts.length}</div>
+          <div className="text-[11px] text-gray-500 mt-1">Akun dialokasikan ke kolektor</div>
         </div>
 
-        <div className="bg-white p-4 rounded-xl border border-emerald-200 bg-emerald-50/20 shadow-sm">
+        <div className="bg-white p-3.5 sm:p-4 rounded-xl border border-emerald-200 bg-emerald-50/20 shadow-sm">
           <div className="flex items-center justify-between text-xs text-emerald-700">
             <span>PIS Diterbitkan Hari Ini</span>
             <FileText className="w-4 h-4 text-emerald-600" />
           </div>
-          <div className="text-2xl font-bold text-emerald-700 mt-2">{receipts.length} Lembar</div>
-          <div className="text-xs text-emerald-600 mt-1">Kuitansi digital tersinkronisasi</div>
+          <div className="text-xl sm:text-2xl font-bold text-emerald-700 mt-2">{receipts.length} Lembar</div>
+          <div className="text-[11px] text-emerald-600 mt-1">Kuitansi digital tersinkronisasi</div>
         </div>
 
-        <div className="bg-white p-4 rounded-xl border border-blue-200 bg-blue-50/20 shadow-sm">
+        <div className="bg-white p-3.5 sm:p-4 rounded-xl border border-blue-200 bg-blue-50/20 shadow-sm">
           <div className="flex items-center justify-between text-xs text-blue-700">
             <span>Pembayaran via QRIS & VA</span>
             <QrCode className="w-4 h-4 text-blue-600" />
           </div>
-          <div className="text-2xl font-bold text-blue-700 mt-2">Instant VA</div>
-          <div className="text-xs text-blue-600 mt-1">Dynamic payment link generator</div>
+          <div className="text-xl sm:text-2xl font-bold text-blue-700 mt-2">Instant VA</div>
+          <div className="text-[11px] text-blue-600 mt-1">Dynamic payment link generator</div>
         </div>
 
-        <div className="bg-white p-4 rounded-xl border border-amber-200 bg-amber-50/20 shadow-sm">
+        <div className="bg-white p-3.5 sm:p-4 rounded-xl border border-amber-200 bg-amber-50/20 shadow-sm">
           <div className="flex items-center justify-between text-xs text-amber-700">
             <span>Simulator Early Payoff</span>
             <Calculator className="w-4 h-4 text-amber-600" />
           </div>
-          <div className="text-2xl font-bold text-amber-700 mt-2">Rule 78</div>
-          <div className="text-xs text-amber-600 mt-1">Diskon bunga & pelunasan instan</div>
+          <div className="text-xl sm:text-2xl font-bold text-amber-700 mt-2">Rule 78</div>
+          <div className="text-[11px] text-amber-600 mt-1">Diskon bunga & pelunasan instan</div>
         </div>
       </div>
 
       {/* Main Table / Card List */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
         {/* Table Filter & Search Header */}
-        <div className="p-4 bg-gray-50 border-b border-gray-200 flex flex-col md:flex-row md:items-center justify-between gap-3">
-          <div className="flex items-center gap-3 flex-1 max-w-md">
+        <div className="p-3 sm:p-4 bg-gray-50 border-b border-gray-200 flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div className="flex items-center gap-3 flex-1 max-w-md w-full">
             <div className="relative w-full">
               <Search className="w-4 h-4 text-gray-400 absolute left-3 top-2.5" />
               <input
@@ -277,13 +277,13 @@ const MCollectWorkbench = () => {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 text-xs">
-            <span className="text-gray-500 font-medium">Bucket:</span>
+          <div className="flex items-center gap-1.5 text-xs overflow-x-auto pb-1 sm:pb-0 scrollbar-none w-full md:w-auto">
+            <span className="text-gray-500 font-medium shrink-0">Bucket:</span>
             {['ALL', '1-3', '4-7', '8-13', '14-18', '19-25', '26-30', '31-60'].map((b) => (
               <button
                 key={b}
                 onClick={() => setSelectedBucket(b)}
-                className={`px-2 py-1 rounded font-medium ${
+                className={`px-2 py-1 rounded font-medium whitespace-nowrap shrink-0 ${
                   selectedBucket === b
                     ? 'bg-emerald-600 text-white'
                     : 'bg-white border border-gray-300 text-gray-600 hover:bg-gray-100'
@@ -297,7 +297,7 @@ const MCollectWorkbench = () => {
 
         {/* Account Table */}
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200 text-xs">
+          <table className="w-full min-w-[760px] divide-y divide-gray-200 text-xs">
             <thead className="bg-gray-50 text-gray-500 font-semibold uppercase tracking-wider">
               <tr>
                 <th className="px-4 py-3 text-left">No Kontrak & Debitur</th>
@@ -391,24 +391,24 @@ const MCollectWorkbench = () => {
       {/* 1. MODAL: RECORD PAYMENT & ISSUE PIS                   */}
       {/* ======================================================= */}
       {paymentModalAccount && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 animate-scale-up">
-            <div className="flex items-center justify-between border-b pb-3">
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-4 sm:p-6 shadow-2xl flex flex-col my-auto max-h-[92vh] overflow-hidden animate-scale-up">
+            <div className="flex items-center justify-between border-b pb-3 shrink-0">
               <div>
-                <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
-                  <CreditCard className="w-5 h-5 text-emerald-600" />
+                <h3 className="text-sm sm:text-base font-bold text-gray-900 flex items-center gap-2">
+                  <CreditCard className="w-5 h-5 text-emerald-600 shrink-0" />
                   Pencatatan Pembayaran Lapangan (mCollect)
                 </h3>
-                <p className="text-xs text-gray-500">
+                <p className="text-[11px] sm:text-xs text-gray-500">
                   Terbitkan bukti setor resmi digital PIS (Payment Information Slip)
                 </p>
               </div>
-              <button onClick={() => setPaymentModalAccount(null)} className="text-gray-400 hover:text-gray-600">
+              <button onClick={() => setPaymentModalAccount(null)} className="text-gray-400 hover:text-gray-600 p-1">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleRecordPayment} className="space-y-4 text-xs">
+            <form onSubmit={handleRecordPayment} className="space-y-4 text-xs overflow-y-auto flex-1 pr-1">
               <div className="p-3 bg-gray-50 rounded-lg space-y-1">
                 <div className="flex justify-between">
                   <span className="text-gray-500">Debitur:</span>
@@ -416,7 +416,7 @@ const MCollectWorkbench = () => {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-500">No Perjanjian:</span>
-                  <span className="font-semibold text-gray-900">{paymentModalAccount.agreement_no}</span>
+                  <span className="font-semibold text-gray-900 font-mono">{paymentModalAccount.agreement_no}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-500">Total Tunggakan:</span>
@@ -433,18 +433,18 @@ const MCollectWorkbench = () => {
                   className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg font-bold text-gray-900 focus:ring-1 focus:ring-emerald-500 focus:outline-none"
                   required
                 />
-                <div className="flex gap-2 mt-1.5">
+                <div className="flex flex-wrap gap-2 mt-1.5">
                   <button
                     type="button"
                     onClick={() => setPaymentAmount(paymentModalAccount.overdue_amount)}
-                    className="px-2 py-0.5 rounded bg-gray-100 hover:bg-gray-200 text-[11px] text-gray-700"
+                    className="px-2 py-1 rounded bg-gray-100 hover:bg-gray-200 text-[11px] text-gray-700 font-medium"
                   >
                     Lunas Tunggakan Penuh
                   </button>
                   <button
                     type="button"
                     onClick={() => setPaymentAmount(paymentModalAccount.agreement?.installment_amount)}
-                    className="px-2 py-0.5 rounded bg-gray-100 hover:bg-gray-200 text-[11px] text-gray-700"
+                    className="px-2 py-1 rounded bg-gray-100 hover:bg-gray-200 text-[11px] text-gray-700 font-medium"
                   >
                     1x Angsuran Pokok
                   </button>
@@ -459,7 +459,7 @@ const MCollectWorkbench = () => {
                       key={m}
                       type="button"
                       onClick={() => setPaymentMethod(m)}
-                      className={`py-2 px-3 rounded-lg font-bold border text-center ${
+                      className={`py-2 px-2 sm:px-3 rounded-lg font-bold border text-center text-xs transition-colors ${
                         paymentMethod === m
                           ? 'border-emerald-600 bg-emerald-50 text-emerald-800'
                           : 'border-gray-200 hover:bg-gray-50 text-gray-700'
@@ -482,30 +482,30 @@ const MCollectWorkbench = () => {
                 />
               </div>
 
-              <div className="flex items-center gap-2 p-2 bg-emerald-50/60 rounded-lg">
+              <div className="flex items-start gap-2 p-2.5 bg-emerald-50/60 rounded-lg">
                 <input
                   type="checkbox"
                   id="waCheck"
                   checked={sendWANow}
                   onChange={(e) => setSendWANow(e.target.checked)}
-                  className="rounded text-emerald-600 focus:ring-emerald-500"
+                  className="rounded text-emerald-600 focus:ring-emerald-500 mt-0.5 shrink-0"
                 />
-                <label htmlFor="waCheck" className="text-gray-700 font-medium cursor-pointer">
+                <label htmlFor="waCheck" className="text-gray-700 font-medium cursor-pointer text-xs">
                   Kirim langsung lembar PIS resmi ke WhatsApp Nasabah ({paymentModalAccount.agreement?.customer?.phone})
                 </label>
               </div>
 
-              <div className="flex justify-end gap-2 pt-2 border-t">
+              <div className="flex flex-wrap sm:flex-nowrap justify-end gap-2 pt-2 border-t shrink-0">
                 <button
                   type="button"
                   onClick={() => setPaymentModalAccount(null)}
-                  className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium"
+                  className="w-full sm:w-auto px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold shadow-md flex items-center gap-1.5"
+                  className="w-full sm:w-auto px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold shadow-md flex items-center justify-center gap-1.5"
                 >
                   <CheckCircle2 className="w-4 h-4" />
                   Konfirmasi & Terbitkan PIS
@@ -520,25 +520,25 @@ const MCollectWorkbench = () => {
       {/* 2. MODAL: DIGITAL RECEIPT SLIP (PIS PREVIEW)           */}
       {/* ======================================================= */}
       {activeSlip && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-scale-up border-t-8 border-emerald-600">
-            <div className="flex items-center justify-between border-b pb-3">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl max-w-md w-full p-4 sm:p-6 shadow-2xl flex flex-col my-auto max-h-[92vh] overflow-hidden animate-scale-up border-t-8 border-emerald-600">
+            <div className="flex items-center justify-between border-b pb-3 shrink-0">
               <div className="flex items-center gap-2">
-                <ShieldCheck className="w-5 h-5 text-emerald-600" />
+                <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0" />
                 <div>
-                  <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider">
+                  <h3 className="text-xs sm:text-sm font-bold text-gray-900 uppercase tracking-wider">
                     BUKTI SETOR RESMI DIGITAL (PIS)
                   </h3>
-                  <div className="text-[11px] text-gray-500">Payment Information Slip - Electronic Receipt</div>
+                  <div className="text-[10px] sm:text-[11px] text-gray-500">Payment Information Slip - Electronic Receipt</div>
                 </div>
               </div>
-              <button onClick={() => setActiveSlip(null)} className="text-gray-400 hover:text-gray-600">
+              <button onClick={() => setActiveSlip(null)} className="text-gray-400 hover:text-gray-600 p-1">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* Receipt Body */}
-            <div className="p-4 bg-gray-50 rounded-xl border border-gray-200 space-y-3 text-xs font-mono">
+            <div className="p-3 sm:p-4 bg-gray-50 rounded-xl border border-gray-200 space-y-3 text-xs font-mono overflow-y-auto flex-1 pr-1">
               <div className="text-center border-b pb-2">
                 <div className="font-bold text-gray-900 text-sm">BANK CRMS DIGITAL INDONESIA</div>
                 <div className="text-[10px] text-gray-500">Sistem Pemulihan & Penagihan Kredit Terpadu</div>
@@ -578,7 +578,7 @@ const MCollectWorkbench = () => {
             </div>
 
             {/* Actions */}
-            <div className="flex gap-2">
+            <div className="flex flex-wrap sm:flex-nowrap gap-2 pt-2 border-t shrink-0">
               <button
                 onClick={async () => {
                   try {
@@ -590,14 +590,14 @@ const MCollectWorkbench = () => {
                     alert('Gagal mengirim WhatsApp: ' + err.message);
                   }
                 }}
-                className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm"
+                className="flex-1 min-w-[140px] py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm"
               >
                 <Share2 className="w-4 h-4" />
                 Kirim via WhatsApp
               </button>
               <button
                 onClick={() => window.print()}
-                className="px-4 py-2 border border-gray-300 hover:bg-gray-100 text-gray-700 rounded-lg text-xs font-semibold flex items-center gap-1"
+                className="w-full sm:w-auto px-4 py-2 border border-gray-300 hover:bg-gray-100 text-gray-700 rounded-lg text-xs font-semibold flex items-center justify-center gap-1"
               >
                 <Download className="w-4 h-4" />
                 Cetak PIS
@@ -611,25 +611,25 @@ const MCollectWorkbench = () => {
       {/* 3. MODAL: REQUEST PAYMENT LINK (QRIS / VA)             */}
       {/* ======================================================= */}
       {linkModalAccount && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-scale-up">
-            <div className="flex items-center justify-between border-b pb-3">
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl max-w-md w-full p-4 sm:p-6 shadow-2xl flex flex-col my-auto max-h-[92vh] overflow-hidden animate-scale-up">
+            <div className="flex items-center justify-between border-b pb-3 shrink-0">
               <div>
-                <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
-                  <QrCode className="w-5 h-5 text-blue-600" />
+                <h3 className="text-sm sm:text-base font-bold text-gray-900 flex items-center gap-2">
+                  <QrCode className="w-5 h-5 text-blue-600 shrink-0" />
                   Generate Payment Link Instan (QRIS / VA)
                 </h3>
-                <p className="text-xs text-gray-500">
+                <p className="text-[11px] sm:text-xs text-gray-500">
                   Kirim kode QRIS dinamis atau Virtual Account ke nomor WhatsApp nasabah
                 </p>
               </div>
-              <button onClick={() => setLinkModalAccount(null)} className="text-gray-400 hover:text-gray-600">
+              <button onClick={() => setLinkModalAccount(null)} className="text-gray-400 hover:text-gray-600 p-1">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {!generatedLinkResult ? (
-              <form onSubmit={handleGenerateLink} className="space-y-4 text-xs">
+              <form onSubmit={handleGenerateLink} className="space-y-4 text-xs overflow-y-auto flex-1 pr-1">
                 <div className="p-3 bg-gray-50 rounded-lg space-y-1">
                   <div className="flex justify-between">
                     <span className="text-gray-500">Debitur:</span>
@@ -660,7 +660,7 @@ const MCollectWorkbench = () => {
                         key={m}
                         type="button"
                         onClick={() => setLinkMethod(m)}
-                        className={`py-2 px-3 rounded-lg font-bold border text-center ${
+                        className={`py-2 px-3 rounded-lg font-bold border text-center transition-colors ${
                           linkMethod === m
                             ? 'border-blue-600 bg-blue-50 text-blue-800'
                             : 'border-gray-200 hover:bg-gray-50 text-gray-700'
@@ -672,25 +672,25 @@ const MCollectWorkbench = () => {
                   </div>
                 </div>
 
-                <div className="flex justify-end gap-2 pt-2 border-t">
+                <div className="flex flex-wrap sm:flex-nowrap justify-end gap-2 pt-2 border-t shrink-0">
                   <button
                     type="button"
                     onClick={() => setLinkModalAccount(null)}
-                    className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium"
+                    className="w-full sm:w-auto px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium"
                   >
                     Batal
                   </button>
                   <button
                     type="submit"
-                    className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold shadow-md flex items-center gap-1.5"
+                    className="w-full sm:w-auto px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold shadow-md flex items-center justify-center gap-1.5"
                   >
                     <Send className="w-4 h-4" />
-                    Buat & Kirim Link Sekarang
+                    Buat & Kirim Link
                   </button>
                 </div>
               </form>
             ) : (
-              <div className="space-y-4 text-xs">
+              <div className="space-y-4 text-xs overflow-y-auto flex-1 pr-1">
                 <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl space-y-2 text-center">
                   <div className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center mx-auto">
                     <CheckCircle2 className="w-6 h-6" />
@@ -702,17 +702,17 @@ const MCollectWorkbench = () => {
                   <div className="text-gray-600">
                     Nominal: <strong>{formatRupiah(generatedLinkResult.amount)}</strong>
                   </div>
-                  <div className="text-[11px] text-gray-500 truncate bg-white p-2 rounded border">
+                  <div className="text-[11px] text-gray-500 break-all bg-white p-2 rounded border">
                     {generatedLinkResult.payment_url}
                   </div>
                 </div>
 
-                <div className="flex gap-2">
+                <div className="flex flex-wrap sm:flex-nowrap gap-2 pt-2 border-t shrink-0">
                   <a
                     href={generatedLinkResult.whatsapp_url}
                     target="_blank"
                     rel="noreferrer"
-                    className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-center font-bold flex items-center justify-center gap-1.5 shadow-sm"
+                    className="flex-1 min-w-[140px] py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-center font-bold flex items-center justify-center gap-1.5 shadow-sm"
                   >
                     <Share2 className="w-4 h-4" />
                     Buka Chat WhatsApp
@@ -722,7 +722,7 @@ const MCollectWorkbench = () => {
                       navigator.clipboard.writeText(generatedLinkResult.payment_url);
                       alert('Tautan pembayaran berhasil disalin ke clipboard!');
                     }}
-                    className="px-4 py-2.5 border border-gray-300 hover:bg-gray-100 text-gray-700 rounded-lg font-semibold"
+                    className="w-full sm:w-auto px-4 py-2.5 border border-gray-300 hover:bg-gray-100 text-gray-700 rounded-lg font-semibold"
                   >
                     Salin Link
                   </button>
@@ -737,121 +737,125 @@ const MCollectWorkbench = () => {
       {/* 4. MODAL: FORECLOSURE / EARLY PAYOFF SIMULATOR           */}
       {/* ======================================================= */}
       {foreclosureAccount && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl space-y-4 animate-scale-up">
-            <div className="flex items-center justify-between border-b pb-3">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl max-w-xl w-full p-4 sm:p-6 shadow-2xl flex flex-col my-auto max-h-[92vh] overflow-hidden animate-scale-up">
+            <div className="flex items-center justify-between border-b pb-3 shrink-0">
               <div>
-                <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
-                  <Calculator className="w-5 h-5 text-indigo-600" />
-                  Simulator Pelunasan Dipercepat (Early Payoff / Foreclosure)
+                <h3 className="text-sm sm:text-base font-bold text-gray-900 flex items-center gap-2">
+                  <Calculator className="w-5 h-5 text-indigo-600 shrink-0" />
+                  Simulator Pelunasan Dipercepat (Early Payoff)
                 </h3>
-                <p className="text-xs text-gray-500">
-                  Hitung kalkulasi pokok tersisa, diskon bunga berjalan (Rule 78), & penalti pelunasan
+                <p className="text-[11px] sm:text-xs text-gray-500">
+                  Hitung kalkulasi pokok tersisa, diskon bunga berjalan (Rule 78), & penalti
                 </p>
               </div>
-              <button onClick={() => setForeclosureAccount(null)} className="text-gray-400 hover:text-gray-600">
+              <button onClick={() => setForeclosureAccount(null)} className="text-gray-400 hover:text-gray-600 p-1">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* Account Info Bar */}
-            <div className="p-3 bg-gray-50 rounded-lg flex items-center justify-between text-xs">
-              <div>
-                <div className="font-bold text-gray-900">{foreclosureAccount.agreement?.customer?.name}</div>
-                <div className="text-gray-500">{foreclosureAccount.agreement_no} • {foreclosureAccount.agreement?.asset_model}</div>
-              </div>
-              <div className="text-right">
-                <div className="text-gray-500">Plafon Awal:</div>
-                <div className="font-bold text-gray-900">{formatRupiah(foreclosureAccount.agreement?.total_financing)}</div>
-              </div>
-            </div>
-
-            {/* Interactive Sliders */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-              <div className="p-3 bg-indigo-50/50 rounded-lg border border-indigo-100 space-y-2">
-                <div className="flex justify-between font-semibold">
-                  <span>Diskon Keringanan Bunga:</span>
-                  <span className="text-indigo-700">{interestDiscountPct}%</span>
+            <div className="overflow-y-auto flex-1 space-y-4 pr-1">
+              {/* Account Info Bar */}
+              <div className="p-3 bg-gray-50 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between text-xs gap-2">
+                <div>
+                  <div className="font-bold text-gray-900">{foreclosureAccount.agreement?.customer?.name}</div>
+                  <div className="text-gray-500 font-mono">{foreclosureAccount.agreement_no} • {foreclosureAccount.agreement?.asset_model}</div>
                 </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="50"
-                  step="5"
-                  value={interestDiscountPct}
-                  onChange={(e) => {
-                    setInterestDiscountPct(Number(e.target.value));
-                  }}
-                  onMouseUp={() => handleRunSimulation()}
-                  className="w-full accent-indigo-600 cursor-pointer"
-                />
-                <div className="text-[10px] text-gray-500">Diskon potongan bunga belum tertagih (0% - 50%)</div>
+                <div className="text-left sm:text-right">
+                  <div className="text-gray-500">Plafon Awal:</div>
+                  <div className="font-bold text-gray-900">{formatRupiah(foreclosureAccount.agreement?.total_financing)}</div>
+                </div>
               </div>
 
-              <div className="p-3 bg-amber-50/50 rounded-lg border border-amber-100 space-y-2">
-                <div className="flex justify-between font-semibold">
-                  <span>Biaya Penalti Foreclosure:</span>
-                  <span className="text-amber-800">{penaltyPct}%</span>
+              {/* Interactive Sliders */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                <div className="p-3 bg-indigo-50/50 rounded-lg border border-indigo-100 space-y-2">
+                  <div className="flex justify-between font-semibold">
+                    <span>Diskon Bunga:</span>
+                    <span className="text-indigo-700">{interestDiscountPct}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="50"
+                    step="5"
+                    value={interestDiscountPct}
+                    onChange={(e) => {
+                      setInterestDiscountPct(Number(e.target.value));
+                    }}
+                    onMouseUp={() => handleRunSimulation()}
+                    onTouchEnd={() => handleRunSimulation()}
+                    className="w-full accent-indigo-600 cursor-pointer"
+                  />
+                  <div className="text-[10px] text-gray-500">Diskon potongan bunga belum tertagih (0% - 50%)</div>
                 </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="5"
-                  step="0.5"
-                  value={penaltyPct}
-                  onChange={(e) => {
-                    setPenaltyPct(Number(e.target.value));
-                  }}
-                  onMouseUp={() => handleRunSimulation()}
-                  className="w-full accent-amber-600 cursor-pointer"
-                />
-                <div className="text-[10px] text-gray-500">Standar ketentuan perbankan: 3.5% dari pokok</div>
+
+                <div className="p-3 bg-amber-50/50 rounded-lg border border-amber-100 space-y-2">
+                  <div className="flex justify-between font-semibold">
+                    <span>Biaya Penalti:</span>
+                    <span className="text-amber-800">{penaltyPct}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="5"
+                    step="0.5"
+                    value={penaltyPct}
+                    onChange={(e) => {
+                      setPenaltyPct(Number(e.target.value));
+                    }}
+                    onMouseUp={() => handleRunSimulation()}
+                    onTouchEnd={() => handleRunSimulation()}
+                    className="w-full accent-amber-600 cursor-pointer"
+                  />
+                  <div className="text-[10px] text-gray-500">Ketentuan perbankan: 3.5% dari pokok</div>
+                </div>
               </div>
-            </div>
 
-            {/* Simulation Results Breakdown */}
-            {foreclosureResult && (
-              <div className="p-4 bg-gray-50 rounded-xl border border-gray-200 space-y-2.5 text-xs font-mono">
-                <div className="flex justify-between text-gray-600">
-                  <span>Sisa Pokok Pinjaman (Outstanding Principal):</span>
-                  <span className="font-bold text-gray-900">{formatRupiah(foreclosureResult.outstanding_principal)}</span>
-                </div>
-                <div className="flex justify-between text-gray-600">
-                  <span>Bunga Berjalan Belum Jatuh Tempo:</span>
-                  <span>{formatRupiah(foreclosureResult.unbilled_interest)}</span>
-                </div>
-                <div className="flex justify-between text-emerald-700 font-semibold">
-                  <span>Potongan Keringanan Bunga ({foreclosureResult.interest_discount_pct}%):</span>
-                  <span>- {formatRupiah(foreclosureResult.interest_rebate_amount)}</span>
-                </div>
-                <div className="flex justify-between text-gray-600">
-                  <span>Biaya Penalti Pelunasan ({foreclosureResult.penalty_pct}%):</span>
-                  <span>+ {formatRupiah(foreclosureResult.early_termination_fee)}</span>
-                </div>
-                <div className="flex justify-between text-rose-600">
-                  <span>Denda Keterlambatan Terhutang:</span>
-                  <span>+ {formatRupiah(foreclosureResult.late_fee_arrears)}</span>
-                </div>
+              {/* Simulation Results Breakdown */}
+              {foreclosureResult && (
+                <div className="p-3 sm:p-4 bg-gray-50 rounded-xl border border-gray-200 space-y-2 text-xs font-mono">
+                  <div className="flex justify-between text-gray-600">
+                    <span>Sisa Pokok (Outstanding Principal):</span>
+                    <span className="font-bold text-gray-900">{formatRupiah(foreclosureResult.outstanding_principal)}</span>
+                  </div>
+                  <div className="flex justify-between text-gray-600">
+                    <span>Bunga Berjalan Belum Jatuh Tempo:</span>
+                    <span>{formatRupiah(foreclosureResult.unbilled_interest)}</span>
+                  </div>
+                  <div className="flex justify-between text-emerald-700 font-semibold">
+                    <span>Potongan Bunga ({foreclosureResult.interest_discount_pct}%):</span>
+                    <span>- {formatRupiah(foreclosureResult.interest_rebate_amount)}</span>
+                  </div>
+                  <div className="flex justify-between text-gray-600">
+                    <span>Biaya Penalti ({foreclosureResult.penalty_pct}%):</span>
+                    <span>+ {formatRupiah(foreclosureResult.early_termination_fee)}</span>
+                  </div>
+                  <div className="flex justify-between text-rose-600">
+                    <span>Denda Keterlambatan:</span>
+                    <span>+ {formatRupiah(foreclosureResult.late_fee_arrears)}</span>
+                  </div>
 
-                <div className="border-t-2 border-gray-300 pt-2 flex justify-between items-center text-sm font-sans">
-                  <div>
-                    <div className="font-bold text-gray-900">TOTAL BERSIH PELUNASAN (NET PAYOFF):</div>
-                    <div className="text-[11px] text-gray-500 font-normal">
-                      Berlaku s.d: {foreclosureResult.valid_until}
+                  <div className="border-t-2 border-gray-300 pt-2 flex flex-col sm:flex-row justify-between sm:items-center gap-1 text-sm font-sans">
+                    <div>
+                      <div className="font-bold text-gray-900 text-xs sm:text-sm">TOTAL BERSIH PELUNASAN:</div>
+                      <div className="text-[10px] sm:text-[11px] text-gray-500 font-normal">
+                        Berlaku s.d: {foreclosureResult.valid_until}
+                      </div>
+                    </div>
+                    <div className="text-lg sm:text-xl font-black text-indigo-700">
+                      {formatRupiah(foreclosureResult.total_net_payoff)}
                     </div>
                   </div>
-                  <div className="text-xl font-black text-indigo-700">
-                    {formatRupiah(foreclosureResult.total_net_payoff)}
-                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
 
-            <div className="flex justify-end gap-2 pt-2 border-t">
+            <div className="flex flex-wrap sm:flex-nowrap justify-end gap-2 pt-2 border-t shrink-0">
               <button
                 type="button"
                 onClick={() => setForeclosureAccount(null)}
-                className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg text-xs font-medium"
+                className="w-full sm:w-auto px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg text-xs font-medium"
               >
                 Tutup
               </button>
@@ -864,10 +868,10 @@ const MCollectWorkbench = () => {
                   const msg = `Yth. Bpk/Ibu ${foreclosureResult.customer_name},\nBerikut penawaran estimasi Pelunasan Dipercepat (Early Payoff) No Kontrak: ${foreclosureResult.agreement_no}.\n\n• Sisa Pokok: ${formatRupiah(foreclosureResult.outstanding_principal)}\n• Diskon Bunga (${foreclosureResult.interest_discount_pct}%): - ${formatRupiah(foreclosureResult.interest_rebate_amount)}\n• Penalti Early Payoff: ${formatRupiah(foreclosureResult.early_termination_fee)}\n\nTOTAL BERSIH PELUNASAN: ${formatRupiah(foreclosureResult.total_net_payoff)}\nBerlaku hingga: ${foreclosureResult.valid_until}.\n\nTerima kasih - CRMS Collection`;
                   window.open(`https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(msg)}`, '_blank');
                 }}
-                className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-md flex items-center gap-1.5"
+                className="w-full sm:w-auto px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-md flex items-center justify-center gap-1.5"
               >
                 <Share2 className="w-4 h-4" />
-                Kirim Penawaran Pelunasan ke WA
+                Kirim Penawaran ke WA
               </button>
             </div>
           </div>

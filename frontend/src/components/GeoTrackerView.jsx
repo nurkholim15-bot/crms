@@ -172,73 +172,73 @@ const GeoTrackerView = () => {
   return (
     <div className="space-y-6">
       {/* Header & KPI Summary */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white p-4 sm:p-5 rounded-xl border border-gray-200 shadow-sm">
         <div>
           <div className="flex items-center space-x-2">
-            <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
+            <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg shrink-0">
               <Radio className="w-6 h-6 animate-pulse" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-gray-900">GeoTracker - Real-time Field Collector Monitoring</h1>
-              <p className="text-sm text-gray-500">
+              <h1 className="text-lg sm:text-xl font-bold text-gray-900">GeoTracker - Real-time Field Collector Monitoring</h1>
+              <p className="text-xs sm:text-sm text-gray-500 mt-0.5">
                 Pemantauan GPS interaktif petugas lapangan, rekam rute harian, & deteksi anomali waktu jeda (Idle Anomaly)
               </p>
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
           <button
             onClick={fetchData}
-            className="px-3 py-2 text-sm font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 border border-gray-300 rounded-lg flex items-center gap-1.5"
+            className="flex-1 sm:flex-none justify-center px-3 py-2 text-xs sm:text-sm font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 border border-gray-300 rounded-lg flex items-center gap-1.5"
           >
             <RotateCcw className="w-4 h-4" />
             Refresh GPS
           </button>
           <button
             onClick={handleSimulatePing}
-            className="px-3 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg flex items-center gap-1.5 shadow-sm"
+            className="flex-1 sm:flex-none justify-center px-3 py-2 text-xs sm:text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg flex items-center gap-1.5 shadow-sm"
           >
             <Zap className="w-4 h-4" />
-            Simulasi Gerakan Kolektor
+            Simulasi Gerakan
           </button>
         </div>
       </div>
 
       {/* KPI Cards */}
       {analytics && (
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-            <div className="text-xs font-medium text-gray-500 uppercase tracking-wider">Kolektor Aktif</div>
-            <div className="text-2xl font-bold text-gray-900 mt-1">{analytics.total_active}</div>
-            <div className="text-xs text-gray-500 mt-1">Total armada di lapangan</div>
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
+          <div className="bg-white p-3.5 sm:p-4 rounded-xl border border-gray-200 shadow-sm">
+            <div className="text-[11px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">Kolektor Aktif</div>
+            <div className="text-xl sm:text-2xl font-bold text-gray-900 mt-1">{analytics.total_active}</div>
+            <div className="text-[11px] text-gray-500 mt-1">Total armada di lapangan</div>
           </div>
 
-          <div className="bg-white p-4 rounded-xl border border-emerald-200 bg-emerald-50/20 shadow-sm">
-            <div className="text-xs font-medium text-emerald-700 uppercase tracking-wider">Sedang Kunjungan (Visiting)</div>
-            <div className="text-2xl font-bold text-emerald-700 mt-1">{analytics.visiting_count}</div>
-            <div className="text-xs text-emerald-600 mt-1">Interaksi tatap muka aktif</div>
+          <div className="bg-white p-3.5 sm:p-4 rounded-xl border border-emerald-200 bg-emerald-50/20 shadow-sm">
+            <div className="text-[11px] sm:text-xs font-medium text-emerald-700 uppercase tracking-wider">Sedang Kunjungan</div>
+            <div className="text-xl sm:text-2xl font-bold text-emerald-700 mt-1">{analytics.visiting_count}</div>
+            <div className="text-[11px] text-emerald-600 mt-1">Tatap muka aktif</div>
           </div>
 
-          <div className="bg-white p-4 rounded-xl border border-blue-200 bg-blue-50/20 shadow-sm">
-            <div className="text-xs font-medium text-blue-700 uppercase tracking-wider">Dalam Perjalanan (Transit)</div>
-            <div className="text-2xl font-bold text-blue-700 mt-1">{analytics.in_transit_count}</div>
-            <div className="text-xs text-blue-600 mt-1">Mobilisasi rute tujuan</div>
+          <div className="bg-white p-3.5 sm:p-4 rounded-xl border border-blue-200 bg-blue-50/20 shadow-sm">
+            <div className="text-[11px] sm:text-xs font-medium text-blue-700 uppercase tracking-wider">Dalam Perjalanan</div>
+            <div className="text-xl sm:text-2xl font-bold text-blue-700 mt-1">{analytics.in_transit_count}</div>
+            <div className="text-[11px] text-blue-600 mt-1">Mobilisasi rute tujuan</div>
           </div>
 
-          <div className="bg-white p-4 rounded-xl border border-amber-200 bg-amber-50/20 shadow-sm">
-            <div className="text-xs font-medium text-amber-700 uppercase tracking-wider">Rata-rata Waktu Idle</div>
-            <div className="text-2xl font-bold text-amber-700 mt-1">{analytics.avg_idle_minutes} mnt</div>
-            <div className="text-xs text-amber-600 mt-1">Batas wajar: maks 60 mnt</div>
+          <div className="bg-white p-3.5 sm:p-4 rounded-xl border border-amber-200 bg-amber-50/20 shadow-sm">
+            <div className="text-[11px] sm:text-xs font-medium text-amber-700 uppercase tracking-wider">Rata-rata Idle</div>
+            <div className="text-xl sm:text-2xl font-bold text-amber-700 mt-1">{analytics.avg_idle_minutes} mnt</div>
+            <div className="text-[11px] text-amber-600 mt-1">Batas wajar: maks 60 mnt</div>
           </div>
 
-          <div className="bg-white p-4 rounded-xl border border-rose-200 bg-rose-50/20 shadow-sm">
-            <div className="text-xs font-medium text-rose-700 uppercase tracking-wider">Deteksi Anomali</div>
-            <div className="text-2xl font-bold text-rose-700 mt-1 flex items-center">
+          <div className="bg-white p-3.5 sm:p-4 rounded-xl border border-rose-200 bg-rose-50/20 shadow-sm col-span-2 lg:col-span-1">
+            <div className="text-[11px] sm:text-xs font-medium text-rose-700 uppercase tracking-wider">Deteksi Anomali</div>
+            <div className="text-xl sm:text-2xl font-bold text-rose-700 mt-1 flex items-center">
               {analytics.anomaly_count}
               {analytics.anomaly_count > 0 && <span className="ml-2 w-2 h-2 rounded-full bg-rose-500 animate-ping"></span>}
             </div>
-            <div className="text-xs text-rose-600 mt-1">Idle time & speed outlier</div>
+            <div className="text-[11px] text-rose-600 mt-1">Idle time & speed outlier</div>
           </div>
         </div>
       )}

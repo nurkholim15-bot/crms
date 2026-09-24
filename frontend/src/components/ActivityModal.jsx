@@ -73,25 +73,25 @@ export default function ActivityModal({ account, onClose, onSuccess }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 overflow-y-auto">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-200">
+    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-2 sm:p-4 overflow-y-auto">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-200 max-h-[92vh] flex flex-col my-auto">
         {/* Header */}
-        <div className="bg-slate-900 text-white p-5 flex justify-between items-center">
+        <div className="bg-slate-900 text-white p-4 sm:p-5 flex justify-between items-center gap-2">
           <div>
-            <h3 className="font-bold text-base flex items-center space-x-2">
+            <h3 className="font-bold text-sm sm:text-base flex items-center space-x-2">
               <span>Log Aktivitas Penagihan CRMS</span>
             </h3>
-            <p className="text-xs text-slate-400 mt-0.5">
+            <p className="text-[11px] sm:text-xs text-slate-400 mt-0.5 truncate max-w-[240px] sm:max-w-none">
               Kontrak: <strong className="text-white">{account.agreement_no}</strong> | {account.agreement?.customer?.name}
             </p>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-white p-1 rounded-lg">
+          <button onClick={onClose} className="text-slate-400 hover:text-white p-1 rounded-lg shrink-0">
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Debitur Overview Strip */}
-        <div className="bg-slate-50 border-b border-slate-200 px-6 py-2.5 text-xs grid grid-cols-3 gap-2">
+        <div className="bg-slate-50 border-b border-slate-200 px-4 sm:px-6 py-2.5 text-xs grid grid-cols-1 sm:grid-cols-3 gap-2">
           <div>
             <span className="text-slate-400 block text-[10px]">Tunggakan Overdue</span>
             <span className="font-extrabold text-red-600 text-xs">{formatRupiah(account.overdue_amount)}</span>
@@ -102,13 +102,13 @@ export default function ActivityModal({ account, onClose, onSuccess }) {
           </div>
           <div>
             <span className="text-slate-400 block text-[10px]">PIC Ditugaskan</span>
-            <span className="font-bold text-slate-800 text-xs">{account.assigned_pic} • {account.recovery_stage || 'STAGE_COLLECTION'}</span>
+            <span className="font-bold text-slate-800 text-xs truncate block">{account.assigned_pic} • {account.recovery_stage || 'COLLECTION'}</span>
           </div>
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4 text-xs">
-          <div className="grid grid-cols-2 gap-3">
+        <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4 text-xs overflow-y-auto flex-1">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="font-semibold text-slate-700 block mb-1">Kanal Penanganan (PIC)</label>
               <select 
@@ -234,30 +234,30 @@ export default function ActivityModal({ account, onClose, onSuccess }) {
           </div>
 
           {/* Anti-Fraud Geotagging & Server Timestamp Strip */}
-          <div className="p-2.5 bg-slate-50 border border-slate-200 rounded-lg flex items-center justify-between text-[11px] text-slate-600">
+          <div className="p-2.5 bg-slate-50 border border-slate-200 rounded-lg flex flex-wrap items-center justify-between gap-1 text-[11px] text-slate-600">
             <div className="flex items-center space-x-1.5">
-              <MapPin className="w-3.5 h-3.5 text-emerald-600" />
+              <MapPin className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
               <span>GPS Geotag: <strong className="text-slate-800">-6.2088, 106.8456</strong></span>
-              <span className="px-1.5 py-0.2 bg-emerald-100 text-emerald-800 rounded font-bold text-[9px]">Akurat (Anti-Fraud)</span>
+              <span className="px-1.5 py-0.2 bg-emerald-100 text-emerald-800 rounded font-bold text-[9px]">Anti-Fraud</span>
             </div>
             <div className="flex items-center space-x-1 text-slate-400 text-[10px]">
               <Clock className="w-3 h-3" />
-              <span>Server NTP Timestamp</span>
+              <span>NTP Timestamp</span>
             </div>
           </div>
 
-          <div className="pt-2 flex justify-end space-x-2 border-t border-slate-200">
+          <div className="pt-2 flex flex-wrap sm:flex-nowrap justify-end gap-2 border-t border-slate-200">
             <button 
               type="button" 
               onClick={onClose}
-              className="px-4 py-2 text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg font-semibold"
+              className="w-full sm:w-auto px-4 py-2 text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg font-semibold cursor-pointer"
             >
               Batal
             </button>
             <button 
               type="submit" 
               disabled={isSubmitting}
-              className="px-5 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-bold shadow-md hover:shadow-lg transition"
+              className="w-full sm:w-auto px-5 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-bold shadow-md hover:shadow-lg transition cursor-pointer disabled:opacity-50"
             >
               {isSubmitting ? 'Menyimpan...' : 'Simpan Log Aktivitas'}
             </button>

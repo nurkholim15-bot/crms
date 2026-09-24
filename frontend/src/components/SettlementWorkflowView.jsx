@@ -248,12 +248,12 @@ export default function SettlementWorkflowView({ onOpenCustomer360 }) {
   return (
     <div className="space-y-6">
       {/* Header Banner */}
-      <div className="bg-gradient-to-r from-emerald-950 via-teal-900 to-slate-900 text-white rounded-2xl p-6 shadow-xl relative overflow-hidden">
+      <div className="bg-gradient-to-r from-emerald-950 via-teal-900 to-slate-900 text-white rounded-2xl p-4 sm:p-6 shadow-xl relative overflow-hidden">
         <div className="absolute right-0 top-0 bottom-0 opacity-10 pointer-events-none flex items-center pr-10">
           <BadgePercent className="w-64 h-64 text-emerald-300" />
         </div>
         <div className="relative z-10 max-w-4xl">
-          <div className="flex items-center gap-2 mb-2">
+          <div className="flex flex-wrap items-center gap-2 mb-2">
             <span className="px-3 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider bg-emerald-500/30 text-emerald-200 border border-emerald-400/30 flex items-center gap-1.5">
               <BadgePercent className="w-3.5 h-3.5 text-emerald-300" />
               Settlement Workflow Architecture
@@ -262,21 +262,21 @@ export default function SettlementWorkflowView({ onOpenCustomer360 }) {
               6-Stage Lifecycle & Multi-Tranches
             </span>
           </div>
-          <h2 className="text-2xl font-bold text-white tracking-tight">
+          <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
             Siklus Komprehensif Penyelesaian Kredit & Kompromi Pelunasan
           </h2>
-          <p className="mt-2 text-slate-300 text-sm leading-relaxed">
+          <p className="mt-2 text-slate-300 text-xs sm:text-sm leading-relaxed">
             Mencakup 6 tahapan terstruktur: <strong>Initiate Settlement</strong> &rarr; <strong>Generate Settlement Schedule (Single/Multi tranches)</strong> &rarr; <strong>Draw Payment Plan</strong> &rarr; <strong>Recommend & Approval Matrix</strong> &rarr; <strong>Settlement Payment Tracking</strong> &rarr; <strong>Settlement Closure / Match-Off</strong>.
           </p>
         </div>
 
-        <div className="mt-4 pt-4 border-t border-teal-800/60 flex items-center justify-between">
+        <div className="mt-4 pt-4 border-t border-teal-800/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="text-xs text-teal-300">
             Dukungan pelunasan bertahap (multi-tranches) dengan verifikasi kuitansi dan match-off otomatis.
           </div>
           <button
             onClick={() => setShowNewModal(true)}
-            className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-xs font-bold shadow-lg flex items-center gap-1.5 transition-transform hover:scale-105"
+            className="w-full sm:w-auto justify-center px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-xs font-bold shadow-lg flex items-center gap-1.5 transition-transform hover:scale-105"
           >
             <PlusCircle className="w-4 h-4" />
             Inisiasi Proposal Baru
@@ -316,7 +316,7 @@ export default function SettlementWorkflowView({ onOpenCustomer360 }) {
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
         {/* Filter bar */}
         <div className="p-4 bg-gray-50 border-b border-gray-200 flex flex-wrap items-center justify-between gap-3">
-          <div className="relative flex-1 min-w-[240px] max-w-md">
+          <div className="relative flex-1 min-w-[200px] max-w-md">
             <Search className="w-4 h-4 text-gray-400 absolute left-3 top-2.5" />
             <input
               type="text"
@@ -327,11 +327,11 @@ export default function SettlementWorkflowView({ onOpenCustomer360 }) {
             />
           </div>
 
-          <div className="flex items-center gap-2 text-xs">
+          <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 text-xs w-full sm:w-auto">
             <select
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}
-              className="border border-gray-300 rounded-lg px-2.5 py-1.5 bg-white text-gray-700 focus:outline-none"
+              className="border border-gray-300 rounded-lg px-2.5 py-1.5 bg-white text-gray-700 focus:outline-none flex-1 sm:flex-none"
             >
               <option value="">Semua Tipe Settlement</option>
               {SETTLEMENT_TYPES.map((t) => (
@@ -344,7 +344,7 @@ export default function SettlementWorkflowView({ onOpenCustomer360 }) {
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              className="border border-gray-300 rounded-lg px-2.5 py-1.5 bg-white text-gray-700 focus:outline-none"
+              className="border border-gray-300 rounded-lg px-2.5 py-1.5 bg-white text-gray-700 focus:outline-none flex-1 sm:flex-none"
             >
               <option value="">Semua Status Approval</option>
               <option value="PENDING_APPROVAL">Menunggu Persetujuan</option>
@@ -366,7 +366,7 @@ export default function SettlementWorkflowView({ onOpenCustomer360 }) {
 
         {/* Proposals Table */}
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200 text-xs">
+          <table className="w-full min-w-[760px] divide-y divide-gray-200 text-xs">
             <thead className="bg-gray-50 text-gray-500 font-semibold uppercase tracking-wider">
               <tr>
                 <th className="px-4 py-3 text-left">No Proposal & Debitur</th>
@@ -506,112 +506,114 @@ export default function SettlementWorkflowView({ onOpenCustomer360 }) {
       {/* 1. MODAL: TRANCHES DETAIL & PAYMENT TRACKING           */}
       {/* ======================================================= */}
       {selectedProposal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl space-y-4 animate-scale-up max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b pb-3">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl max-w-2xl w-full p-4 sm:p-6 shadow-2xl flex flex-col my-auto max-h-[92vh] overflow-hidden animate-scale-up">
+            <div className="flex items-center justify-between border-b pb-3 shrink-0">
               <div>
-                <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
-                  <CreditCard className="w-5 h-5 text-indigo-600" />
+                <h3 className="text-sm sm:text-base font-bold text-gray-900 flex items-center gap-2">
+                  <CreditCard className="w-5 h-5 text-indigo-600 shrink-0" />
                   Jadwal Termin & Tracking Pembayaran (Settlement Tranches)
                 </h3>
-                <p className="text-xs text-gray-500">
+                <p className="text-[11px] sm:text-xs text-gray-500 truncate max-w-xs sm:max-w-md">
                   Proposal: {selectedProposal.proposal_no} • {selectedProposal.customer?.name} ({selectedProposal.agreement_no})
                 </p>
               </div>
-              <button onClick={() => setSelectedProposal(null)} className="text-gray-400 hover:text-gray-600">
+              <button onClick={() => setSelectedProposal(null)} className="text-gray-400 hover:text-gray-600 p-1">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* Stepper Status on Active Proposal */}
-            <div className="p-3 bg-gray-50 rounded-xl space-y-2 text-xs">
-              <div className="flex items-center justify-between">
-                <span className="font-semibold text-gray-700">Tahapan Saat Ini:</span>
-                {getStageBadge(selectedProposal.settlement_stage)}
-              </div>
-              <div className="flex items-center gap-1 overflow-x-auto py-1">
-                {SETTLEMENT_STAGES.map((st, i) => {
-                  const isCurrent = selectedProposal.settlement_stage === st.key;
-                  return (
-                    <button
-                      key={st.key}
-                      onClick={() => handleAdvanceStage(selectedProposal.id, st.key)}
-                      className={`px-2 py-1 rounded text-[10px] font-bold whitespace-nowrap border ${
-                        isCurrent
-                          ? 'bg-emerald-600 text-white border-emerald-600'
-                          : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-100'
-                      }`}
-                    >
-                      {i + 1}. {st.label.split('. ')[1] || st.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Tranches List */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wider">
-                  Daftar Termin Pembayaran ({selectedProposal.tranches?.length || 0})
-                </h4>
-                <div className="text-xs text-gray-500">
-                  Total Nilai: <strong className="text-emerald-700">{formatIDR(selectedProposal.net_settlement_amount)}</strong>
+            <div className="overflow-y-auto flex-1 space-y-4 pr-1">
+              {/* Stepper Status on Active Proposal */}
+              <div className="p-3 bg-gray-50 rounded-xl space-y-2 text-xs">
+                <div className="flex flex-wrap items-center justify-between gap-1">
+                  <span className="font-semibold text-gray-700">Tahapan Saat Ini:</span>
+                  {getStageBadge(selectedProposal.settlement_stage)}
+                </div>
+                <div className="flex items-center gap-1 overflow-x-auto py-1">
+                  {SETTLEMENT_STAGES.map((st, i) => {
+                    const isCurrent = selectedProposal.settlement_stage === st.key;
+                    return (
+                      <button
+                        key={st.key}
+                        onClick={() => handleAdvanceStage(selectedProposal.id, st.key)}
+                        className={`px-2 py-1 rounded text-[10px] font-bold whitespace-nowrap border ${
+                          isCurrent
+                            ? 'bg-emerald-600 text-white border-emerald-600'
+                            : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-100'
+                        }`}
+                      >
+                        {i + 1}. {st.label.split('. ')[1] || st.label}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
-              <div className="space-y-2">
-                {(selectedProposal.tranches || []).map((tr) => (
-                  <div
-                    key={tr.id}
-                    className="p-3.5 rounded-xl border border-gray-200 bg-white flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-sm hover:border-indigo-300 transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${
-                        tr.payment_status === 'PAID' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
-                      }`}>
-                        #{tr.tranche_no}
-                      </div>
-                      <div>
-                        <div className="font-bold text-xs text-gray-900">
-                          Termin #{tr.tranche_no}: {formatIDR(tr.amount)}
+              {/* Tranches List */}
+              <div className="space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-1">
+                  <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wider">
+                    Daftar Termin Pembayaran ({selectedProposal.tranches?.length || 0})
+                  </h4>
+                  <div className="text-xs text-gray-500">
+                    Total Nilai: <strong className="text-emerald-700">{formatIDR(selectedProposal.net_settlement_amount)}</strong>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  {(selectedProposal.tranches || []).map((tr) => (
+                    <div
+                      key={tr.id}
+                      className="p-3 rounded-xl border border-gray-200 bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm hover:border-indigo-300 transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 ${
+                          tr.payment_status === 'PAID' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                        }`}>
+                          #{tr.tranche_no}
                         </div>
-                        <div className="text-[11px] text-gray-500">
-                          Jatuh Tempo: {new Date(tr.due_date).toLocaleDateString('id-ID')} • Metode: {tr.payment_method}
-                        </div>
-                        {tr.receipt_no && (
-                          <div className="text-[10px] text-emerald-700 font-mono mt-0.5">
-                            Bukti Setor: {tr.receipt_no}
+                        <div>
+                          <div className="font-bold text-xs text-gray-900">
+                            Termin #{tr.tranche_no}: {formatIDR(tr.amount)}
                           </div>
+                          <div className="text-[11px] text-gray-500">
+                            Jatuh Tempo: {new Date(tr.due_date).toLocaleDateString('id-ID')} • Metode: {tr.payment_method}
+                          </div>
+                          {tr.receipt_no && (
+                            <div className="text-[10px] text-emerald-700 font-mono mt-0.5">
+                              Bukti Setor: {tr.receipt_no}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between sm:justify-end gap-2 pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-100">
+                        <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold ${
+                          tr.payment_status === 'PAID' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                        }`}>
+                          {tr.payment_status}
+                        </span>
+
+                        {tr.payment_status !== 'PAID' && (
+                          <button
+                            onClick={() => setPayTrancheData(tr)}
+                            className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow-sm"
+                          >
+                            Catat Bayar
+                          </button>
                         )}
                       </div>
                     </div>
-
-                    <div className="flex items-center gap-2">
-                      <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold ${
-                        tr.payment_status === 'PAID' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
-                      }`}>
-                        {tr.payment_status}
-                      </span>
-
-                      {tr.payment_status !== 'PAID' && (
-                        <button
-                          onClick={() => setPayTrancheData(tr)}
-                          className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow-sm"
-                        >
-                          Catat Bayar
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </div>
 
-            <div className="flex justify-end pt-3 border-t">
+            <div className="flex justify-end pt-3 border-t shrink-0">
               <button
                 onClick={() => setSelectedProposal(null)}
-                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs font-semibold"
+                className="w-full sm:w-auto px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs font-semibold"
               >
                 Tutup
               </button>
@@ -624,19 +626,19 @@ export default function SettlementWorkflowView({ onOpenCustomer360 }) {
       {/* 2. MODAL: PAY TRANCHE                                  */}
       {/* ======================================================= */}
       {payTrancheData && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-scale-up">
-            <div className="flex items-center justify-between border-b pb-3">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl max-w-md w-full p-4 sm:p-6 shadow-2xl flex flex-col my-auto max-h-[92vh] overflow-hidden animate-scale-up">
+            <div className="flex items-center justify-between border-b pb-3 shrink-0">
               <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
-                <CreditCard className="w-4 h-4 text-emerald-600" />
+                <CreditCard className="w-4 h-4 text-emerald-600 shrink-0" />
                 Konfirmasi Pembayaran Termin #{payTrancheData.tranche_no}
               </h3>
-              <button onClick={() => setPayTrancheData(null)} className="text-gray-400 hover:text-gray-600">
+              <button onClick={() => setPayTrancheData(null)} className="text-gray-400 hover:text-gray-600 p-1">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handlePayTrancheSubmit} className="space-y-4 text-xs">
+            <form onSubmit={handlePayTrancheSubmit} className="space-y-4 text-xs overflow-y-auto flex-1 pr-1">
               <div className="p-3 bg-gray-50 rounded-lg space-y-1">
                 <div className="flex justify-between">
                   <span className="text-gray-500">Jumlah Tagihan Termin:</span>
@@ -662,20 +664,20 @@ export default function SettlementWorkflowView({ onOpenCustomer360 }) {
                 </select>
               </div>
 
-              <div className="flex justify-end gap-2 pt-2 border-t">
+              <div className="flex flex-wrap sm:flex-nowrap justify-end gap-2 pt-2 border-t shrink-0">
                 <button
                   type="button"
                   onClick={() => setPayTrancheData(null)}
-                  className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium"
+                  className="w-full sm:w-auto px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold shadow-md"
+                  className="w-full sm:w-auto px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold shadow-md disabled:opacity-50"
                 >
-                  {submitting ? 'Memproses...' : 'Konfirmasi Pelunasan Termin'}
+                  {submitting ? 'Memproses...' : 'Konfirmasi Pelunasan'}
                 </button>
               </div>
             </form>
@@ -687,19 +689,19 @@ export default function SettlementWorkflowView({ onOpenCustomer360 }) {
       {/* 3. MODAL: RECOMMEND TO HIGHER TIER                     */}
       {/* ======================================================= */}
       {recommendProposal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-scale-up">
-            <div className="flex items-center justify-between border-b pb-3">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl max-w-md w-full p-4 sm:p-6 shadow-2xl flex flex-col my-auto max-h-[92vh] overflow-hidden animate-scale-up">
+            <div className="flex items-center justify-between border-b pb-3 shrink-0">
               <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
-                <UserCheck className="w-4 h-4 text-blue-600" />
+                <UserCheck className="w-4 h-4 text-blue-600 shrink-0" />
                 Rekomendasi Berjenjang (Approval Matrix)
               </h3>
-              <button onClick={() => setRecommendProposal(null)} className="text-gray-400 hover:text-gray-600">
+              <button onClick={() => setRecommendProposal(null)} className="text-gray-400 hover:text-gray-600 p-1">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleRecommendSubmit} className="space-y-4 text-xs">
+            <form onSubmit={handleRecommendSubmit} className="space-y-4 text-xs overflow-y-auto flex-1 pr-1">
               <div>
                 <label className="block text-gray-700 font-semibold mb-1">Jenjang Tingkat Kewenangan</label>
                 <select
@@ -740,18 +742,18 @@ export default function SettlementWorkflowView({ onOpenCustomer360 }) {
                 />
               </div>
 
-              <div className="flex justify-end gap-2 pt-2 border-t">
+              <div className="flex flex-wrap sm:flex-nowrap justify-end gap-2 pt-2 border-t shrink-0">
                 <button
                   type="button"
                   onClick={() => setRecommendProposal(null)}
-                  className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium"
+                  className="w-full sm:w-auto px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold shadow-md"
+                  className="w-full sm:w-auto px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold shadow-md disabled:opacity-50"
                 >
                   {submitting ? 'Mengirim...' : 'Kirim Rekomendasi'}
                 </button>
@@ -765,23 +767,23 @@ export default function SettlementWorkflowView({ onOpenCustomer360 }) {
       {/* 4. MODAL: APPROVE / REJECT ACTION                      */}
       {/* ======================================================= */}
       {actionModalProposal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-scale-up">
-            <div className="flex items-center justify-between border-b pb-3">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl max-w-md w-full p-4 sm:p-6 shadow-2xl flex flex-col my-auto max-h-[92vh] overflow-hidden animate-scale-up">
+            <div className="flex items-center justify-between border-b pb-3 shrink-0">
               <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
                 Persetujuan Komite Remedial & Recovery
               </h3>
-              <button onClick={() => setActionModalProposal(null)} className="text-gray-400 hover:text-gray-600">
+              <button onClick={() => setActionModalProposal(null)} className="text-gray-400 hover:text-gray-600 p-1">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleProcessAction} className="space-y-4 text-xs">
+            <form onSubmit={handleProcessAction} className="space-y-4 text-xs overflow-y-auto flex-1 pr-1">
               <div className="p-3 bg-gray-50 rounded-lg space-y-1">
                 <div className="flex justify-between">
                   <span className="text-gray-500">Proposal:</span>
-                  <span className="font-bold text-gray-900">{actionModalProposal.proposal_no}</span>
+                  <span className="font-bold text-gray-900 font-mono">{actionModalProposal.proposal_no}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-500">Debitur:</span>
@@ -799,7 +801,7 @@ export default function SettlementWorkflowView({ onOpenCustomer360 }) {
                   <button
                     type="button"
                     onClick={() => setActionFormData({ ...actionFormData, action: 'APPROVE' })}
-                    className={`py-2 px-3 rounded-lg font-bold border text-center ${
+                    className={`py-2 px-3 rounded-lg font-bold border text-center transition-colors ${
                       actionFormData.action === 'APPROVE'
                         ? 'border-emerald-600 bg-emerald-50 text-emerald-800'
                         : 'border-gray-200 hover:bg-gray-50 text-gray-700'
@@ -810,7 +812,7 @@ export default function SettlementWorkflowView({ onOpenCustomer360 }) {
                   <button
                     type="button"
                     onClick={() => setActionFormData({ ...actionFormData, action: 'REJECT' })}
-                    className={`py-2 px-3 rounded-lg font-bold border text-center ${
+                    className={`py-2 px-3 rounded-lg font-bold border text-center transition-colors ${
                       actionFormData.action === 'REJECT'
                         ? 'border-rose-600 bg-rose-50 text-rose-800'
                         : 'border-gray-200 hover:bg-gray-50 text-gray-700'
@@ -842,18 +844,18 @@ export default function SettlementWorkflowView({ onOpenCustomer360 }) {
                 />
               </div>
 
-              <div className="flex justify-end gap-2 pt-2 border-t">
+              <div className="flex flex-wrap sm:flex-nowrap justify-end gap-2 pt-2 border-t shrink-0">
                 <button
                   type="button"
                   onClick={() => setActionModalProposal(null)}
-                  className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium"
+                  className="w-full sm:w-auto px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className={`px-5 py-2 text-white rounded-lg font-bold shadow-md ${
+                  className={`w-full sm:w-auto px-5 py-2 text-white rounded-lg font-bold shadow-md disabled:opacity-50 ${
                     actionFormData.action === 'APPROVE' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-rose-600 hover:bg-rose-700'
                   }`}
                 >
@@ -869,19 +871,19 @@ export default function SettlementWorkflowView({ onOpenCustomer360 }) {
       {/* 5. MODAL: INITIATE NEW PROPOSAL (STAGE 1)              */}
       {/* ======================================================= */}
       {showNewModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 animate-scale-up max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b pb-3">
-              <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
-                <PlusCircle className="w-5 h-5 text-emerald-600" />
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-4 sm:p-6 shadow-2xl flex flex-col my-auto max-h-[92vh] overflow-hidden animate-scale-up">
+            <div className="flex items-center justify-between border-b pb-3 shrink-0">
+              <h3 className="text-sm sm:text-base font-bold text-gray-900 flex items-center gap-2">
+                <PlusCircle className="w-5 h-5 text-emerald-600 shrink-0" />
                 Inisiasi Proposal Settlement Baru (Stage 1: Initiate)
               </h3>
-              <button onClick={() => setShowNewModal(false)} className="text-gray-400 hover:text-gray-600">
+              <button onClick={() => setShowNewModal(false)} className="text-gray-400 hover:text-gray-600 p-1">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleCreateProposal} className="space-y-3 text-xs">
+            <form onSubmit={handleCreateProposal} className="space-y-3 text-xs overflow-y-auto flex-1 pr-1">
               <div>
                 <label className="block text-gray-700 font-semibold mb-1">Nomor Rekening / Perjanjian</label>
                 <input
@@ -893,7 +895,7 @@ export default function SettlementWorkflowView({ onOpenCustomer360 }) {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-gray-700 font-semibold mb-1">Skema Settlement</label>
                   <select
@@ -920,7 +922,7 @@ export default function SettlementWorkflowView({ onOpenCustomer360 }) {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-gray-700 font-semibold mb-1">Tunggakan Awal (Rp)</label>
                   <input
@@ -943,7 +945,7 @@ export default function SettlementWorkflowView({ onOpenCustomer360 }) {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-gray-700 font-semibold mb-1">Diskon Denda (Waive Penalty)</label>
                   <input
@@ -985,18 +987,18 @@ export default function SettlementWorkflowView({ onOpenCustomer360 }) {
                 />
               </div>
 
-              <div className="flex justify-end gap-2 pt-2 border-t">
+              <div className="flex flex-wrap sm:flex-nowrap justify-end gap-2 pt-2 border-t shrink-0">
                 <button
                   type="button"
                   onClick={() => setShowNewModal(false)}
-                  className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium"
+                  className="w-full sm:w-auto px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold shadow-md"
+                  className="w-full sm:w-auto px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold shadow-md disabled:opacity-50"
                 >
                   {submitting ? 'Menyimpan...' : 'Inisiasi Proposal'}
                 </button>

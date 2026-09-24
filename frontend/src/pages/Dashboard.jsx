@@ -150,30 +150,30 @@ export default function Dashboard({ companyInfo }) {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
       {/* Enterprise Architecture Module Switcher */}
-      <div className="bg-white rounded-2xl p-2 shadow-sm border border-slate-200 mb-6 flex flex-wrap gap-2">
+      <div className="bg-white rounded-2xl p-1.5 sm:p-2 shadow-sm border border-slate-200 mb-6 flex overflow-x-auto scrollbar-none gap-1.5 sm:gap-2 sm:flex-wrap">
         <button
           onClick={() => setActiveModule('reguler')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition ${
+          className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl text-xs font-bold transition cursor-pointer ${
             activeModule === 'reguler'
               ? 'bg-red-600 text-white shadow-md'
               : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
           }`}
         >
-          <Layers className="w-4 h-4" />
+          <Layers className="w-4 h-4 shrink-0" />
           <span>Koleksi Reguler (Overdue Matrix)</span>
         </button>
 
         <button
           onClick={() => setActiveModule('pdm')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition ${
+          className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl text-xs font-bold transition cursor-pointer ${
             activeModule === 'pdm'
               ? 'bg-blue-600 text-white shadow-md'
               : 'text-slate-600 hover:text-blue-600 hover:bg-blue-50'
           }`}
         >
-          <ShieldAlert className="w-4 h-4" />
+          <ShieldAlert className="w-4 h-4 shrink-0" />
           <span>Pre-Delinquency DPD 0 (PDM)</span>
           <span className={`px-1.5 py-0.2 rounded text-[10px] ${activeModule === 'pdm' ? 'bg-blue-500 text-white' : 'bg-blue-100 text-blue-700'}`}>
             Early Warning
@@ -182,13 +182,13 @@ export default function Dashboard({ companyInfo }) {
 
         <button
           onClick={() => setActiveModule('legal')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition ${
+          className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl text-xs font-bold transition cursor-pointer ${
             activeModule === 'legal'
               ? 'bg-indigo-600 text-white shadow-md'
               : 'text-slate-600 hover:text-indigo-600 hover:bg-indigo-50'
           }`}
         >
-          <Scale className="w-4 h-4" />
+          <Scale className="w-4 h-4 shrink-0" />
           <span>Alur Hukum & Litigasi (Legal)</span>
           <span className={`px-1.5 py-0.2 rounded text-[10px] ${activeModule === 'legal' ? 'bg-indigo-500 text-white' : 'bg-indigo-100 text-indigo-700'}`}>
             6 Tahapan
@@ -197,13 +197,13 @@ export default function Dashboard({ companyInfo }) {
 
         <button
           onClick={() => setActiveModule('repo')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition ${
+          className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl text-xs font-bold transition cursor-pointer ${
             activeModule === 'repo'
               ? 'bg-emerald-600 text-white shadow-md'
               : 'text-slate-600 hover:text-emerald-600 hover:bg-emerald-50'
           }`}
         >
-          <Warehouse className="w-4 h-4" />
+          <Warehouse className="w-4 h-4 shrink-0" />
           <span>Eksekusi Agunan & Lelang (Repo)</span>
           <span className={`px-1.5 py-0.2 rounded text-[10px] ${activeModule === 'repo' ? 'bg-emerald-500 text-white' : 'bg-emerald-100 text-emerald-700'}`}>
             8 Tahapan
@@ -212,13 +212,13 @@ export default function Dashboard({ companyInfo }) {
 
         <button
           onClick={() => setActiveModule('settlement')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition ${
+          className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl text-xs font-bold transition cursor-pointer ${
             activeModule === 'settlement'
               ? 'bg-teal-600 text-white shadow-md'
               : 'text-slate-600 hover:text-teal-600 hover:bg-teal-50'
           }`}
         >
-          <BadgePercent className="w-4 h-4" />
+          <BadgePercent className="w-4 h-4 shrink-0" />
           <span>Settlement & Diskon Pelunasan</span>
           <span className={`px-1.5 py-0.2 rounded text-[10px] ${activeModule === 'settlement' ? 'bg-teal-500 text-white' : 'bg-teal-100 text-teal-700'}`}>
             6-Stage & Tranches
@@ -227,13 +227,13 @@ export default function Dashboard({ companyInfo }) {
 
         <button
           onClick={() => setActiveModule('geotracker')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition ${
+          className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl text-xs font-bold transition cursor-pointer ${
             activeModule === 'geotracker'
               ? 'bg-indigo-600 text-white shadow-md'
               : 'text-slate-600 hover:text-indigo-600 hover:bg-indigo-50'
           }`}
         >
-          <Radio className="w-4 h-4 animate-pulse" />
+          <Radio className="w-4 h-4 shrink-0 animate-pulse" />
           <span>GeoTracker (GPS Monitoring)</span>
           <span className={`px-1.5 py-0.2 rounded text-[10px] ${activeModule === 'geotracker' ? 'bg-indigo-500 text-white' : 'bg-emerald-100 text-emerald-700 font-bold'}`}>
             Live GPS
@@ -242,13 +242,13 @@ export default function Dashboard({ companyInfo }) {
 
         <button
           onClick={() => setActiveModule('mcollect')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition ${
+          className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl text-xs font-bold transition cursor-pointer ${
             activeModule === 'mcollect'
               ? 'bg-emerald-600 text-white shadow-md'
               : 'text-slate-600 hover:text-emerald-600 hover:bg-emerald-50'
           }`}
         >
-          <Smartphone className="w-4 h-4" />
+          <Smartphone className="w-4 h-4 shrink-0" />
           <span>mCollect Field Workbench</span>
           <span className={`px-1.5 py-0.2 rounded text-[10px] ${activeModule === 'mcollect' ? 'bg-emerald-500 text-white' : 'bg-emerald-100 text-emerald-700 font-bold'}`}>
             PIS Digital
@@ -257,13 +257,13 @@ export default function Dashboard({ companyInfo }) {
 
         <button
           onClick={() => setActiveModule('supervisory')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition ${
+          className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl text-xs font-bold transition cursor-pointer ${
             activeModule === 'supervisory'
               ? 'bg-purple-600 text-white shadow-md'
               : 'text-slate-600 hover:text-purple-600 hover:bg-purple-50'
           }`}
         >
-          <UserCheck className="w-4 h-4" />
+          <UserCheck className="w-4 h-4 shrink-0" />
           <span>Supervisory & Agency</span>
           <span className={`px-1.5 py-0.2 rounded text-[10px] ${activeModule === 'supervisory' ? 'bg-purple-500 text-white' : 'bg-purple-100 text-purple-700 font-bold'}`}>
             OOO & Capacity
@@ -323,57 +323,60 @@ export default function Dashboard({ companyInfo }) {
           </div>
 
           {/* Search & Status Filters */}
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="relative">
+          <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2 w-full sm:w-auto">
+            <div className="relative w-full sm:w-auto">
               <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
               <input 
                 type="text"
                 value={filterQuery.search}
                 onChange={(e) => setFilterQuery(prev => ({ ...prev, search: e.target.value }))}
                 placeholder="Cari kontrak, nama, unit..."
-                className="pl-9 pr-3 py-1.5 text-xs border border-slate-300 rounded-lg bg-white w-48 sm:w-60 focus:ring-2 focus:ring-red-500 focus:outline-none"
+                className="pl-9 pr-3 py-1.5 text-xs border border-slate-300 rounded-lg bg-white w-full sm:w-60 focus:ring-2 focus:ring-red-500 focus:outline-none"
               />
             </div>
 
-            <select
-              value={filterQuery.status}
-              onChange={(e) => setFilterQuery(prev => ({ ...prev, status: e.target.value }))}
-              className="text-xs border border-slate-300 rounded-lg px-2.5 py-1.5 bg-white font-medium text-slate-700"
-            >
-              <option value="">Semua Status</option>
-              <option value="OPEN">OPEN</option>
-              <option value="PROMISE_TO_PAY">PROMISE TO PAY (PTP)</option>
-              <option value="PAID">PAID</option>
-            </select>
+            <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 w-full sm:w-auto">
+              <select
+                value={filterQuery.status}
+                onChange={(e) => setFilterQuery(prev => ({ ...prev, status: e.target.value }))}
+                className="text-xs border border-slate-300 rounded-lg px-2.5 py-1.5 bg-white font-medium text-slate-700 w-full sm:w-auto"
+              >
+                <option value="">Semua Status</option>
+                <option value="OPEN">OPEN</option>
+                <option value="PROMISE_TO_PAY">PROMISE TO PAY (PTP)</option>
+                <option value="PAID">PAID</option>
+              </select>
 
-            <select
-              value={filterQuery.recoveryStage}
-              onChange={(e) => setFilterQuery(prev => ({ ...prev, recoveryStage: e.target.value }))}
-              className="text-xs border border-slate-300 rounded-lg px-2.5 py-1.5 bg-white font-medium text-slate-700"
-            >
-              <option value="">Semua Tahapan Recovery</option>
-              <option value="STAGE_COLLECTION">Koleksi Reguler (Omnichannel)</option>
-              <option value="STAGE_SKIP_TRACING">Skip Tracing (Pelacakan)</option>
-              <option value="STAGE_RESTRUCTURING">Restrukturisasi Kredit</option>
-              <option value="STAGE_LEGAL_NOTICE">Somasi / Peringatan Hukum</option>
-              <option value="STAGE_LITIGATION_AUCTION">Litigasi & Lelang Agunan</option>
-              <option value="STAGE_SETTLEMENT">Settlement (Diskon/Pelunasan)</option>
-              <option value="STAGE_CLOSED">Selesai / Lunas</option>
-            </select>
+              <select
+                value={filterQuery.recoveryStage}
+                onChange={(e) => setFilterQuery(prev => ({ ...prev, recoveryStage: e.target.value }))}
+                className="text-xs border border-slate-300 rounded-lg px-2.5 py-1.5 bg-white font-medium text-slate-700 w-full sm:w-auto"
+              >
+                <option value="">Semua Recovery</option>
+                <option value="STAGE_COLLECTION">Koleksi Reguler</option>
+                <option value="STAGE_SKIP_TRACING">Skip Tracing</option>
+                <option value="STAGE_RESTRUCTURING">Restrukturisasi</option>
+                <option value="STAGE_LEGAL_NOTICE">Somasi / Hukum</option>
+                <option value="STAGE_LITIGATION_AUCTION">Litigasi & Lelang</option>
+                <option value="STAGE_SETTLEMENT">Settlement</option>
+                <option value="STAGE_CLOSED">Selesai / Lunas</option>
+              </select>
+            </div>
 
             <button 
               onClick={fetchDashboardData}
-              className="p-1.5 text-slate-600 hover:text-slate-900 bg-white border border-slate-300 rounded-lg shadow-2xs hover:bg-slate-50"
+              className="p-1.5 text-slate-600 hover:text-slate-900 bg-white border border-slate-300 rounded-lg shadow-2xs hover:bg-slate-50 flex items-center justify-center cursor-pointer"
               title="Refresh Data"
             >
-              <RotateCw className="w-4 h-4" />
+              <RotateCw className="w-4 h-4 mr-1 sm:mr-0" />
+              <span className="text-xs font-semibold sm:hidden">Refresh Data</span>
             </button>
           </div>
         </div>
 
         {/* Data Table */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-slate-600">
+        <div className="overflow-x-auto w-full">
+          <table className="w-full text-left text-xs text-slate-600 min-w-[750px]">
             <thead className="bg-slate-100 text-slate-700 uppercase tracking-wider font-bold text-[11px] border-b border-slate-200">
               <tr>
                 <th className="px-3 py-3 text-center w-10">No.</th>

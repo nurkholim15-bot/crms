@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import Navbar from './components/Navbar';
+import Navbar, { navItems } from './components/Navbar';
 import Dashboard from './pages/Dashboard';
 import DecisionEnginePage from './pages/DecisionEnginePage';
 import OperationsWorkbench from './pages/OperationsWorkbench';
@@ -117,7 +117,7 @@ export default function App() {
       />
 
       {/* Main Tab Content */}
-      <main className="flex-1 pb-12">
+      <main className="flex-1 pb-24 lg:pb-12">
         {activeTab === 'dashboard' && <Dashboard key={globalRefreshTrigger} companyInfo={companyInfo} />}
         {activeTab === 'decision_engine' && <DecisionEnginePage key={globalRefreshTrigger} companyInfo={companyInfo} />}
         {activeTab === 'operations' && <OperationsWorkbench key={globalRefreshTrigger} companyInfo={companyInfo} />}
@@ -126,11 +126,43 @@ export default function App() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-white border-t border-slate-200 py-4 px-6 text-center text-xs text-slate-500">
+      <footer className="bg-white border-t border-slate-200 py-4 px-6 text-center text-xs text-slate-500 mb-14 lg:mb-0">
         <div className="max-w-7xl mx-auto flex justify-center items-center">
           <p>© 2026 {companyInfo.namaPT} ({companyInfo.simbolPT}) – Collection & Recovery Management System (CRMS)</p>
         </div>
       </footer>
+
+      {/* Mobile Bottom Navigation Bar */}
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200 px-2 py-1.5 flex justify-around items-center shadow-2xl">
+        {navItems.map((item) => {
+          const Icon = item.icon;
+          const isActive = activeTab === item.id;
+          return (
+            <button
+              key={item.id}
+              onClick={() => setActiveTab(item.id)}
+              className={`flex flex-col items-center justify-center py-1 px-1.5 rounded-xl transition cursor-pointer relative ${
+                isActive ? 'text-red-600 font-bold' : 'text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              <div className="relative">
+                <Icon className={`w-5 h-5 ${isActive ? 'text-red-600 scale-110' : 'text-slate-500'} transition-transform`} />
+                {item.badge && (
+                  <span className="absolute -top-1 -right-2 px-1 text-[8px] font-black bg-purple-600 text-white rounded-full">
+                    {item.badge}
+                  </span>
+                )}
+              </div>
+              <span className="text-[10px] mt-0.5 leading-none tracking-tight">
+                {item.shortLabel || item.label}
+              </span>
+              {isActive && (
+                <span className="w-1 h-1 rounded-full bg-red-600 mt-0.5"></span>
+              )}
+            </button>
+          );
+        })}
+      </nav>
     </div>
   );
 }

@@ -295,34 +295,34 @@ export default function Customer360Modal({ customerId, isOpen, onClose, onActivi
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5">
-      <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-5xl overflow-hidden flex flex-col max-h-[92vh] animate-in fade-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4">
+      <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-5xl overflow-hidden flex flex-col max-h-[96vh] my-auto animate-in fade-in zoom-in-95 duration-200">
         
         {/* Modal Header */}
-        <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-red-950 text-white p-5 flex justify-between items-start">
-          <div className="flex items-start space-x-4">
-            <div className="w-13 h-13 rounded-2xl bg-gradient-to-tr from-red-600 to-amber-500 p-0.5 shadow-md flex-shrink-0">
-              <div className="w-12 h-12 rounded-2xl bg-slate-900 flex items-center justify-center text-white font-bold text-lg">
-                <User className="w-6 h-6 text-red-400" />
+        <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-red-950 text-white p-3.5 sm:p-5 flex justify-between items-start gap-2">
+          <div className="flex items-start space-x-2.5 sm:space-x-4 min-w-0">
+            <div className="w-10 h-10 sm:w-13 sm:h-13 rounded-2xl bg-gradient-to-tr from-red-600 to-amber-500 p-0.5 shadow-md shrink-0">
+              <div className="w-full h-full rounded-2xl bg-slate-900 flex items-center justify-center text-white font-bold text-sm sm:text-lg">
+                <User className="w-5 h-5 sm:w-6 sm:h-6 text-red-400" />
               </div>
             </div>
-            <div>
-              <div className="flex items-center space-x-2">
-                <h2 className="text-xl font-bold tracking-tight text-white">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-1.5">
+                <h2 className="text-base sm:text-xl font-bold tracking-tight text-white truncate max-w-[200px] sm:max-w-none">
                   {loading ? 'Memuat Profil...' : data?.customer_name}
                 </h2>
                 {data?.is_vip && (
-                  <span className="px-2 py-0.5 text-xs font-black bg-gradient-to-r from-amber-400 to-amber-500 text-amber-950 rounded-full flex items-center shadow-sm">
-                    <Crown className="w-3.5 h-3.5 mr-1" /> VIP Prioritas
+                  <span className="px-2 py-0.5 text-[10px] sm:text-xs font-black bg-gradient-to-r from-amber-400 to-amber-500 text-amber-950 rounded-full flex items-center shadow-sm">
+                    <Crown className="w-3 h-3 mr-1" /> VIP
                   </span>
                 )}
                 {data?.combo_case_stamping && data.combo_case_stamping !== 'Single Facility' && (
-                  <span className="px-2.5 py-0.5 text-xs font-bold bg-indigo-500/40 text-indigo-200 border border-indigo-400/50 rounded-full flex items-center shadow-sm">
-                    <Sparkles className="w-3.5 h-3.5 mr-1 text-yellow-300" />
+                  <span className="px-2 py-0.5 text-[10px] sm:text-xs font-bold bg-indigo-500/40 text-indigo-200 border border-indigo-400/50 rounded-full flex items-center shadow-sm">
+                    <Sparkles className="w-3 h-3 mr-1 text-yellow-300" />
                     {data.combo_case_stamping}
                   </span>
                 )}
-                <span className="px-2 py-0.5 text-[11px] font-mono bg-slate-800 text-slate-300 rounded border border-slate-700">
+                <span className="px-1.5 py-0.5 text-[10px] sm:text-[11px] font-mono bg-slate-800 text-slate-300 rounded border border-slate-700">
                   {data?.customer_no || 'CIF-000000'}
                 </span>
               </div>
@@ -387,13 +387,14 @@ export default function Customer360Modal({ customerId, isOpen, onClose, onActivi
             </div>
           </div>
 
-          <div className="flex items-center space-x-2">
-            <span className="text-[11px] font-semibold text-emerald-400 bg-emerald-950/80 px-2.5 py-1 rounded-full border border-emerald-800/80 flex items-center">
-              <Sparkles className="w-3.5 h-3.5 mr-1" /> CRMS 360° Unified View
+          <div className="flex items-center space-x-1.5 shrink-0">
+            <span className="hidden sm:flex text-[11px] font-semibold text-emerald-400 bg-emerald-950/80 px-2.5 py-1 rounded-full border border-emerald-800/80 items-center">
+              <Sparkles className="w-3.5 h-3.5 mr-1" /> CRMS 360°
             </span>
             <button 
               onClick={onClose}
               className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
+              aria-label="Tutup"
             >
               <X className="w-5 h-5" />
             </button>
@@ -459,10 +460,10 @@ export default function Customer360Modal({ customerId, isOpen, onClose, onActivi
         )}
 
         {/* Tab Navigation */}
-        <div className="flex border-b border-slate-200 px-5 bg-white space-x-6 text-sm font-semibold">
+        <div className="flex overflow-x-auto scrollbar-none border-b border-slate-200 px-3 sm:px-5 bg-white space-x-2 sm:space-x-6 text-xs sm:text-sm font-semibold shrink-0">
           <button
             onClick={() => setActiveTab('facilities')}
-            className={`py-3 flex items-center space-x-2 border-b-2 transition ${
+            className={`py-2.5 sm:py-3 shrink-0 whitespace-nowrap flex items-center space-x-1.5 sm:space-x-2 border-b-2 transition cursor-pointer ${
               activeTab === 'facilities'
                 ? 'border-red-600 text-red-600'
                 : 'border-transparent text-slate-500 hover:text-slate-900'
@@ -474,39 +475,39 @@ export default function Customer360Modal({ customerId, isOpen, onClose, onActivi
 
           <button
             onClick={() => setActiveTab('script')}
-            className={`py-3 flex items-center space-x-2 border-b-2 transition ${
+            className={`py-2.5 sm:py-3 shrink-0 whitespace-nowrap flex items-center space-x-1.5 sm:space-x-2 border-b-2 transition cursor-pointer ${
               activeTab === 'script'
                 ? 'border-red-600 text-red-600'
                 : 'border-transparent text-slate-500 hover:text-slate-900'
             }`}
           >
             <MessageSquare className="w-4 h-4 text-emerald-600" />
-            <span>Skrip Percakapan Terpandu</span>
+            <span>Skrip Percakapan</span>
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
           </button>
 
           <button
             onClick={() => setActiveTab('workflow')}
-            className={`py-3 flex items-center space-x-2 border-b-2 transition ${
+            className={`py-2.5 sm:py-3 shrink-0 whitespace-nowrap flex items-center space-x-1.5 sm:space-x-2 border-b-2 transition cursor-pointer ${
               activeTab === 'workflow'
                 ? 'border-red-600 text-red-600'
                 : 'border-transparent text-slate-500 hover:text-slate-900'
             }`}
           >
             <Scale className="w-4 h-4 text-indigo-600" />
-            <span>Advanced Collections Lifecycle</span>
+            <span>Alur Lifecycle</span>
           </button>
 
           <button
             onClick={() => setActiveTab('timeline')}
-            className={`py-3 flex items-center space-x-2 border-b-2 transition ${
+            className={`py-2.5 sm:py-3 shrink-0 whitespace-nowrap flex items-center space-x-1.5 sm:space-x-2 border-b-2 transition cursor-pointer ${
               activeTab === 'timeline'
                 ? 'border-red-600 text-red-600'
                 : 'border-transparent text-slate-500 hover:text-slate-900'
             }`}
           >
             <Clock className="w-4 h-4 text-amber-600" />
-            <span>Timeline Interaksi ({timelineActivities.length})</span>
+            <span>Timeline ({timelineActivities.length})</span>
           </button>
 
           {(data?.legal_cases?.length || 0) > 0 && (

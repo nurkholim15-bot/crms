@@ -110,24 +110,24 @@ export default function DecisionEnginePage({ companyInfo }) {
   const simResult = calculateEvaluation();
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8">
+    <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-6">
       {/* Header Banner */}
-      <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-2xl p-6 text-white shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center">
+      <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-2xl p-4 sm:p-6 text-white shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <div className="flex items-center space-x-2">
-            <span className="p-2 bg-indigo-500/20 text-indigo-400 rounded-lg">
+            <span className="p-2 bg-indigo-500/20 text-indigo-400 rounded-lg shrink-0">
               <Cpu className="w-6 h-6" />
             </span>
-            <h2 className="text-xl font-black">Decision Engine (DE) & Risk Scoring Hub</h2>
+            <h2 className="text-base sm:text-xl font-black">Decision Engine (DE) & Risk Scoring Hub</h2>
           </div>
           <p className="text-slate-300 text-xs mt-2 max-w-2xl">
             Decision Engine {companyInfo?.simbolPT || 'CRMS'} secara otomatis mengevaluasi seluruh portofolio kredit (Pre-Delinquency DPD -3 s/d 0 hingga DPD &gt; 150) ke dalam kelompok Champion vs Challenger, menentukan Risk Level (0–1000 Poin), serta menugaskan PIC yang paling efektif secara biaya dan hasil di setiap bucket.
           </p>
         </div>
-        <div className="mt-4 md:mt-0 flex items-center space-x-3 bg-white/10 px-4 py-2 rounded-xl backdrop-blur-xs">
-          <div className="text-right">
+        <div className="w-full md:w-auto flex items-center justify-between md:justify-end space-x-3 bg-white/10 px-4 py-2 rounded-xl backdrop-blur-xs">
+          <div className="text-left md:text-right">
             <span className="text-[11px] text-slate-300 block">Status Engine</span>
-            <span className="font-extrabold text-emerald-400 text-xs flex items-center justify-end">
+            <span className="font-extrabold text-emerald-400 text-xs flex items-center md:justify-end">
               <span className="w-2 h-2 rounded-full bg-emerald-400 mr-1.5 animate-pulse"></span>
               Aktif & Optimal
             </span>
@@ -138,7 +138,7 @@ export default function DecisionEnginePage({ companyInfo }) {
       {/* 2 Column: Architecture & Interactive Testing Simulator */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left: Interactive DE Simulator */}
-        <div className="lg:col-span-6 bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-5">
+        <div className="lg:col-span-6 bg-white p-4 sm:p-6 rounded-xl border border-slate-200 shadow-sm space-y-5">
           <div className="flex items-center justify-between pb-3 border-b border-slate-200">
             <h3 className="font-extrabold text-slate-900 text-base flex items-center">
               <Sliders className="w-5 h-5 mr-2 text-indigo-600" />

@@ -69,26 +69,26 @@ export default function ConfinsEODSimulator({ onEODComplete, companyInfo }) {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+    <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-6">
       {/* Header Banner */}
-      <div className="bg-slate-900 rounded-2xl p-6 text-white shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center">
+      <div className="bg-slate-900 rounded-2xl p-4 sm:p-6 text-white shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <div className="flex items-center space-x-3">
-            <div className="p-2.5 bg-red-600/30 text-red-400 rounded-xl">
-              <RefreshCw className={`w-7 h-7 ${isRunning ? 'animate-spin' : ''}`} />
+            <div className="p-2.5 bg-red-600/30 text-red-400 rounded-xl shrink-0">
+              <RefreshCw className={`w-6 h-6 sm:w-7 sm:h-7 ${isRunning ? 'animate-spin' : ''}`} />
             </div>
             <div>
-              <h2 className="text-xl font-black">Core Banking End of Day (EOD) Batch Simulator</h2>
+              <h2 className="text-base sm:text-xl font-black">Core Banking End of Day (EOD) Batch Simulator</h2>
               <p className="text-slate-400 text-xs mt-0.5">
                 Simulasi Siklus Pergantian Hari Sistem Inti Perbankan & Re-evaluasi Otomatis Decision Engine
               </p>
             </div>
           </div>
         </div>
-        <div className="mt-4 md:mt-0 flex space-x-2">
+        <div className="w-full md:w-auto flex">
           <button
             onClick={handleResetData}
-            className="px-3.5 py-2 text-xs font-bold text-slate-300 bg-slate-800 hover:bg-slate-700 rounded-xl border border-slate-700 transition"
+            className="w-full md:w-auto justify-center px-3.5 py-2 text-xs font-bold text-slate-300 bg-slate-800 hover:bg-slate-700 rounded-xl border border-slate-700 transition flex items-center gap-1.5"
           >
             ↻ Reset Sample Data
           </button>
@@ -98,7 +98,7 @@ export default function ConfinsEODSimulator({ onEODComplete, companyInfo }) {
       {/* 2 Column: Controls & Real-time Batch Logs */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Controls Card */}
-        <div className="lg:col-span-6 bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-5">
+        <div className="lg:col-span-6 bg-white p-4 sm:p-6 rounded-xl border border-slate-200 shadow-sm space-y-5">
           <h3 className="font-extrabold text-slate-900 text-base pb-2 border-b border-slate-200 flex items-center">
             <Play className="w-4 h-4 mr-2 text-red-600 fill-red-600" />
             Parameter Eksekusi Batch EOD

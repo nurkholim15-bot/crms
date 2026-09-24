@@ -82,13 +82,13 @@ export default function BucketMatrixTable({ matrixData, onSelectCell, selectedCe
   const isVIPSelected = selectedCell?.actionPath === 'VIP';
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 mb-8">
+    <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-3.5 sm:p-6 mb-8">
       {/* Header Info */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between pb-4 mb-4 border-b border-slate-200">
+      <div className="flex flex-col md:flex-row md:items-center justify-between pb-4 mb-4 border-b border-slate-200 gap-3">
         <div className="flex items-center space-x-3">
-          <div className="w-3 h-8 bg-[#0F5132] rounded-xs"></div>
+          <div className="w-3 h-8 bg-[#0F5132] rounded-xs shrink-0"></div>
           <div>
-            <h2 className="text-xl font-black text-slate-900 tracking-tight">
+            <h2 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight">
               Collection Bucket Matrix <span className="text-[#0F5132] font-extrabold">– {generalNamaPT || 'PT AAA'} ({generalSimbolPT || 'AAA'})</span>
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">
@@ -98,20 +98,26 @@ export default function BucketMatrixTable({ matrixData, onSelectCell, selectedCe
         </div>
 
         {/* Status Indikator */}
-        <div className="mt-3 md:mt-0 flex items-center space-x-2 text-xs">
+        <div className="flex flex-wrap items-center gap-2 text-xs">
           <span className="px-2.5 py-1 rounded bg-emerald-50 text-emerald-800 font-bold border border-emerald-300">
-            DPD 1–30: Decision Engine Phase
+            DPD 1–30: Decision Engine
           </span>
           <span className="text-slate-400">&rarr;</span>
           <span className="px-2.5 py-1 rounded bg-orange-50 text-orange-800 font-bold border border-orange-300">
-            DPD &gt; 30: Senior Field Collector
+            DPD &gt; 30: Senior Field
           </span>
         </div>
       </div>
 
+      {/* Mobile Scroll Hint */}
+      <div className="flex sm:hidden items-center justify-between text-[11px] text-slate-500 mb-2 px-1">
+        <span>👈 Geser tabel ke kanan/kiri 👉</span>
+        <span className="font-semibold text-emerald-700">10 Kolom Bucket</span>
+      </div>
+
       {/* Tabel Matriks Persis Gambar 2 */}
-      <div className="overflow-x-auto shadow-sm rounded-lg border-2 border-[#0F5132]">
-        <table className="w-full border-collapse text-center">
+      <div className="overflow-x-auto shadow-sm rounded-lg border-2 border-[#0F5132] w-full">
+        <table className="w-full border-collapse text-center min-w-[720px]">
           <thead>
             {/* Header Hijau Gelap sesuai Image 2 */}
             <tr className="bg-[#0F5132] text-white font-extrabold text-sm border-b-2 border-[#0F5132]">

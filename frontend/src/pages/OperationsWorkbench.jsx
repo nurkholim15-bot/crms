@@ -82,11 +82,11 @@ export default function OperationsWorkbench({ companyInfo }) {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+    <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-6">
       {/* Workbench Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center pb-4 border-b border-slate-200">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center pb-4 border-b border-slate-200 gap-2">
         <div>
-          <h2 className="text-xl font-extrabold text-slate-900">
+          <h2 className="text-lg sm:text-xl font-extrabold text-slate-900">
             Kanal Operasional Penanganan (PIC Workbench)
           </h2>
           <p className="text-xs text-slate-500 mt-0.5">
@@ -96,7 +96,7 @@ export default function OperationsWorkbench({ companyInfo }) {
       </div>
 
       {/* Channel Switcher Tabs */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2.5">
+      <div className="flex overflow-x-auto pb-2 scrollbar-none sm:grid sm:grid-cols-4 lg:grid-cols-7 gap-2 sm:gap-2.5">
         {channels.map((ch) => {
           const Icon = ch.icon;
           const isSelected = selectedChannel === ch.id;
@@ -104,7 +104,7 @@ export default function OperationsWorkbench({ companyInfo }) {
             <button
               key={ch.id}
               onClick={() => setSelectedChannel(ch.id)}
-              className={`p-3 rounded-xl border text-left transition flex flex-col justify-between ${
+              className={`min-w-[140px] sm:min-w-0 shrink-0 sm:shrink p-3 rounded-xl border text-left transition flex flex-col justify-between ${
                 isSelected
                   ? 'border-red-600 bg-red-50/70 shadow-sm ring-2 ring-red-500/30'
                   : 'border-slate-200 bg-white hover:bg-slate-50'
@@ -133,9 +133,9 @@ export default function OperationsWorkbench({ companyInfo }) {
 
       {/* Accounts List for the Active Channel */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="p-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
+        <div className="p-3 sm:p-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
           <div className="flex items-center space-x-2">
-            <span className="font-extrabold text-sm text-slate-900">
+            <span className="font-extrabold text-xs sm:text-sm text-slate-900">
               Antrean Tugas Kanal {selectedChannel}
             </span>
             <span className="px-2 py-0.5 text-xs font-bold bg-red-100 text-red-700 rounded-full">
@@ -149,7 +149,7 @@ export default function OperationsWorkbench({ companyInfo }) {
 
         {/* Channel Queue Table */}
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-slate-600">
+          <table className="w-full min-w-[760px] text-left text-xs text-slate-600">
             <thead className="bg-slate-100 text-slate-700 uppercase tracking-wider font-bold text-[11px]">
               <tr>
                 <th className="px-3 py-3 text-center w-10">No.</th>

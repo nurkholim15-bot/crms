@@ -140,12 +140,12 @@ const SupervisoryControlView = () => {
   return (
     <div className="space-y-6">
       {/* Header Banner */}
-      <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white rounded-2xl p-6 shadow-xl relative overflow-hidden">
+      <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white rounded-2xl p-4 sm:p-6 shadow-xl relative overflow-hidden">
         <div className="absolute right-0 top-0 bottom-0 opacity-10 pointer-events-none flex items-center pr-10">
           <Shield className="w-64 h-64 text-indigo-300" />
         </div>
         <div className="relative z-10 max-w-4xl">
-          <div className="flex items-center gap-2 mb-2">
+          <div className="flex flex-wrap items-center gap-2 mb-2">
             <span className="px-3 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider bg-indigo-500/30 text-indigo-200 border border-indigo-400/30 flex items-center gap-1.5">
               <Shield className="w-3.5 h-3.5 text-indigo-300" />
               Supervisory Control & Governance
@@ -154,10 +154,10 @@ const SupervisoryControlView = () => {
               Enterprise Value Differentiators
             </span>
           </div>
-          <h2 className="text-2xl font-bold text-white tracking-tight">
+          <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
             Manajemen Agensi, Delegasi Wewenang (OOO) & Perencanaan Kapasitas
           </h2>
-          <p className="mt-2 text-slate-300 text-sm leading-relaxed">
+          <p className="mt-2 text-slate-300 text-xs sm:text-sm leading-relaxed">
             Menyediakan fitur pembeda tingkat enterprise: <strong>External Agency & Agent Onboarding</strong>, <strong>Authority Delegation (Out of Office Enablement)</strong>, <strong>Round-Robin Allocation & Capacity Planning</strong>, serta <strong>Frontend Easy Rule Creation</strong>.
           </p>
         </div>
@@ -167,38 +167,38 @@ const SupervisoryControlView = () => {
       <div className="bg-white rounded-xl p-2 border border-gray-200 shadow-sm flex flex-wrap gap-2">
         <button
           onClick={() => setActiveTab('agencies')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition ${
+          className={`flex-1 sm:flex-none justify-center flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-xs font-bold transition ${
             activeTab === 'agencies'
               ? 'bg-indigo-600 text-white shadow-sm'
               : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
           }`}
         >
-          <Building2 className="w-4 h-4" />
-          <span>Agency & Agent Onboarding ({agencies.length})</span>
+          <Building2 className="w-4 h-4 shrink-0" />
+          <span>Agency Onboarding ({agencies.length})</span>
         </button>
 
         <button
           onClick={() => setActiveTab('delegations')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition ${
+          className={`flex-1 sm:flex-none justify-center flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-xs font-bold transition ${
             activeTab === 'delegations'
               ? 'bg-indigo-600 text-white shadow-sm'
               : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
           }`}
         >
-          <UserCheck className="w-4 h-4" />
-          <span>Authority Delegation / Out-of-Office ({delegations.filter(d => d.is_active).length} Aktif)</span>
+          <UserCheck className="w-4 h-4 shrink-0" />
+          <span>Delegasi OOO ({delegations.filter(d => d.is_active).length} Aktif)</span>
         </button>
 
         <button
           onClick={() => setActiveTab('capacity')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition ${
+          className={`flex-1 sm:flex-none justify-center flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-xs font-bold transition ${
             activeTab === 'capacity'
               ? 'bg-indigo-600 text-white shadow-sm'
               : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
           }`}
         >
-          <BarChart3 className="w-4 h-4" />
-          <span>Capacity Planning & Round-Robin</span>
+          <BarChart3 className="w-4 h-4 shrink-0" />
+          <span>Capacity Planning</span>
         </button>
       </div>
 
@@ -207,14 +207,14 @@ const SupervisoryControlView = () => {
       {/* ======================================================= */}
       {activeTab === 'agencies' && (
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <h3 className="text-sm font-bold text-gray-900">Daftar Agensi Penagihan Pihak Ketiga (External Agencies)</h3>
               <p className="text-xs text-gray-500">Kemitraan alih daya penagihan resmi dengan pemantauan recovery rate & batas masa berlaku izin</p>
             </div>
             <button
               onClick={() => setShowAgencyModal(true)}
-              className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-sm"
+              className="w-full sm:w-auto justify-center px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-sm"
             >
               <PlusCircle className="w-4 h-4" />
               Onboard Agensi Baru
@@ -223,7 +223,7 @@ const SupervisoryControlView = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {agencies.map((agy) => (
-              <div key={agy.id} className="bg-white rounded-xl p-5 border border-gray-200 shadow-sm space-y-3">
+              <div key={agy.id} className="bg-white rounded-xl p-4 sm:p-5 border border-gray-200 shadow-sm space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="font-mono text-xs px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 font-bold">
                     {agy.agency_code}
@@ -264,22 +264,22 @@ const SupervisoryControlView = () => {
       {/* ======================================================= */}
       {activeTab === 'delegations' && (
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <h3 className="text-sm font-bold text-gray-900">Pendelegasian Wewenang (Out of Office Approval Delegation)</h3>
               <p className="text-xs text-gray-500">Pengalihan sementara hak persetujuan diskon kompromi settlement saat pejabat berhalangan hadir</p>
             </div>
             <button
               onClick={() => setShowDelegationModal(true)}
-              className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-sm"
+              className="w-full sm:w-auto justify-center px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-sm"
             >
               <PlusCircle className="w-4 h-4" />
               Aktifkan Delegasi Baru
             </button>
           </div>
 
-          <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200 text-xs">
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-x-auto">
+            <table className="w-full min-w-[760px] divide-y divide-gray-200 text-xs">
               <thead className="bg-gray-50 text-gray-500 uppercase tracking-wider font-semibold">
                 <tr>
                   <th className="px-4 py-3 text-left">Pejabat Asal (Delegator)</th>
@@ -343,7 +343,7 @@ const SupervisoryControlView = () => {
       {/* ======================================================= */}
       {activeTab === 'capacity' && capacityData && (
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div>
               <h3 className="text-sm font-bold text-gray-900">Alokasi Beban Kerja & Kapasitas Penagihan (Round-Robin)</h3>
               <p className="text-xs text-gray-500">
@@ -403,19 +403,19 @@ const SupervisoryControlView = () => {
       {/* MODAL: ONBOARD AGENCY                                   */}
       {/* ======================================================= */}
       {showAgencyModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-scale-up">
-            <div className="flex items-center justify-between border-b pb-3">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl max-w-md w-full p-4 sm:p-6 shadow-2xl flex flex-col my-auto max-h-[92vh] overflow-hidden animate-scale-up">
+            <div className="flex items-center justify-between border-b pb-3 shrink-0">
               <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
-                <Building2 className="w-4 h-4 text-indigo-600" />
+                <Building2 className="w-4 h-4 text-indigo-600 shrink-0" />
                 Onboard Agensi Penagihan Eksternal Baru
               </h3>
-              <button onClick={() => setShowAgencyModal(false)} className="text-gray-400 hover:text-gray-600">
+              <button onClick={() => setShowAgencyModal(false)} className="text-gray-400 hover:text-gray-600 p-1">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleCreateAgency} className="space-y-3 text-xs">
+            <form onSubmit={handleCreateAgency} className="space-y-3 text-xs overflow-y-auto flex-1 pr-1">
               <div>
                 <label className="block text-gray-700 font-semibold mb-1">Kode Agensi</label>
                 <input
@@ -439,7 +439,7 @@ const SupervisoryControlView = () => {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-gray-700 font-semibold mb-1">No Kontrak Kerjasama</label>
                   <input
@@ -462,7 +462,7 @@ const SupervisoryControlView = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-gray-700 font-semibold mb-1">PIC Agensi</label>
                   <input
@@ -487,17 +487,17 @@ const SupervisoryControlView = () => {
                 </div>
               </div>
 
-              <div className="flex justify-end gap-2 pt-2 border-t">
+              <div className="flex flex-wrap sm:flex-nowrap justify-end gap-2 pt-2 border-t shrink-0">
                 <button
                   type="button"
                   onClick={() => setShowAgencyModal(false)}
-                  className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium"
+                  className="w-full sm:w-auto px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold shadow-md"
+                  className="w-full sm:w-auto px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold shadow-md"
                 >
                   Simpan Agensi
                 </button>
@@ -511,19 +511,19 @@ const SupervisoryControlView = () => {
       {/* MODAL: CREATE DELEGATION (OOO)                          */}
       {/* ======================================================= */}
       {showDelegationModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-scale-up">
-            <div className="flex items-center justify-between border-b pb-3">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl max-w-md w-full p-4 sm:p-6 shadow-2xl flex flex-col my-auto max-h-[92vh] overflow-hidden animate-scale-up">
+            <div className="flex items-center justify-between border-b pb-3 shrink-0">
               <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
-                <UserCheck className="w-4 h-4 text-indigo-600" />
+                <UserCheck className="w-4 h-4 text-indigo-600 shrink-0" />
                 Aktifkan Pendelegasian Wewenang (Out of Office)
               </h3>
-              <button onClick={() => setShowDelegationModal(false)} className="text-gray-400 hover:text-gray-600">
+              <button onClick={() => setShowDelegationModal(false)} className="text-gray-400 hover:text-gray-600 p-1">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleCreateDelegation} className="space-y-3 text-xs">
+            <form onSubmit={handleCreateDelegation} className="space-y-3 text-xs overflow-y-auto flex-1 pr-1">
               <div>
                 <label className="block text-gray-700 font-semibold mb-1">Pejabat Asal (Pemberi Kuasa)</label>
                 <input
@@ -557,7 +557,7 @@ const SupervisoryControlView = () => {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-gray-700 font-semibold mb-1">Tanggal Mulai</label>
                   <input
@@ -591,17 +591,17 @@ const SupervisoryControlView = () => {
                 />
               </div>
 
-              <div className="flex justify-end gap-2 pt-2 border-t">
+              <div className="flex flex-wrap sm:flex-nowrap justify-end gap-2 pt-2 border-t shrink-0">
                 <button
                   type="button"
                   onClick={() => setShowDelegationModal(false)}
-                  className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium"
+                  className="w-full sm:w-auto px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold shadow-md"
+                  className="w-full sm:w-auto px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold shadow-md"
                 >
                   Aktifkan Delegasi
                 </button>

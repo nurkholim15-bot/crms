@@ -233,8 +233,8 @@ export default function LegalWorkflowView({ onOpenCustomer360 }) {
           <span className="text-xs text-slate-400">Sinkronisasi Dokumen Perkara & Surat Kuasa</span>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm text-slate-600">
+        <div className="overflow-x-auto w-full">
+          <table className="w-full text-left text-xs sm:text-sm text-slate-600 min-w-[750px]">
             <thead className="bg-slate-50 text-xs font-semibold text-slate-700 uppercase tracking-wider border-b border-slate-200">
               <tr>
                 <th className="px-5 py-3">No. Perkara / Kasus</th>
@@ -346,22 +346,22 @@ export default function LegalWorkflowView({ onOpenCustomer360 }) {
 
       {/* Modal Update Tahapan Legal */}
       {selectedCaseForEdit && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden animate-in fade-in zoom-in-95">
-            <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-900 text-white">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-2 sm:p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden max-h-[92vh] flex flex-col my-auto animate-in fade-in zoom-in-95">
+            <div className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-200 flex items-center justify-between bg-slate-900 text-white gap-2">
               <div className="flex items-center gap-2">
-                <Gavel className="w-5 h-5 text-indigo-400" />
-                <h3 className="font-semibold text-lg">Perbarui Tahapan Perkara Legal</h3>
+                <Gavel className="w-5 h-5 text-indigo-400 shrink-0" />
+                <h3 className="font-semibold text-base sm:text-lg">Perbarui Tahapan Legal</h3>
               </div>
               <button 
                 onClick={() => setSelectedCaseForEdit(null)}
-                className="text-slate-400 hover:text-white"
+                className="text-slate-400 hover:text-white p-1 rounded-lg shrink-0 cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleUpdateStage} className="p-6 space-y-4">
+            <form onSubmit={handleUpdateStage} className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1 text-xs sm:text-sm">
               <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 text-xs space-y-1">
                 <div><strong>No Perkara:</strong> {selectedCaseForEdit.case_no}</div>
                 <div><strong>Debitur:</strong> {selectedCaseForEdit.customer?.name} ({selectedCaseForEdit.agreement_no})</div>
@@ -384,7 +384,7 @@ export default function LegalWorkflowView({ onOpenCustomer360 }) {
                 </select>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
                     Nama Kuasa Hukum / Advokat
@@ -411,7 +411,7 @@ export default function LegalWorkflowView({ onOpenCustomer360 }) {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
                     Pengadilan / Lembaga
@@ -437,7 +437,7 @@ export default function LegalWorkflowView({ onOpenCustomer360 }) {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
                     Dasar Gugatan / Pasal Hukum
@@ -480,18 +480,18 @@ export default function LegalWorkflowView({ onOpenCustomer360 }) {
                 />
               </div>
 
-              <div className="pt-2 flex items-center justify-end gap-3 border-t border-slate-200">
+              <div className="pt-2 flex flex-wrap sm:flex-nowrap items-center justify-end gap-2 border-t border-slate-200">
                 <button
                   type="button"
                   onClick={() => setSelectedCaseForEdit(null)}
-                  className="px-4 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100"
+                  className="w-full sm:w-auto px-4 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 cursor-pointer"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-4 py-2 rounded-lg text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 text-white flex items-center gap-1.5 shadow-sm"
+                  className="w-full sm:w-auto px-4 py-2 rounded-lg text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 text-white flex items-center justify-center gap-1.5 shadow-sm cursor-pointer disabled:opacity-50"
                 >
                   {submitting ? 'Menyimpan...' : 'Simpan Pembaruan'}
                 </button>
