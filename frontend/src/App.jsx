@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import Sidebar from './components/Sidebar';
 import TopHeader from './components/TopHeader';
 import AboutModal from './components/AboutModal';
+import MobileShortcutMenu from './components/MobileShortcutMenu';
+import MobileFooterNav from './components/MobileFooterNav';
 import Dashboard from './pages/Dashboard';
 import DecisionEnginePage from './pages/DecisionEnginePage';
 import OperationsWorkbench from './pages/OperationsWorkbench';
@@ -18,9 +20,10 @@ export default function App() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
+  const [summaryData, setSummaryData] = useState(null);
   const [companyInfo, setCompanyInfo] = useState({
-    namaPT: 'PT AAA',
-    simbolPT: 'AAA'
+    namaPT: 'PT Bank Rakyat Nusantara Tbk',
+    simbolPT: 'BANK'
   });
 
   // State Otentikasi Pengguna
@@ -38,9 +41,10 @@ export default function App() {
       try {
         const res = await getDashboardSummary();
         if (res.data?.data) {
+          setSummaryData(res.data.data);
           setCompanyInfo({
-            namaPT: res.data.data.general_nama_pt || 'PT AAA',
-            simbolPT: res.data.data.general_simbol_pt || 'AAA'
+            namaPT: res.data.data.general_nama_pt || 'PT Bank Rakyat Nusantara Tbk',
+            simbolPT: res.data.data.general_simbol_pt || 'BANK'
           });
         }
       } catch (e) {
@@ -52,7 +56,7 @@ export default function App() {
 
   // Update Dynamic Document Title & Favicon Tab Browser
   useEffect(() => {
-    const symbol = companyInfo.simbolPT || 'AAA';
+    const symbol = companyInfo.simbolPT || 'BANK';
     document.title = `${symbol} CRMS - Collection & Recovery Management System`;
 
     // Perbarui favicon secara dinamis ke logo rounded-square emerald dengan inisial perusahaan
@@ -110,7 +114,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[#064E3B] flex font-['Plus_Jakarta_Sans',sans-serif] text-slate-900 antialiased overflow-x-hidden">
+    <div className="h-screen flex bg-[#064E3B] font-['Plus_Jakarta_Sans',sans-serif] text-slate-900 antialiased overflow-hidden">
       {/* Sidebar Navigation (Collapsible desktop + sliding drawer mobile) */}
       <Sidebar 
         activeTab={activeTab}
@@ -127,58 +131,86 @@ export default function App() {
       />
 
       {/* Main Content Column */}
-      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
-        {/* Top Header */}
-        <TopHeader 
-          currentUser={currentUser}
-          companyInfo={companyInfo}
-          isRefreshing={isRefreshing}
-          onResetDemo={handleResetDemo}
-          onLogout={handleLogout}
-          onOpenAbout={() => setIsAboutModalOpen(true)}
-          setMobileOpen={setMobileSidebarOpen}
-          activeTab={activeTab}
-          activeModule={activeModule}
-        />
+      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden relative">
+        {/* Top Header - STATIS / TETAP DI ATAS (shrink-0, posisi terkunci tidak ikut scroll) */}
+        <header className="shrink-0 z-30 bg-[#064E3B] border-b border-emerald-800/40 shadow-sm">
+          <TopHeader 
+            currentUser={currentUser}
+            companyInfo={companyInfo}
+            isRefreshing={isRefreshing}
+            onResetDemo={handleResetDemo}
+            onLogout={handleLogout}
+            onOpenAbout={() => setIsAboutModalOpen(true)}
+            setMobileOpen={setMobileSidebarOpen}
+            activeTab={activeTab}
+            activeModule={activeModule}
+          />
+        </header>
 
-        {/* Content Card Area - LIMS styled rounded-3xl white card */}
-        <main className="flex-1 px-3 sm:px-6 lg:px-8 pb-8 pt-1">
-          <div className="bg-white rounded-3xl shadow-2xl p-4 sm:p-6 lg:p-8 min-h-[calc(100vh-140px)] border border-emerald-950/10 transition-all">
-            {activeTab === 'dashboard' && (
-              <Dashboard 
-                key={`${globalRefreshTrigger}-${activeModule}`} 
-                companyInfo={companyInfo} 
-                activeModule={activeModule}
-                setActiveModule={setActiveModule}
-              />
-            )}
-            {activeTab === 'decision_engine' && (
-              <DecisionEnginePage 
-                key={globalRefreshTrigger} 
-                companyInfo={companyInfo} 
-              />
-            )}
-            {activeTab === 'operations' && (
-              <OperationsWorkbench 
-                key={globalRefreshTrigger} 
-                companyInfo={companyInfo} 
-              />
-            )}
-            {activeTab === 'vip' && (
-              <VIPManagementPage 
-                key={globalRefreshTrigger} 
-                companyInfo={companyInfo} 
-              />
-            )}
-            {activeTab === 'confins' && (
-              <ConfinsEODSimulator 
-                key={globalRefreshTrigger} 
-                onEODComplete={handleEODComplete} 
-                companyInfo={companyInfo} 
-              />
-            )}
+        {/* Scrollable Container - Hanya area ini yang bergerak saat di-scroll */}
+        <div className="flex-1 overflow-y-auto overflow-x-hidden">
+          {/* Mobile Shortcut & Sub Menu Section (hanya tampil di mobile/tablet < lg) */}
+          <div className="lg:hidden px-3 pt-3">
+            <MobileShortcutMenu 
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+              activeModule={activeModule}
+              setActiveModule={setActiveModule}
+              currentUser={currentUser}
+              companyInfo={companyInfo}
+              summaryData={summaryData}
+            />
           </div>
-        </main>
+
+          {/* Content Card Area - LIMS styled rounded-3xl white card */}
+          <main className="px-2 sm:px-6 lg:px-8 pb-24 lg:pb-8 pt-1">
+            <div className="bg-white rounded-3xl shadow-2xl p-3 sm:p-6 lg:p-8 min-h-[calc(100vh-140px)] border border-emerald-950/10 transition-all">
+              {activeTab === 'dashboard' && (
+                <Dashboard 
+                  key={`${globalRefreshTrigger}-${activeModule}`} 
+                  companyInfo={companyInfo} 
+                  activeModule={activeModule}
+                  setActiveModule={setActiveModule}
+                />
+              )}
+              {activeTab === 'decision_engine' && (
+                <DecisionEnginePage 
+                  key={globalRefreshTrigger} 
+                  companyInfo={companyInfo} 
+                />
+              )}
+              {activeTab === 'operations' && (
+                <OperationsWorkbench 
+                  key={globalRefreshTrigger} 
+                  companyInfo={companyInfo} 
+                />
+              )}
+              {activeTab === 'vip' && (
+                <VIPManagementPage 
+                  key={globalRefreshTrigger} 
+                  companyInfo={companyInfo} 
+                />
+              )}
+              {activeTab === 'confins' && (
+                <ConfinsEODSimulator 
+                  key={globalRefreshTrigger} 
+                  onEODComplete={handleEODComplete} 
+                  companyInfo={companyInfo} 
+                />
+              )}
+            </div>
+          </main>
+        </div>
+
+        {/* Mobile Footer Menu (Menu Utama) - Fixed at bottom */}
+        <MobileFooterNav 
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          activeModule={activeModule}
+          setActiveModule={setActiveModule}
+          onOpenAbout={() => setIsAboutModalOpen(true)}
+          onLogout={handleLogout}
+        />
       </div>
 
       {/* About CRMS Modal */}

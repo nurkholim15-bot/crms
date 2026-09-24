@@ -152,9 +152,9 @@ export default function Dashboard({ companyInfo, activeModule: propActiveModule,
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
-      {/* Enterprise Architecture Module Switcher */}
-      <div className="bg-white rounded-2xl p-1.5 sm:p-2 shadow-sm border border-slate-200 mb-6 flex overflow-x-auto scrollbar-none gap-1.5 sm:gap-2 sm:flex-wrap">
+    <div className="max-w-7xl mx-auto px-1 sm:px-4 py-2 sm:py-4">
+      {/* Enterprise Architecture Module Switcher (Desktop) */}
+      <div className="hidden lg:flex bg-white rounded-2xl p-1.5 sm:p-2 shadow-sm border border-slate-200 mb-6 overflow-x-auto scrollbar-none gap-1.5 sm:gap-2 sm:flex-wrap">
         <button
           onClick={() => setActiveModule('reguler')}
           className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl text-xs font-bold transition cursor-pointer ${
