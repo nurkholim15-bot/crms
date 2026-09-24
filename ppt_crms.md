@@ -13,7 +13,7 @@ Dokumen ini merupakan panduan resmi slide-by-slide (*Presenter Transcript & Spea
 Dokumen ini disusun untuk memfasilitasi presentasi tingkat tinggi (*High-Level Executive Walkthrough*) kepada:
 1. **Dewan Direksi & Komite Kredit**: Untuk memahami dampak finansial (*ROI*), penurunan NPL (*Roll Rate*), dan efisiensi biaya operasional (*Opex*).
 2. **Tim Manajemen Risiko & Kepatuhan (*Risk & Compliance*)**: Untuk memvalidasi kepatuhan tata kelola TI perbankan, enkripsi data, dan etika penagihan.
-3. **Divisi Teknologi Informasi & Arsitektur Sistem**: Untuk menelaah skema basis data 18 entitas, arsitektur ETL *Incremental Upsert*, isolasi microservices, dan integrasi API core banking.
+3. **Divisi Teknologi Informasi & Arsitektur Sistem**: Untuk menelaah skema basis data 21 entitas, arsitektur ETL *Incremental Upsert*, isolasi microservices, dan integrasi API core banking.
 4. **Operasional Kredit & Head of Remedial/Collection**: Untuk memahami operasional harian *Customer 360°*, *Decision Scoring 0-1000*, *mCollect*, *GeoTracker*, dan alur penyelesaian *Settlement 6-Stage*.
 
 ---
@@ -28,14 +28,14 @@ Dokumen ini disusun untuk memfasilitasi presentasi tingkat tinggi (*High-Level E
 6. [Slide 06: Kebijakan ETL 1: Mengapa Basis Data Operasional CRMS Tidak Boleh Di-Truncate?](#slide-06-kebijakan-etl-1-mengapa-basis-data-operasional-crms-tidak-boleh-di-truncate)
 7. [Slide 07: Kebijakan ETL 2: Mengapa Seluruh Fasilitas Kredit Aktif (Termasuk DPD 0) Wajib Ditransfer?](#slide-07-kebijakan-etl-2-mengapa-seluruh-fasilitas-kredit-aktif-termasuk-dpd-0-wajib-ditransfer)
 8. [Slide 08: Tata Kelola & Proteksi Data Inputan Operasional CRMS (5 Prinsip Integritas Data Native)](#slide-08-tata-kelola--proteksi-data-inputan-operasional-crms-5-prinsip-integritas-data-native)
-9. [Slide 09: Taksonomi Basis Data: Katalog 18 Entitas Relasional CRMS](#slide-09-taksonomi-basis-data-katalog-18-entitas-relasional-crms)
+9. [Slide 09: Taksonomi Basis Data: Katalog 21 Entitas Relasional CRMS](#slide-09-taksonomi-basis-data-katalog-21-entitas-relasional-crms)
 10. [Slide 10: Entity Relationship Model (ERD) Enterprise & Data Model Relasional](#slide-10-entity-relationship-model-erd-enterprise--data-model-relasional)
 11. [Slide 11: Modul Internal 1: Unified Customer 360° View & Guided Dialogue Script](#slide-11-modul-internal-1-unified-customer-360-view--guided-dialogue-script)
 12. [Slide 12: Modul Internal 2: Decision Engine & Scoring Model (0–1000 Poin & Action Path Grade 1–8)](#slide-12-modul-internal-2-decision-engine--scoring-model-01000-poin--action-path-grade-18)
 13. [Slide 13: Modul Internal 3: Pre-Delinquency Management (PDM - DPD 0 Early Warning & Tukin ASN)](#slide-13-modul-internal-3-pre-delinquency-management-pdm---dpd-0-early-warning--tukin-asn)
 14. [Slide 14: Modul Internal 4: Settlement 6-Stage Lifecycle & Multi-Tranches Schedule](#slide-14-modul-internal-4-settlement-6-stage-lifecycle--multi-tranches-schedule)
-15. [Slide 15: Modul Internal 5: Supervisory Control, Capacity Planning & OOO Authority Delegation](#slide-15-modul-internal-5-supervisory-control-capacity-planning--ooo-authority-delegation)
-16. [Slide 16: Modul Internal 6: mCollect Mobile Field Workbench (PWA) & Digital PIS Slip](#slide-16-modul-internal-6-mcollect-mobile-field-workbench-pwa--digital-pis-slip)
+15. [Slide 15: Modul Internal 5: Supervisory Control, Capacity Planning, Reassign Collector & OOO Authority Delegation](#slide-15-modul-internal-5-supervisory-control-capacity-planning-reassign-collector--ooo-authority-delegation)
+16. [Slide 16: Modul Internal 6: mCollect Mobile Field Workbench, Task List, Today's Plan, Customer Form & CMS Flow Rate Incentive Engine](#slide-16-modul-internal-6-mcollect-mobile-field-workbench-task-list-todays-plan-customer-form--cms-flow-rate-incentive-engine)
 17. [Slide 17: Modul Internal 7: GeoTracker Real-Time GPS Map & Route Playback](#slide-17-modul-internal-7-geotracker-real-time-gps-map--route-playback)
 18. [Slide 18: Modul Internal 8: Legal Recourse (6 Tahap) & Eksekusi Agunan / Lelang KPKNL (8 Tahap)](#slide-18-modul-internal-8-legal-recourse-6-tahap--eksekusi-agunan--lelang-kpknl-8-tahap)
 19. [Slide 19: Modul Internal 9: Omnichannel Messaging Gateway & Smart Auto-Dialer](#slide-19-modul-internal-9-omnichannel-messaging-gateway--smart-auto-dialer)
@@ -343,7 +343,7 @@ Dokumen ini disusun untuk memfasilitasi presentasi tingkat tinggi (*High-Level E
 
 ---
 
-### Slide 09: Taksonomi Basis Data: Katalog 18 Entitas Relasional CRMS
+### Slide 09: Taksonomi Basis Data: Katalog 21 Entitas Relasional CRMS
 
 #### 1. Informasi & Tata Letak Visual Slide:
 * **Nomor Slide**: 09 / 24
@@ -357,7 +357,7 @@ Dokumen ini disusun untuk memfasilitasi presentasi tingkat tinggi (*High-Level E
     3. `pre_delinquency_accounts`: Akun DPD 0 pengawasan dini H-3..H-0 (evaluasi saldo CASA & kalender Tukin).
     4. `overdue_accounts`: Antrean penagihan DPD 1+ (skor risiko 0-1000, Action Path 1-8, penugasan PIC & recovery stage).
     5. `decision_rules`: Tabel konfigurasi matriks strategi risiko (Champion vs Challenger) oleh Risk Admin.
-  - **Kategori C: Native Operasional & Transaksional CRMS (13 Tabel)**:
+  - **Kategori C: Native Operasional & Transaksional CRMS (16 Tabel)**:
     6. `collection_activities`: Log histori penagihan (*Append-only audit trail*).
     7. `settlement_proposals`: Usulan kompromi diskon pelunasan 6-stage lifecycle.
     8. `settlement_tranches`: Jadwal dan realisasi pembayaran bertahap 1-6 termin.
@@ -371,17 +371,20 @@ Dokumen ini disusun untuk memfasilitasi presentasi tingkat tinggi (*High-Level E
     16. `authority_delegations`: Pendelegasian batas wewenang sementara (*Out of Office*).
     17. `users`: Otentikasi dan otorisasi peran pengguna (RBAC: `ADMIN`, `AR_HEAD`, `COLLECTOR`).
     18. `global_parameters`: Konfigurasi parameter dinamis bank (`GENERAL_NAMA_PT`, `GENERAL_SIMBOL_PT`).
+    19. `collector_daily_plans`: Perencanaan rute harian kolektor (Today's Plan), sequence order, target penagihan, status kunjungan, dan realisasi penerimaan.
+    20. `collector_reassignment_logs`: Jejak audit pengalihan tugas antar kolektor (Reassign Collector), kode alasan (`OVERLOAD`, `SICK_LEAVE`, `AREA_ROTATION`, `PERFORMANCE_ESCALATION`), dan catatan supervisor.
+    21. `collector_incentive_rules`: Aturan matriks insentif berbasis CMS Bucket Flow Rate (insentif dasar, target collection rate, modifier bonus/penalti flow rate).
 
 #### 2. Penjelasan Narasi Presenter (Speaker Script):
-> *"Slide 9 menyajikan katalog lengkap 18 entitas relasional yang menyusun basis data CRMS (`crms_db`).  
-> *Kami membagi ke-18 tabel ini ke dalam 3 kategori berdasarkan kepemilikan dan asalnya:  
+> *"Slide 9 menyajikan katalog lengkap 21 entitas relasional yang menyusun basis data CRMS (`crms_db`).  
+> *Kami membagi ke-21 tabel ini ke dalam 3 kategori berdasarkan kepemilikan dan asalnya:  
 > * **Kategori A (2 Tabel)** adalah Master Data yang direplikasi dari Core Banking dan Customer Acquisition: tabel `customers` dan `agreements`.  
 > * **Kategori B (3 Tabel)** adalah tabel yang dihasilkan secara dinamis oleh mesin komputasi CRMS: tabel pemantauan pra-jatuh tempo DPD 0 (`pre_delinquency_accounts`), tabel antrean penagihan utama DPD 1+ (`overdue_accounts`), dan tabel aturan risiko (`decision_rules`).  
-> * **Kategori C (13 Tabel)** adalah tabel transaksional asli yang lahir dan hidup di dalam CRMS: mulai dari log aktivitas penagihan, proposal settlement, kuitansi digital PIS, titik koordinat rute GPS, berkas hukum, hingga delegasi wewenang saat pejabat cuti.  
+> * **Kategori C (16 Tabel)** adalah tabel transaksional asli yang lahir dan hidup di dalam CRMS: mulai dari log aktivitas penagihan, proposal settlement, kuitansi digital PIS, titik koordinat rute GPS, berkas hukum, perencanaan rute harian kolektor (`collector_daily_plans`), jejak audit pengalihan tugas (`collector_reassignment_logs`), hingga mesin aturan insentif flow rate (`collector_incentive_rules`).  
 > *Struktur ini menjamin pemisahan tanggung jawab data (*Separation of Data Concerns*) yang sangat rapi."*
 
 #### 3. Detail Arsitektur & Logika Sistem:
-* Seluruh 18 tabel dirancang dalam bentuk normal ketiga (3NF) dan diotomigrasi melalui GORM ORM di Golang saat backend pertama kali diinisialisasi.
+* Seluruh 21 tabel dirancang dalam bentuk normal ketiga (3NF) dan diotomigrasi melalui GORM ORM di Golang saat backend pertama kali diinisialisasi.
 
 #### 4. Kepatuhan Regulasi & Governance:
 * Standar Kamus Data Terstruktur (*Data Dictionary Compliance*) sesuai panduan OJK untuk pelaporan sistem informasi perbankan.
@@ -401,14 +404,15 @@ Dokumen ini disusun untuk memfasilitasi presentasi tingkat tinggi (*High-Level E
 * **4 Gugus Entitas Terhubung**:
   1. `Gugus Master & Ingestion`: `CUSTOMERS` memiliki 1..N `AGREEMENTS` dan 1..N `PRE_DELINQUENCY_ACCOUNTS`.
   2. `Gugus Evaluasi & Penugasan`: `AGREEMENTS` dipantau 1..1 oleh `OVERDUE_ACCOUNTS`, diatur oleh `DECISION_RULES`.
-  3. `Gugus Transaksi & Pemulihan`: `OVERDUE_ACCOUNTS` memiliki 1..N `COLLECTION_ACTIVITIES`, 1..N `PAYMENT_RECEIPT_SLIPS`; `AGREEMENTS` terhubung ke `SETTLEMENT_PROPOSALS` (memiliki 1..N `SETTLEMENT_TRANCHES`), `LEGAL_CASES`, `REPOSSESSION_CASES`, dan `SKIP_TRACING_CASES`.
-  4. `Gugus Telemetri & Tata Kelola`: `COLLECTOR_GEO_LOCATIONS` memiliki 1..N `COLLECTOR_ROUTE_POINTS`; `USERS` mengatur `AUTHORITY_DELEGATIONS` dan `COLLECTION_AGENCIES`; dikonfigurasi oleh `GLOBAL_PARAMETERS`.
+  3. `Gugus Transaksi & Pemulihan`: `OVERDUE_ACCOUNTS` memiliki 1..N `COLLECTION_ACTIVITIES`, 1..N `PAYMENT_RECEIPT_SLIPS`, 1..N `COLLECTOR_DAILY_PLANS`, 1..N `COLLECTOR_REASSIGNMENT_LOGS`; `AGREEMENTS` terhubung ke `SETTLEMENT_PROPOSALS` (memiliki 1..N `SETTLEMENT_TRANCHES`), `LEGAL_CASES`, `REPOSSESSION_CASES`, dan `SKIP_TRACING_CASES`.
+  4. `Gugus Telemetri & Tata Kelola`: `COLLECTOR_GEO_LOCATIONS` memiliki 1..N `COLLECTOR_ROUTE_POINTS`; `USERS` mengatur `AUTHORITY_DELEGATIONS`, `COLLECTION_AGENCIES`, `COLLECTOR_DAILY_PLANS`, `COLLECTOR_REASSIGNMENT_LOGS`, dan `COLLECTOR_INCENTIVE_RULES`; dikonfigurasi oleh `GLOBAL_PARAMETERS`.
 
 #### 2. Penjelasan Narasi Presenter (Speaker Script):
-> *"Slide 10 memvisualisasikan bagaimana 18 tabel tersebut saling terhubung dalam Entity Relationship Diagram (ERD) enterprise.  
+> *"Slide 10 memvisualisasikan bagaimana 21 tabel tersebut saling terhubung dalam Entity Relationship Diagram (ERD) enterprise.  
 > *Pusat dari seluruh transaksi berakar pada entitas **`CUSTOMERS`** dan **`AGREEMENTS`**. Dari nomor rekening pinjaman `agreement_no`, sistem menghubungkan secara simultan ke antrean kerja keterlambatan `overdue_accounts`, kuitansi pembayaran `payment_receipt_slips`, dan histori aktivitas kolektor `collection_activities`.  
 > *Jika pinjaman masuk ke jalur penyelesaian khusus, relasi berlanjut ke `settlement_proposals` yang memiliki anak tabel `settlement_tranches` untuk termin cicilan, atau ke `legal_cases` jika masuk ranah pengadilan.  
-> *Di sisi lain, modul pemantauan lapangan memiliki klaster tersendiri: setiap kolektor terdaftar di tabel `users`, posisinya dipantau di `collector_geo_locations`, dan rute perjalanannya terekam di `collector_route_points`.  
+> *Di sisi lain, modul operasional lapangan dan tata kelola memiliki gugus terpadu: antrean harian terpilih tercatat di `collector_daily_plans`, riwayat mutasi tugas tersimpan di `collector_reassignment_logs`, dan aturan insentif flow rate dikelola di `collector_incentive_rules`.  
+> *Setiap kolektor terdaftar di tabel `users`, posisinya dipantau di `collector_geo_locations`, dan rute perjalanannya terekam di `collector_route_points`.  
 > *Arsitektur relasional ini menjamin bahwa setiap data dapat ditelusuri riwayatnya (*end-to-end traceability*)."*
 
 #### 3. Detail Arsitektur & Logika Sistem:
@@ -617,91 +621,125 @@ Dokumen ini disusun untuk memfasilitasi presentasi tingkat tinggi (*High-Level E
 
 ---
 
-### Slide 15: Modul Internal 5: Supervisory Control, Capacity Planning & OOO Authority Delegation
+### Slide 15: Modul Internal 5: Supervisory Control, Capacity Planning, Reassign Collector & OOO Authority Delegation
 
 #### 1. Informasi & Tata Letak Visual Slide:
 * **Nomor Slide**: 15 / 24
 * **Kategori / Pill Tag**: `MODUL INTERNAL`
-* **Tema Visual**: *Capacity & Workforce Light* (`#F8FAFC`) dengan 3 kartu pilar pengawasan operasional.
-* **3 Fitur Utama Pengawasan**:
+* **Tema Visual**: *Capacity & Supervisory Governance Light* (`#F8FAFC`) dengan 4 kartu pilar pengawasan operasional.
+* **4 Fitur Utama Pengawasan**:
   1. `Balanced Round-Robin Allocation`:
      - Algoritma pembagian antrean penugasan yang seimbang dan adil kepada seluruh kolektor aktif.
      - Memperhitungkan domisili cabang, spesialisasi produk pinjaman, dan penguasaan bahasa daerah.
      - Standar Kapasitas Harian Optimal: Menetapkan batas beban kerja ideal ~25 akun per kolektor per hari.
      - Indikator Visual Kapasitas: `OPTIMAL` (<25 akun), `NEARING CAPACITY` (25-30 akun), dan `OVERLOAD` (>30 akun) untuk mencegah kelelahan petugas.
-  2. `Out of Office (OOO) Authority Delegation`:
+  2. `Reassign Collector & Audit Trail Workflow`:
+     - Solusi fleksibel pemindahan akun/tugas antar kolektor (Single Task maupun Bulk Reassignment) langsung dari dashboard supervisor.
+     - Standarisasi Kode Alasan Pengalihan (*Reason Codes*):
+       * `OVERLOAD`: Beban kerja kolektor melebihi kapasitas optimal harian (>30 akun).
+       * `SICK_LEAVE`: Petugas berhalangan hadir / izin sakit mendadak.
+       * `AREA_ROTATION`: Penyesuaian rotasi zonasi wilayah domisili nasabah.
+       * `PERFORMANCE_ESCALATION`: Eskalasi mitigasi risiko ke kolektor senior/spesialis.
+       * `OTHER`: Alasan operasional khusus lainnya dengan catatan wajib.
+     - Audit Trail Permanen: Rekam mutasi tercatat otomatis di tabel `collector_reassignment_logs` lengkap dengan timestamp, user pemindah, dan catatan justifikasi.
+  3. `Out of Office (OOO) Authority Delegation`:
      - Solusi pendelegasian wewenang saat pejabat pemutus (AR Head / Branch Manager) berhalangan, cuti, atau dinas luar.
      - Menunjuk pejabat pengganti yang sah dengan menetapkan plafon batas nominal approval limit.
      - Penguncian Tanggal Otomatis: Masa berlaku delegasi otomatis aktif dan nonaktif sesuai rentang `start_date` dan `end_date`.
      - Kepatuhan Audit: Seluruh approval yang diterbitkan mencantumkan audit log 'Disetujui atas nama Pejabat Definitif'.
-  3. `External Agency Onboarding & SLA Monitoring`:
+  4. `External Agency Onboarding & SLA Monitoring`:
      - Administrasi kemitraan dengan agensi penagihan pihak ketiga (eksternal) secara transparan.
      - Pemantauan Legalitas: Pelacakan masa berlaku izin operasional dan nomor kontrak Perjanjian Kerjasama (PKS).
      - Pengawasan Kuota Penugasan: Pembatasan jumlah akun yang dialokasikan ke mitra luar.
      - Evaluasi SLA Kinerja: Mengukur persentase pemulihan tagihan (*Recovery Rate*) dan persentase komisi (*Commission Rate*).
 
 #### 2. Penjelasan Narasi Presenter (Speaker Script):
-> *"Slide 15 menghadirkan fitur manajemen operasional untuk para Supervisor dan Pimpinan Unit Kredit: **Supervisory Control, Capacity Planning & OOO Delegation**.*  
-> *Seringkali penagihan tidak efektif karena beban kerja yang tidak seimbang—ada kolektor yang memegang 60 akun sehingga tidak sempat berkunjung, sementara kolektor lain hanya memegang 10 akun.  
-> *CRMS menerapkan **Balanced Round-Robin Allocation**: sistem otomatis mendistribusikan antrean secara merata dengan target kapasitas ideal 25 akun per hari. Dashboard menyajikan indikator warna yang jelas: Hijau jika beban optimal, dan Merah jika petugas mengalami *overload*.  
-> *Selain itu, kami menyelesaikan kendala operasional klasik saat pejabat pimpinan sedang cuti melalui fitur **Out of Office (OOO) Delegation**. Pimpinan dapat mendelegasikan wewenang persetujuan diskon settlement kepada wakilnya dengan batas nominal tertentu dan masa berlaku otomatis. Persetujuan kredit tidak lagi tertunda berminggu-minggu hanya karena pejabat sedang dinas luar.*  
-> *Untuk agensi penagih eksternal, sistem menyediakan portal onboarding dan monitoring SLA Recovery Rate yang transparan."*
+> *"Slide 15 menghadirkan modul kendali pimpinan unit kredit: **Supervisory Control, Capacity Planning, Reassign Collector & OOO Authority Delegation**.*  
+> *Seringkali penagihan terhambat karena ketidakseimbangan beban kerja atau kendala kehadiran petugas lapangan.  
+> *CRMS mengimplementasikan dua instrumen utama: Pertama, **Balanced Round-Robin Allocation** yang menjaga kapasitas harian ideal 25 akun per kolektor dengan indikator visual Optimal, Nearing Capacity, dan Overload. Kedua, **Reassign Collector Workflow** yang memungkinkan AR Head atau Supervisor memindahkan tugas secara instan—baik per akun maupun massal (*bulk*)—dengan kode alasan baku (`OVERLOAD`, `SICK_LEAVE`, `AREA_ROTATION`, `PERFORMANCE_ESCALATION`). Seluruh riwayat pengalihan ini tersimpan permanen dalam audit trail `collector_reassignment_logs`.*  
+> *Selain itu, kebuntuan persetujuan diskon settlement saat pejabat cuti diselesaikan tuntas melalui fitur **Out of Office (OOO) Delegation**, di mana wewenang persetujuan dengan batas plafon tertentu dialihkan secara otomatis dengan batas waktu kadaluarsa presisi.*  
+> *Untuk agensi eksternal, sistem menyediakan tata kelola kuota dan evaluasi SLA Recovery Rate yang transparan."*
 
 #### 3. Detail Arsitektur & Logika Sistem:
-* Endpoint API: `GET /api/v1/capacity-planning`, `GET /api/v1/delegations`, `POST /api/v1/delegations`, dan `GET /api/v1/agencies`. Mendukung entitas model `AuthorityDelegation` dan `CollectionAgency`.
+* Endpoint API:
+  - `GET /api/v1/capacity-planning`: Analisis beban kerja kolektor aktif.
+  - `POST /api/v1/collector/reassign`: Eksekusi pengalihan tugas penagihan single/bulk.
+  - `GET /api/v1/collector/reassignments`: Riwayat jejak audit pengalihan penugasan.
+  - `GET /api/v1/delegations`, `POST /api/v1/delegations`, `DELETE /api/v1/delegations/:id`: Pengelolaan pendelegasian wewenang OOO.
+  - `GET /api/v1/agencies`: Pemantauan agensi penagihan mitra.
 
 #### 4. Kepatuhan Regulasi & Governance:
-* Memenuhi prinsip *Delegation of Authority* (DoA) perbankan dan aturan OJK mengenai pengawasan terhadap pihak ketiga penyedia jasa penagihan (*Outsourcing Collection Management*).
+* Memenuhi prinsip *Delegation of Authority* (DoA) perbankan, kepatuhan audit internal (jejak reassign akun terlacak tanpa celah manipulasi), dan POJK Tata Kelola Alih Daya (*Outsourcing Collection Management*).
 
 #### 5. Antisipasi Tanya Jawab (Q&A):
-* **Pertanyaan Divisi SDM / HR**: *"Apakah delegasi OOO dapat dibatalkan sewaktu-waktu jika pejabat kembali bekerja lebih cepat?"*
-* **Jawaban Presenter**: *"Sangat bisa. Pejabat pemutus dapat menonaktifkan delegasi kapan saja melalui satu klik tombol 'Revoke Delegation' di portal CRMS, dan wewenang seketika kembali ke pejabat definitif."*
+* **Pertanyaan Tim Internal Audit**: *"Bagaimana sistem memastikan reassign tugas tidak disalahgunakan untuk melempar akun-akun macet berat?"*
+* **Jawaban Presenter**: *"Setiap aksi reassign mewajibkan pemilihan Reason Code terstandarisasi dan catatan justifikasi. Riwayat pengalihan tercatat permanen di basis data dan ditampilkan pada tab jejak audit. Selain itu, AR Head memiliki visibilitas penuh untuk menyetujui atau mengoreksi distribusi akun antar petugas."*
 
 ---
 
-### Slide 16: Modul Internal 6: mCollect Mobile Field Workbench (PWA) & Digital PIS Slip
+### Slide 16: Modul Internal 6: mCollect Mobile Field Workbench, Task List, Today's Plan, Customer Form & CMS Flow Rate Incentive Engine
 
 #### 1. Informasi & Tata Letak Visual Slide:
 * **Nomor Slide**: 16 / 24
-* **Kategori / Pill Tag**: `MODUL INTERNAL`
-* **Tema Visual**: *Mobile App & PIS Slip Light* (`#F8FAFC`) dengan 4 kartu fitur lapangan.
-* **4 Fitur Utama mCollect**:
-  1. `Mobile-First PWA Responsive`:
-     - Aplikasi web progresif (PWA) yang cepat, ringan, dan responsif pada seluruh smartphone Android dan iOS.
-     - Tanpa instalasi rumit: Cukup diakses via browser mobile terenkripsi dengan login JWT aman.
-     - Menampilkan daftar rute kunjungan harian yang diurutkan berdasarkan jarak lokasi terdekat.
-     - Menyajikan profil debitur, riwayat interaksi, foto agunan, dan skrip dialog di genggaman kolektor.
-  2. `Perekaman Pembayaran Lapangan`:
+* **Kategori / Pill Tag**: `MODUL INTERNAL & INSENTIF KOLEKTOR`
+* **Tema Visual**: *Mobile Field & Incentive Engine Light* (`#F8FAFC`) dengan 5 pilar fitur lapangan terpadu.
+* **5 Fitur Utama mCollect & Engine Insentif**:
+  1. `Task List & Today's Plan Workflow`:
+     - **Task List Terpadu**: Antrean komprehensif seluruh akun yang ditugaskan ke kolektor, dilengkapi filter pencarian instan debitur, segmentasi bucket keterlambatan (Bucket 1-30, 31-60, 61-90, >90), dan fitur centang banyak (*multi-select*) untuk memasukkan penugasan ke rencana kerja harian.
+     - **Today's Plan Harian**: Rencana kerja harian terpilih dengan nomor urut prioritas (*Route Order Sequence*), estimasi waktu kunjungan, ringkasan target vs realisasi penagihan (Target Rp, Realisasi Rp, % Pencapaian), serta pembaruan status interaksi (`PLANNED`, `IN_PROGRESS`, `VISITED`, `CANCELLED`).
+  2. `Comprehensive Customer Form Modal`:
+     - Akses instan saat kartu/baris task diklik pada smartphone petugas lapangan.
+     - Data Profil 360°: Identitas nasabah, masking NIK KTP aman UU PDP, instansi ASN Pemprov DKI, status VIP, dan alamat domisili.
+     - Aksi Cepat Sekali Sentuh (*One-Touch Action*): Tombol panggilan langsung (*Direct Call*), pengiriman pesan WhatsApp Gateway, dan navigasi peta Google Maps.
+     - Detail Fasilitas Kredit: Plafon, angsuran bulanan, baki debet, denda, dan total tunggakan jatuh tempo.
+     - Histori Kunjungan & Pencatatan Lapangan: Menampilkan rekam interaksi sebelumnya dan form aksi penagihan baru dengan geotagging GPS, *contact result code*, tanggal janji bayar (PTP), serta unggah dokumentasi.
+  3. `Perekaman Pembayaran Lapangan & Kuitansi Digital PIS`:
      - Pencatatan fleksibel metode setoran: Tunai (Cash), QRIS Dinamis, atau Virtual Account BI-FAST.
      - Validasi Geotagging Otomatis: Mengunci koordinat GPS lintang & bujur tepat di lokasi serah terima uang.
-     - Real-Time Balance Clearance: Setoran yang direkam langsung memotong saldo tunggakan di server CRMS.
-     - Anti-Fraud Embezzlement: Menghilangkan risiko penggelapan uang setoran tunai oleh oknum kolektor.
-  3. `Kuitansi Digital Resmi (PIS)`:
-     - Penerbitan Kuitansi Pembayaran Digital Resmi (*Payment Information Slip / PIS*) berstandar perbankan.
-     - Nomor Seri Slip Unik: Setiap slip memiliki kode acak unik anti-duplikasi yang tercatat di server.
-     - Kirim Otomatis via WhatsApp: Sistem langsung menembakkan bukti kuitansi digital ke nomor WA debitur.
-     - Sah di Mata Hukum: Menjadi bukti pembayaran resmi bank yang sah dan terlindungi UU ITE.
+     - Kuitansi Digital Resmi (*Payment Information Slip / PIS*): Nomor seri slip unik anti-duplikasi yang otomatis dikirim ke WhatsApp nasabah (100% anti-fraud penggelapan uang).
   4. `Kalkulator Pelunasan Rule 78`:
      - Simulator pelunasan dipercepat (*Foreclosure Payoff Simulator*) metode bunga menurun Rule 78.
-     - Menghitung di depan nasabah secara transparan: sisa pokok kredit, diskon bunga masa depan, dan biaya administrasi.
-     - Memberikan keyakinan finansial bagi nasabah untuk segera melunasi kewajibannya di tempat.
+     - Menghitung sisa pokok, diskon bunga masa depan, dan penalti secara transparan di hadapan nasabah.
+  5. `CMS Bucket Flow Rate Incentive Engine`:
+     - Mesin perhitungan insentif berbasis *Collection Management System (CMS)* yang mengintegrasikan variabel *Bucket Flow Rate* (laju akun menunggak bergeser ke tingkat tunggakan yang lebih parah).
+     - **Prinsip Kinerja**: Semakin rendah flow rate, kinerja kolektor semakin prima (mendapatkan bonus pengali). Semakin tinggi flow rate, dikenakan penalti pengurang.
+     - **Formula Resmi**:
+       $$\text{Insentif Berjalan} = \text{Insentif Dasar} \times \left(\frac{\text{Collection Rate}}{100}\right)$$
+       $$\text{Insentif Akhir} = \text{Insentif Berjalan} \times \text{Modifier}$$
+     - **Matriks Pengali (Modifier) Flow Rate (Target Maksimal 15%)**:
+       * Flow Rate `< 10%`: Kinerja Sangat Bagus $\rightarrow$ **Modifier 1.2 (+20% Bonus)**.
+       * Flow Rate `10% - 15%`: Memenuhi Target $\rightarrow$ **Modifier 1.0 (Utuh 100%)**.
+       * Flow Rate `15.1% - 20%`: Kinerja Buruk $\rightarrow$ **Modifier 0.8 (-20% Penalti)**.
+       * Flow Rate `> 20%`: Kinerja Sangat Buruk $\rightarrow$ **Modifier 0.5 (-50% Penalti)**.
+     - **Studi Kasus Skenario Kolektor (Andi Pratama)**:
+       * *Insentif Dasar*: Rp 3.000.000 | *Pencapaian Collection Rate*: 90% $\rightarrow$ Insentif Berjalan = Rp 2.700.000.
+       * *Skenario A (Flow Rate 8%)*: Modifier 1.2 $\rightarrow$ Insentif Akhir = $\text{Rp } 2.700.000 \times 1.2 = \mathbf{\text{Rp } 3.240.000}$ (*Reward Bonus*).
+       * *Skenario B (Flow Rate 18%)*: Modifier 0.8 $\rightarrow$ Insentif Akhir = $\text{Rp } 2.700.000 \times 0.8 = \mathbf{\text{Rp } 2.160.000}$ (*Dampak Penalti*).
+     - Antarmuka web portal menyediakan simulator interaktif real-time, tabel rekapitulasi portofolio kolektor, dan slip insentif digital siap cetak (*Print/Save PDF*).
 
 #### 2. Penjelasan Narasi Presenter (Speaker Script):
-> *"Slide 16 memperkenalkan senjata utama petugas lapangan kita: **mCollect Mobile Field Workbench (PWA)**.*  
-> *mCollect mentransformasi cara kerja kolektor lapangan dari cara-cara kuno berbasis map kertas menjadi serba digital di smartphone.*  
-> *Kolektor membuka aplikasi, langsung melihat daftar kunjungan hari ini lengkap dengan rute jalan tercepat. Saat tiba di rumah nasabah, kolektor dapat membacakan skrip dialog resmi, menghitung simulasi pelunasan dipercepat menggunakan **Kalkulator Rule 78**, dan menerima setoran pembayaran.*  
-> *Ketika nasabah membayar tunai atau transfer QRIS di tempat, mCollect mengunci koordinat GPS lokasi dan menerbitkan **Kuitansi Digital Resmi (Payment Information Slip / PIS)** ber nomor seri unik.*  
-> *Detik itu juga, slip bukti bayar resmi bank terkirim otomatis ke WhatsApp nasabah! Cara ini **100% mengeliminasi fraud penggelapan uang** oleh oknum kolektor nakal yang kerap mencoreng reputasi perbankan."*
+> *"Slide 16 memperkenalkan terobosan besar pada garda terdepan penagihan: **mCollect Mobile Field Workbench & CMS Flow Rate Incentive Engine**.*  
+> *Aplikasi ini membekali kolektor dengan instrumen kerja modern berbasis mobile PWA yang responsif di segala ukuran layar smartphone.*  
+> *Setiap pagi, kolektor membuka menu **Task List**, menyeleksi akun prioritas, dan menyusunnya ke dalam **Today's Plan** lengkap dengan urutan rute kunjungan tercepat dan estimasi waktu tiba.*  
+> *Saat tiba di alamat nasabah, kolektor cukup mengetuk baris tugas untuk membuka **Customer Form**: profil 360° lengkap terbuka seketika, termasuk opsi Direct Call, WhatsApp, navigasi peta, kalkulator pelunasan Rule 78, serta form pencatatan hasil kunjungan.*  
+> *Jika nasabah membayar di tempat, kuitansi digital resmi PIS dengan koordinat GPS dan nomor seri unik langsung diterbitkan dan terkirim ke WhatsApp nasabah—mengeliminasi celah fraud penagihan tunai.*  
+> *Yang paling revolusioner adalah **CMS Bucket Flow Rate Incentive Engine**. Skema insentif tidak hanya menghargai nominal uang yang tertagih (*Collection Rate*), melainkan juga menghukum kolektor yang membiarkan akun nasabahnya bergeser ke bucket tunggakan yang lebih parah (*Bucket Flow Rate*).*  
+> *Seperti simulasi pada slide: kolektor dengan target tertagih 90% yang berhasil menjaga flow rate di angka 8% memperoleh insentif Rp 3.240.000 (bonus 20%). Namun jika flow rate membengkak menjadi 18%, insentifnya dipotong menjadi Rp 2.160.000. Skema transparan ini memacu kolektor menjaga kualitas portofolio bank secara berkelanjutan!"*
 
 #### 3. Detail Arsitektur & Logika Sistem:
-* Menggunakan Progressive Web App (PWA) dengan *Service Workers* untuk kapabilitas *offline-first caching* jika sinyal internet di daerah pelosok terputus. Endpoint: `POST /api/v1/mcollect/record-payment` dan `POST /api/v1/mcollect/foreclosure-simulate`.
+* Endpoint API:
+  - `GET /api/v1/collector/tasks`: Antrean tugas terdistribusi per kolektor.
+  - `GET /api/v1/collector/today-plan`, `POST /api/v1/collector/today-plan`, `POST /api/v1/collector/today-plan/bulk`, `PUT /api/v1/collector/today-plan/:id/status`, `DELETE /api/v1/collector/today-plan/:id`: Manajemen rencana harian.
+  - `POST /api/v1/mcollect/record-payment`: Perekaman setoran PIS ber-geotagging GPS.
+  - `POST /api/v1/mcollect/foreclosure-simulate`: Kalkulator pelunasan Rule 78.
+  - `GET /api/v1/collector/incentives`, `POST /api/v1/collector/incentives/simulate`: Mesin kalkulasi insentif CMS Flow Rate.
 
 #### 4. Kepatuhan Regulasi & Governance:
-* Memenuhi ketentuan Bank Indonesia tentang Penyelenggaraan Sistem Pembayaran dan POJK Perlindungan Konsumen terkait kewajiban penerbitan tanda terima sah bagi setiap transaksi keuangan.
+* Perlindungan konsumen dan transparansi kompensasi sesuai POJK Perlindungan Konsumen Sektor Jasa Keuangan, kepatuhan UU ITE atas kuitansi elektronik resmi PIS, serta tata kelola remunerasi berbasis risiko kredit yang sehat.
 
 #### 5. Antisipasi Tanya Jawab (Q&A):
-* **Pertanyaan Head of Branch Banking**: *"Apakah kuitansi digital PIS ini memiliki kekuatan pembuktian yang sah jika ada sengketa?"*
-* **Jawaban Presenter**: *"Sangat sah. Setiap kuitansi PIS tercatat di basis data bank lengkap dengan hash kriptografis, nomor seri acak unik, geotagging koordinat GPS, stempel waktu server, dan bukti pengiriman WhatsApp gateway."*
+* **Pertanyaan Direktur Keuangan / SDM**: *"Mengapa variabel Bucket Flow Rate dijadikan faktor pengali dalam skema insentif?"*
+* **Jawaban Presenter**: *"Karena dalam industri perbankan, menagih akun lancar atau tunggakan awal jauh lebih murah daripada memulihkan kredit macet (NPL). Jika insentif hanya berbasis nominal tertagih tanpa memperhitungkan flow rate, kolektor cenderung hanya mengejar nasabah yang mudah ditagih dan membiarkan akun lain membusuk jatuh ke bucket macet. Integrasi Bucket Flow Rate memastikan kolektor aktif mencegah pembusukan portofolio sejak dini."*
 
 ---
 
@@ -1021,7 +1059,7 @@ Dokumen ini disusun untuk memfasilitasi presentasi tingkat tinggi (*High-Level E
   1. `BACKEND API ENGINE`: Golang 1.24+ / Gin Web Framework / GORM ORM. Port internal `8030`, Daemon `crms-backend.service`, multi-threaded concurrency, 35+ REST API enterprise.
   2. `FRONTEND WEB PORTAL`: React 18.3 / Vite Bundler / Tailwind CSS / Lucide Icons. Single Page Application (SPA) ultra-cepat, mCollect PWA Mobile, Customer 360, dan Action Path Matrix.
   3. `WEB SERVER & REVERSE PROXY`: Nginx SSL HTTPS Port `3030`. Terminasi SSL/TLS 1.3 Let's Encrypt, reverse proxy internal ke 8030, kompresi Gzip, WSS WebSocket GeoTracker live stream.
-  4. `DATABASE RDBMS`: PostgreSQL 14+ / 18+ (`crms_db`). Connection Pool (MaxOpen: 50, MaxIdle: 10), 18 entitas relasional ternormalisasi (3NF), B-Tree indexing berkecepatan tinggi.
+  4. `DATABASE RDBMS`: PostgreSQL 14+ / 18+ (`crms_db`). Connection Pool (MaxOpen: 50, MaxIdle: 10), 21 entitas relasional ternormalisasi (3NF), B-Tree indexing berkecepatan tinggi.
 * **Lembar Persetujuan & Kesiapan Go-Live**:
   - Status Sistem: **SIAP PRODUKSI (PRODUCTION-READY)**, teruji end-to-end pada server VPS Bank DKI / Bank Jakarta.
   - Disusun Oleh: *Credit Risk & IT Architecture Team* (September 2026).

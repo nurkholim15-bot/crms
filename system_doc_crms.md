@@ -253,17 +253,40 @@ Berdasarkan matriks evaluasi kebutuhan pada berkas review [**`Review CMS - Bank 
 - **Rekomendasi Rute & Klaster Kunjungan**: Sistem mengelompokkan debitur lapangan berdasarkan kelurahan/kecamatan terdekat untuk meminimalkan waktu dan biaya transportasi kolektor.
 
 ### 5.6. Fitur Re-Assignment Manual Penugasan Kolektor (Review Point 6.0)
-- Jika seorang petugas kolektor sakit, cuti, atau berhalangan, supervisor (*AR Head* atau *Team Leader*) memiliki wewenang untuk mengalihkan penugasan akun secara manual dari Kolektor A ke Kolektor B secara individual maupun massal (*bulk re-assignment*).
+- Jika seorang petugas kolektor mengalami beban kerja berlebih (*overload*), sakit/cuti (*out-of-office*), rotasi zonasi wilayah domisili, atau diperlukan eskalasi penanganan khusus, supervisor (*AR Head* atau *Team Leader*) memiliki wewenang untuk mengalihkan penugasan akun secara manual dari Kolektor Asal ke Kolektor Tujuan:
+  - **Dukungan Single & Bulk Reassignment**: Supervisor dapat memilih satu atau banyak akun kontrak secara simultan melalui antarmuka visual.
+  - **Pilihan Alasan Operasional Baku**: Sistem menyediakan klasifikasi alasan terstandarisasi (`OVERLOAD`, `SICK_LEAVE`, `AREA_ROTATION`, `PERFORMANCE_ESCALATION`, `OTHER`) beserta kolom catatan instruksi khusus.
+  - **Sinkronisasi Otomatis ke Today's Plan**: Jadwal kunjungan pada kolektor lama otomatis dipindahkan atau diperbarui ke kolektor baru.
+  - **Audit Trail Terpadu (`collector_reassignment_logs`)**: Seluruh mutasi penugasan dicatat ke dalam tabel audit terpisah dan log aktivitas `collection_activities` lengkap dengan stempel waktu dan identitas supervisor pemroses.
 
 ### 5.7. Fitur Takeout Task Assignment Otomatis (Review Point 7.0)
 - **Real-Time Payment Clearance**: Begitu core banking atau payment gateway menerima setoran debitur (via Virtual Account, transfer BI-FAST, atau teller), sistem CRMS secara instan mengubah status akun menjadi `PAID` dan menghapusnya dari antrean penagihan harian (*takeout task*).
 - Menghilangkan risiko debitur yang sudah membayar tetap ditagih oleh bot atau kolektor lapangan.
 
-### 5.8. Perhitungan Insentif Kolektor Terintegrasi (Review Point 8.0)
-- Modul dashboard supervisor menyediakan penghitungan estimasi insentif penagihan berdasarkan:
-  - Tingkat Keberhasilan Penagihan (*Cure Rate*)
-  - Rasio Pemenuhan Janji Bayar (*Kept PTP Ratio*)
-  - Nominal Pemulihan Piutang (*Recovery Cash Inflow*).
+### 5.8. Perhitungan Insentif Kolektor Terintegrasi (CMS Flow Rate Engine - Review Point 8.0)
+Sistem CRMS mengintegrasikan modul perhitungan insentif berbasis *Collection Management System* (CMS) yang menggabungkan variabel **Bucket Flow Rate** (tingkat kegagalan menagih sehingga akun bergeser ke tingkat tunggakan yang lebih parah) sebagai faktor pengali bonus atau pengurang penalti:
+- **1. Variabel Penilaian Utama**:
+  - *Insentif Dasar (Base Incentive)*: Standar acuan awal (default Rp 3.000.000, dapat dikonfigurasi).
+  - *Target KPI Utama*: Persentase jumlah uang berhasil ditagih (*Collection Rate %*) atau jumlah akun tertangani (*Rollback Rate %*).
+    $$\text{Insentif Berjalan} = \text{Pencapaian KPI Utama (\%)} \times \text{Insentif Dasar}$$
+- **2. Matriks Aturan Bucket Flow Rate Modifier** (Target Toleransi Maksimal Manajemen: **15%**):
+  | Realisasi Flow Rate | Status Kinerja | Faktor Pengali / Pengurang (Modifier) | Dampak terhadap Insentif |
+  | :---: | :---: | :---: | :---: |
+  | **< 10%** | **Sangat Bagus** | **Pengali: 1.2** | **Bonus**: Insentif naik 20% |
+  | **10% – 15%** | **Memenuhi Target** | **Pengali: 1.0** | **Utuh**: Insentif diterima 100% |
+  | **15.1% – 20%** | **Buruk** | **Pengurang: 0.8** | **Penalti**: Insentif dipotong 20% |
+  | **> 20%** | **Sangat Buruk** | **Pengurang: 0.5** | **Penalti Berat**: Insentif dipotong 50% |
+- **3. Rumus Insentif Akhir**:
+  $$\text{Insentif Akhir} = \text{Insentif Berjalan} \times \text{Bucket Flow Rate Modifier}$$
+- **4. Pembuktian Skenario Simulasi (Andi Pratama - Portofolio Bucket 1)**:
+  - Insentif Dasar: Rp 3.000.000 | Pencapaian KPI Utama Penagihan: 90%
+  - Insentif Berjalan: $90\% \times \text{Rp } 3.000.000 = \text{Rp } 2.700.000$
+  - **Skenario A (Flow Rate Bagus = 8%)**: Modifier 1.2 $\rightarrow$ $\text{Rp } 2.700.000 \times 1.2 = \mathbf{\text{Rp } 3.240.000}$ *(Bonus Tambahan Rp 540.000 karena berhasil menahan arus kemacetan kredit)*.
+  - **Skenario B (Flow Rate Buruk = 18%)**: Modifier 0.8 $\rightarrow$ $\text{Rp } 2.700.000 \times 0.8 = \mathbf{\text{Rp } 2.160.000}$ *(Insentif dipotong Rp 540.000 karena membiarkan kemacetan baru membengkak)*.
+- **5. Fitur Interaktif pada Antarmuka**:
+  - *Interactive Slider Simulator*: Uji cepat kombinasi nilai insentif dasar, KPI penagihan %, dan flow rate % dengan visualisasi rumus instan.
+  - *Tabel Rekapitulasi Portofolio Kolektor*: Rekap bulanan seluruh kolektor (Andi, Budi, Rian, Doni, Dimas) secara real-time.
+  - *Cetak Slip Insentif Digital*: Penerbitan lembar rincian slip insentif resmi per kolektor.
 
 ### 5.9. Penanganan Khusus Portofolio Payroll ASN/PNS Pemprov DKI
 - Sistem menyediakan logika kalender fleksibel yang mengakomodasi jadwal pembayaran gaji pokok dan tunjangan kinerja (tukin) Pemprov DKI.
@@ -1205,7 +1228,7 @@ flowchart LR
     KAT_C -.->|Reverse Webhook & Takeout Task| KAT_A
 ```
 
-#### Tabel Ringkasan Taksonomi 18 Entitas Basis Data CRMS:
+#### Tabel Ringkasan Taksonomi 21 Entitas Basis Data CRMS:
 | No | Nama Tabel Fisik | Kategori Data | Sistem Asal / Sumber Data (*Source System*) | Dibuat / Dikelola di CRMS? | Deskripsi Fungsional Entitas Perbankan |
 |:---:|---|:---:|---|:---:|---|
 | **1** | `customers` | **Kategori A** (Replikasi Master) | **Customer Acquisition System (CAS / LOS)** & **Loan Management System (LMS / CBS)** | Dikelola via ETL Sync (Replikasi Read/Update) | Menyimpan master profil identitas debitur: CIF (*Customer Identification File*), NIK (di-masking UU PDP), nama lengkap, kontak ponsel/WhatsApp, email domisili, instansi pekerjaan (ASN Pemprov DKI / BUMD / Swasta), dan indikator nasabah prioritas (`is_vip`). |
@@ -1214,18 +1237,21 @@ flowchart LR
 | **4** | `overdue_accounts` | **Kategori B** (Generated Engine) | **CRMS Data Transformer & Decision Engine** (Dipicu mutasi saldo tunggakan dari LMS) | Dihasilkan Otomatis oleh CRMS | Antrean kerja operasional utama penagihan: menghitung hari keterlambatan (*DPD*), nominal overdue, penentuan *Bucket* (1-3 s.d >150), scoring risiko multi-faktor (0–1000 poin), penetapan *Action Path* (Grade 1–8), penugasan PIC & kanal penanganan, serta pelacakan *Recovery Stage*. |
 | **5** | `decision_rules` | **Kategori B** (Engine Config) | **CRMS Risk Management** | Dibuat & Dikelola di CRMS | Tabel konfigurasi matriks Decision Engine: memetakan kombinasi *Strategy Group* (*Champion/Challenger*), kategori risiko, dan bucket ke dalam *Action Path*, jenis penanganan (*Handling Type*), dan kriteria alokasi PIC. |
 | **6** | `collection_activities` | **Kategori C** (Native Operational) | **CRMS Touchpoints** (Desk Collector, Field Officer mCollect, WhatsApp Bot, Smart IVR) | Dibuat Langsung di CRMS | Buku besar catatan penagihan (*Append-Only Audit Trail*): mencatat kronologis kontak, respon debitur, komitmen janji bayar (*Promise to Pay / PTP*), koordinat GPS kunjungan, dan berita acara negosiasi. |
-| **7** | `settlement_proposals` | **Kategori C** (Native Operational) | **CRMS Remedial & Restructuring** (Collector, Supervisor, Debitur) | Dibuat Langsung di CRMS | Mengelola usulan program kompromi / diskon pelunasan kredit bermasalah: jenis settlement (*Net Settlement / Charge-Wise*), diskon denda/bunga, nominal pelunasan netto, dan alur persetujuan bertingkat 6-stage (*Maker-Checker-Approver*). |
-| **8** | `settlement_tranches` | **Kategori C** (Native Operational) | **CRMS Settlement Engine** | Dihasilkan & Dikelola di CRMS | Memecah jadwal pembayaran kompromi ke dalam 1 s.d 6 termin cicilan, memantau tanggal jatuh tempo termin, kanal setor (Virtual Account / QRIS / Tunai), dan status pelunasan per termin. |
-| **9** | `skip_tracing_cases` | **Kategori C** (Native Operational) | **CRMS Skip Tracing Unit** (Remedial & Investigator) | Dibuat Langsung di CRMS | Mengelola investigasi pelacakan debitur yang hilang kontak (*unreachable*): penelusuran nomor telepon baru, alamat tempat kerja baru, koordinasi RT/RW kelurahan, dan histori penelusuran identitas. |
-| **10** | `legal_cases` | **Kategori C** (Native Operational) | **CRMS Legal Department** (Litigation Officer) | Dibuat Langsung di CRMS | Mengelola 6 tahapan alur penegakan hukum perbankan (*Legal Recourse*): somasi tertulis, penunjukan kuasa hukum rekanan, legal drafting somasi/gugatan sederhana, persidangan Pengadilan Negeri, audit kepatuhan, hingga putusan/perdamaian. |
-| **11** | `repossession_cases` | **Kategori C** (Native Operational) | **CRMS Asset Recovery Unit** (Remedial & Auction Specialist) | Dibuat Langsung di CRMS | Mengelola 8 tahapan eksekusi agunan dan lelang: penandaan agunan (*marking*), penarikan fisik agunan, penitipan di stockyard, penunjukan KJPP (*appraisal*), penetapan nilai pasar/likuidasi, registrasi lelang KPKNL, transaksi penjualan, hingga penyerahan aset. |
-| **12** | `payment_receipt_slips` | **Kategori C** (Native Operational) | **CRMS mCollect Mobile Workbench** (Field Officer di Lapangan) | Dibuat Langsung di CRMS | Menerbitkan Kuitansi Pembayaran Digital Resmi (*Payment Information Slip / PIS*) saat kolektor menerima setoran tunai atau verifikasi transfer VA/QRIS di lapangan, lengkap dengan nomor slip seri unik, geotagging GPS, dan pengiriman otomatis via WhatsApp. |
-| **13** | `collector_geo_locations` | **Kategori C** (Native Operational) | **CRMS Telemetry Ingestion Service** (Background GPS Smartphone mCollect) | Dibuat & Diperbarui di CRMS | Menyimpan status telemetri GPS *real-time* petugas lapangan: koordinat lintang/bujur terkini, radius akurasi, status operasional (*Visiting, In-Transit, Idle*), persentase baterai ponsel, dan indikator deteksi anomali waktu diam (> 120 menit). |
-| **14** | `collector_route_points` | **Kategori C** (Native Operational) | **CRMS GeoTracker Service** | Dibuat Langsung di CRMS | Rekam jejak kronologis titik-titik koordinat rute perjalanan harian kolektor untuk keperluan pemutaran ulang rute animasi (*route playback*), audit efisiensi mobilitas, dan verifikasi kehadiran fisik di alamat debitur. |
-| **15** | `collection_agencies` | **Kategori C** (Native Operational) | **CRMS Supervisory Module** (Head of Collection / AR Head) | Dibuat & Dikelola di CRMS | Mengelola administrasi agensi penagihan pihak ketiga (eksternal): pendaftaran mitra, legalitas kontrak PKS, nomor izin, jumlah tenaga penagih terafiliasi, kuota akun yang ditugaskan, persentase komisi, dan evaluasi *Recovery Rate* berbasis SLA. |
-| **16** | `authority_delegations` | **Kategori C** (Native Operational) | **CRMS Supervisory Module** (AR Head / Pejabat Pemutus) | Dibuat & Dikelola di CRMS | Mengelola pendelegasian wewenang persetujuan (*approval limit delegation*) saat pejabat definitif berhalangan / cuti (*Out of Office / OOO*), mencakup identitas delegator, delegasi, tanggal masa berlaku, batas nominal limit wewenang, dan alasan pendelegasian. |
-| **17** | `users` | **Kategori C** (Native Operational) | **CRMS Identity Management** (Admin Sistem / Integrasi SSO IAM Bank) | Dibuat & Dikelola di CRMS | Mengelola otentikasi akun pengguna CRMS, enkripsi kata sandi Bcrypt, hak akses berbasis peran (RBAC: `ADMIN`, `AR_HEAD`, `COLLECTOR`), status keaktifan akun, dan pencatatan waktu login terakhir. |
-| **18** | `global_parameters` | **Kategori C** (Native Operational) | **CRMS System Administration** | Dibuat & Dikelola di CRMS | Menyimpan konfigurasi parameter dinamis institusi perbankan (`GENERAL_NAMA_PT`, `GENERAL_SIMBOL_PT`), ambang batas toleransi, SLA, dan pengaturan sistem tanpa melakukan *hardcoding* pada source code. |
+| **7** | `collector_daily_plans` | **Kategori C** (Native Operational) | **CRMS Collector Workbench** (Petugas Lapangan) | Dibuat Langsung di CRMS | Rencana kunjungan kerja harian kolektor (*Today's Plan*): memuat urutan rute perjalanan (*Route Sequence*), estimasi waktu kedatangan, prioritas penagihan, status eksekusi (*PLANNED/VISITED/PTP/PAID*), dan catatan lapangan. |
+| **8** | `collector_reassignment_logs` | **Kategori C** (Native Operational) | **CRMS Supervisory Module** (Supervisor / AR Head) | Dibuat Langsung di CRMS | Catatan audit trail pengalihan penugasan akun antar kolektor (*Reassign Collector*): merekam akun dipindahkan, kolektor asal, kolektor tujuan, alasan baku (*OVERLOAD/SICK_LEAVE/AREA_ROTATION*), dan supervisor penanggung jawab. |
+| **9** | `collector_incentive_rules` | **Kategori C** (Native Operational) | **CRMS Incentive Administration** | Dibuat & Dikelola di CRMS | Parameter acuan matriks *Bucket Flow Rate Modifier* untuk perhitungan insentif berbasis CMS: rentang flow rate, status kinerja (Sangat Bagus s.d Sangat Buruk), dan faktor pengali bonus/pengurang penalti (1.2, 1.0, 0.8, 0.5). |
+| **10** | `settlement_proposals` | **Kategori C** (Native Operational) | **CRMS Remedial & Restructuring** (Collector, Supervisor, Debitur) | Dibuat Langsung di CRMS | Mengelola usulan program kompromi / diskon pelunasan kredit bermasalah: jenis settlement (*Net Settlement / Charge-Wise*), diskon denda/bunga, nominal pelunasan netto, dan alur persetujuan bertingkat 6-stage (*Maker-Checker-Approver*). |
+| **11** | `settlement_tranches` | **Kategori C** (Native Operational) | **CRMS Settlement Engine** | Dihasilkan & Dikelola di CRMS | Memecah jadwal pembayaran kompromi ke dalam 1 s.d 6 termin cicilan, memantau tanggal jatuh tempo termin, kanal setor (Virtual Account / QRIS / Tunai), dan status pelunasan per termin. |
+| **12** | `skip_tracing_cases` | **Kategori C** (Native Operational) | **CRMS Skip Tracing Unit** (Remedial & Investigator) | Dibuat Langsung di CRMS | Mengelola investigasi pelacakan debitur yang hilang kontak (*unreachable*): penelusuran nomor telepon baru, alamat tempat kerja baru, koordinasi RT/RW kelurahan, dan histori penelusuran identitas. |
+| **13** | `legal_cases` | **Kategori C** (Native Operational) | **CRMS Legal Department** (Litigation Officer) | Dibuat Langsung di CRMS | Mengelola 6 tahapan alur penegakan hukum perbankan (*Legal Recourse*): somasi tertulis, penunjukan kuasa hukum rekanan, legal drafting somasi/gugatan sederhana, persidangan Pengadilan Negeri, audit kepatuhan, hingga putusan/perdamaian. |
+| **14** | `repossession_cases` | **Kategori C** (Native Operational) | **CRMS Asset Recovery Unit** (Remedial & Auction Specialist) | Dibuat Langsung di CRMS | Mengelola 8 tahapan eksekusi agunan dan lelang: penandaan agunan (*marking*), penarikan fisik agunan, penitipan di stockyard, penunjukan KJPP (*appraisal*), penetapan nilai pasar/likuidasi, registrasi lelang KPKNL, transaksi penjualan, hingga penyerahan aset. |
+| **15** | `payment_receipt_slips` | **Kategori C** (Native Operational) | **CRMS mCollect Mobile Workbench** (Field Officer di Lapangan) | Dibuat Langsung di CRMS | Menerbitkan Kuitansi Pembayaran Digital Resmi (*Payment Information Slip / PIS*) saat kolektor menerima setoran tunai atau verifikasi transfer VA/QRIS di lapangan, lengkap dengan nomor slip seri unik, geotagging GPS, dan pengiriman otomatis via WhatsApp. |
+| **16** | `collector_geo_locations` | **Kategori C** (Native Operational) | **CRMS Telemetry Ingestion Service** (Background GPS Smartphone mCollect) | Dibuat & Diperbarui di CRMS | Menyimpan status telemetri GPS *real-time* petugas lapangan: koordinat lintang/bujur terkini, radius akurasi, status operasional (*Visiting, In-Transit, Idle*), persentase baterai ponsel, dan indikator deteksi anomali waktu diam (> 120 menit). |
+| **17** | `collector_route_points` | **Kategori C** (Native Operational) | **CRMS GeoTracker Service** | Dibuat Langsung di CRMS | Rekam jejak kronologis titik-titik koordinat rute perjalanan harian kolektor untuk keperluan pemutaran ulang rute animasi (*route playback*), audit efisiensi mobilitas, dan verifikasi kehadiran fisik di alamat debitur. |
+| **18** | `collection_agencies` | **Kategori C** (Native Operational) | **CRMS Supervisory Module** (Head of Collection / AR Head) | Dibuat & Dikelola di CRMS | Mengelola administrasi agensi penagihan pihak ketiga (eksternal): pendaftaran mitra, legalitas kontrak PKS, nomor izin, jumlah tenaga penagih terafiliasi, kuota akun yang ditugaskan, persentase komisi, dan evaluasi *Recovery Rate* berbasis SLA. |
+| **19** | `authority_delegations` | **Kategori C** (Native Operational) | **CRMS Supervisory Module** (AR Head / Pejabat Pemutus) | Dibuat & Dikelola di CRMS | Mengelola pendelegasian wewenang persetujuan (*approval limit delegation*) saat pejabat definitif berhalangan / cuti (*Out of Office / OOO*), mencakup identitas delegator, delegasi, tanggal masa berlaku, batas nominal limit wewenang, dan alasan pendelegasian. |
+| **20** | `users` | **Kategori C** (Native Operational) | **CRMS Identity Management** (Admin Sistem / Integrasi SSO IAM Bank) | Dibuat & Dikelola di CRMS | Mengelola otentikasi akun pengguna CRMS, enkripsi kata sandi Bcrypt, hak akses berbasis peran (RBAC: `ADMIN`, `AR_HEAD`, `COLLECTOR`), status keaktifan akun, dan pencatatan waktu login terakhir. |
+| **21** | `global_parameters` | **Kategori C** (Native Operational) | **CRMS System Administration** | Dibuat & Dikelola di CRMS | Menyimpan konfigurasi parameter dinamis institusi perbankan (`GENERAL_NAMA_PT`, `GENERAL_SIMBOL_PT`), ambang batas toleransi, SLA, dan pengaturan sistem tanpa melakukan *hardcoding* pada source code. |
 
 ---
 
@@ -1379,7 +1405,7 @@ flowchart TD
 
 ### 12.4. Entity Relationship Model (ERD) Enterprise & Kamus Data Tabel Fisik
 
-Diagram Entity Relationship Model (ERD) enterprise di bawah ini menggambarkan arsitektur relasional komprehensif yang menghubungkan seluruh 18 tabel pada basis data `crms_db`:
+Diagram Entity Relationship Model (ERD) enterprise di bawah ini menggambarkan arsitektur relasional komprehensif yang menghubungkan seluruh 21 tabel pada basis data `crms_db`:
 
 ```mermaid
 erDiagram
@@ -1400,6 +1426,8 @@ erDiagram
     AGREEMENTS ||--o{ PAYMENT_RECEIPT_SLIPS : "pembayaran angsuran"
 
     OVERDUE_ACCOUNTS ||--o{ COLLECTION_ACTIVITIES : "mencatat aktivitas"
+    OVERDUE_ACCOUNTS ||--o{ COLLECTOR_DAILY_PLANS : "tugas kunjungan harian"
+    OVERDUE_ACCOUNTS ||--o{ COLLECTOR_REASSIGNMENT_LOGS : "riwayat reassign akun"
     
     SETTLEMENT_PROPOSALS ||--o{ SETTLEMENT_TRANCHES : "memiliki 1..6 termin"
     
@@ -1409,6 +1437,9 @@ erDiagram
 
     USERS ||--o{ COLLECTION_ACTIVITIES : "petugas pelaksana"
     USERS ||--o{ AUTHORITY_DELEGATIONS : "delegator & penerima wewenang"
+    USERS ||--o{ COLLECTOR_DAILY_PLANS : "petugas rute harian"
+    USERS ||--o{ COLLECTOR_REASSIGNMENT_LOGS : "kolektor asal / baru / reassigner"
+    USERS ||--o{ COLLECTOR_INCENTIVE_RULES : "dikelola administrator"
 
     GLOBAL_PARAMETERS {
         bigserial id PK
@@ -1636,6 +1667,45 @@ erDiagram
         varchar reason "Alasan Cuti / Dinas Luar"
         boolean is_active "Status Keaktifan OOO"
     }
+
+    COLLECTOR_DAILY_PLANS {
+        bigserial id PK
+        varchar collector_username FK "Username Petugas Kolektor"
+        bigint overdue_account_id FK "ID Antrean Overdue"
+        varchar agreement_no FK "Nomor Rekening Kredit"
+        date plan_date "Tanggal Rencana Kunjungan"
+        int route_order "Nomor Urut Prioritas Rute"
+        time estimated_time "Estimasi Jam Tiba"
+        numeric target_amount "Target Penagihan (Rp)"
+        numeric collected_amount "Realisasi Penerimaan (Rp)"
+        varchar status "PLANNED, IN_PROGRESS, VISITED, CANCELLED"
+        text visit_notes "Catatan Kunjungan Petugas"
+        timestamptz visited_at "Waktu Penyelesaian Kunjungan"
+    }
+
+    COLLECTOR_REASSIGNMENT_LOGS {
+        bigserial id PK
+        bigint overdue_account_id FK "ID Antrean Overdue"
+        varchar agreement_no FK "Nomor Rekening Kredit"
+        varchar from_collector_username FK "Kolektor Asal"
+        varchar to_collector_username FK "Kolektor Tujuan"
+        varchar reassigned_by FK "Supervisor / AR Head"
+        varchar reason_code "OVERLOAD, SICK_LEAVE, AREA_ROTATION, PERFORMANCE_ESCALATION, OTHER"
+        text notes "Catatan Alasan Pengalihan"
+        timestamptz created_at "Waktu Pengalihan Tugas"
+    }
+
+    COLLECTOR_INCENTIVE_RULES {
+        bigserial id PK
+        varchar rule_name "Nama Aturan Insentif"
+        numeric base_incentive "Insentif Dasar (Rp)"
+        numeric target_collection_rate "Target Collection Rate (%)"
+        numeric flow_rate_min "Batas Minimal Flow Rate (%)"
+        numeric flow_rate_max "Batas Maksimal Flow Rate (%)"
+        numeric modifier "Faktor Pengali (Modifier)"
+        text notes "Keterangan Kategori Kinerja"
+        boolean is_active "Status Keaktifan Aturan"
+    }
 ```
 
 ---
@@ -1697,6 +1767,16 @@ Backend CRMS mengimplementasikan 35+ endpoint RESTful API terstandarisasi yang m
 | **Batch Simulator** | `POST` | `/api/v1/confins/reset-demo` | Mengembalikan kondisi basis data ke seeder awal portofolio bank | Tanpa payload |
 | **VIP Desk** | `GET` | `/api/v1/vip/accounts` | Portofolio debitur VIP khusus di bawah kendali eksklusif AR Head | Filter otomatis `action_path = 'VIP'` |
 | **VIP Desk** | `POST` | `/api/v1/vip/accounts/:agreement_no/action` | Penerapan instruksi perlakuan khusus nasabah prioritas oleh AR Head | `action_plan`, `assigned_specialist`, `notes`, `ptp_date` |
+| **Collector Tasks** | `GET` | `/api/v1/collector/tasks` | Mengambil seluruh antrean task yang ditugaskan ke kolektor | Filter query: `search`, `bucket` |
+| **Collector Daily Plan** | `GET` | `/api/v1/collector/today-plan` | Mengambil daftar tugas yang dipilih untuk dikerjakan hari ini (Today's Plan) | Filter query: `date` |
+| **Collector Daily Plan** | `POST` | `/api/v1/collector/today-plan` | Menambahkan single task ke Today's Plan kolektor | `{"overdue_account_id": ..., "plan_date": "...", "route_order": ..., "target_amount": ...}` |
+| **Collector Daily Plan** | `POST` | `/api/v1/collector/today-plan/bulk` | Menambahkan multi-task sekaligus ke Today's Plan | `{"task_ids": [1, 2, ...], "plan_date": "..."}` |
+| **Collector Daily Plan** | `PUT` | `/api/v1/collector/today-plan/:id/status` | Memperbarui status kunjungan Today's Plan (`VISITED`, `CANCELLED`) | `{"status": "VISITED", "collected_amount": ..., "notes": "..."}` |
+| **Collector Daily Plan** | `DELETE` | `/api/v1/collector/today-plan/:id` | Menghapus item dari Today's Plan | Path Param: ID Plan |
+| **Collector Reassignment** | `POST` | `/api/v1/collector/reassign` | Mengalihkan tugas penagihan antar kolektor (Single/Bulk) dengan audit log | `{"task_ids": [...], "to_collector_username": "...", "reason_code": "...", "notes": "..."}` |
+| **Collector Reassignment** | `GET` | `/api/v1/collector/reassignments` | Mengambil log riwayat pengalihan tugas kolektor (Audit Trail) | Filter: `from_collector`, `to_collector` |
+| **Collector Incentive** | `GET` | `/api/v1/collector/incentives` | Mengambil aturan dan simulasi insentif CMS Flow Rate kolektor | Filter: `collector_username` |
+| **Collector Incentive** | `POST` | `/api/v1/collector/incentives/simulate` | Melakukan simulasi interaktif perhitungan insentif CMS Flow Rate | `{"base_incentive": ..., "collection_rate": ..., "flow_rate": ...}` |
 
 ---
 
@@ -2368,28 +2448,63 @@ Fitur tata kelola strategis pengawasan tim penagihan internal dan agensi ekstern
 
 ---
 
-### 17.7 mCollect - Workbench Penagihan Lapangan Digital
-Modul operasional *mobile-first* terpadu bagi petugas kolektor lapangan (*Field Collector* / *Field Recovery Officer*):
+### 17.7 mCollect - Workbench Penagihan Lapangan Digital & CMS Incentive Engine
+Modul operasional *mobile-first* terpadu bagi petugas kolektor lapangan (*Field Collector* / *Field Recovery Officer*) serta mesin insentif berbasis risiko:
 
-1. **Field Accounts Management**: Tampilan antrean kunjungan harian yang dioptimalkan untuk perangkat bergerak (*mobile/tablet*), dilengkapi informasi kontak debitur, riwayat DPD, dan rincian agunan.
-2. **Pencatatan Pembayaran Lapangan (Payment Recording)**:
-   - Pencatatan penerimaan pembayaran tunai (*CASH*), transfer *Virtual Account*, atau scan *QRIS*.
+1. **📋 Task List (Master Antrean Penugasan Kolektor)**:
+   - Menampilkan seluruh daftar task/akun kredit bermasalah yang dialokasikan ke kolektor berdasarkan algoritma *Decision Engine* dan beban kerja.
+   - Filter multi-dimensi berdasarkan kolektor spesifik (Andi Pratama, Budi Santoso, Rian Pratama, Dimas Kurniawan, dll.), bucket keterlambatan (1-3 s.d 31-60 DPD), dan status akun.
+   - Fitur *Multi-Select Checkbox* untuk memilih beberapa akun sekaligus dan menekan tombol **`+ Masukkan ke Today's Plan`** secara massal.
+   - Badge penanda status (*Sudah di Plan Rute #X* vs *Belum di Plan*).
+   - Mengetuk baris task langsung memunculkan **Customer Form** interaktif.
+
+2. **📅 Today's Plan (Rencana Rute & Target Harian Terpilih)**:
+   - Daftar task penagihan yang telah dipilih kolektor untuk dieksekusi hari ini.
+   - Disusun berdasarkan urutan rute perjalanan logis (*Route Sequence #1, #2, #3...*) dan estimasi waktu kunjungan (*09:00 WIB, 11:00 WIB*).
+   - Metrik ringkasan target harian: Total Kunjungan Terencana, Jumlah Selesai / Dikunjungi (*Progress Bar %*), Target Nominal Tagihan Rute, dan Realisasi Uang Terkumpul Lapangan.
+   - Pembaruan status eksekusi kunjungan secara dinamis: `PLANNED` (Belum), `IN_PROGRESS` (Menuju Lokasi), `VISITED` (Selesai Bertemu), `PTP` (Janji Bayar), dan `PAID` (Lunas).
+   - Tombol aksi cepat untuk membuka Customer Form, catat bayar PIS, atau hapus dari jadwal harian.
+
+3. **📄 Customer Form (Modal Informasi Lengkap Saat Task Di-klik)**:
+   - Formulir detail komprehensif yang muncul saat task di-klik pada Task List maupun Today's Plan:
+     - **Profil & Identitas**: CIF, NIK, Nama Lengkap, Pekerjaan, Alamat Domisili, dan Kota.
+     - **Kontak & Komunikasi Cepat**: Tombol panggilan telepon langsung (`tel:`) dan chat WhatsApp otomatis (`wa.me`) dengan nomor debitur.
+     - **Fasilitas Pinjaman**: Plafon Kredit, Model Aset/Jaminan, Angsuran Pokok+Bunga per bulan, Tenor Total & Terbayar.
+     - **Status Tunggakan**: Nominal Overdue, DPD, Bucket Saat Ini, Risk Score & Level.
+     - **Formulir Laporan Eksekusi Kunjungan Petugas**: Pencatatan status kontak (*Bertemu Debitur Langsung, Bertemu Pasangan/Keluarga, Debitur Pindah Alamat, Tidak di Tempat, Menolak Bayar*), input komitmen PTP (tanggal janji bayar & nominal PTP), serta catatan kunjungan lapangan (*Field Notes*).
+     - **Integrasi Cepat 3 Alat Lapangan**: Terima bayar langsung (PIS), kirim link QRIS/VA ke WhatsApp, dan simulator pelunasan Rule 78.
+
+4. **🔄 Reassign Collector (Pengalihan Tugas Antar Kolektor)**:
+   - Memfasilitasi supervisor / AR Head untuk memindahkan portofolio penagihan antar kolektor (tunggal atau massal).
+   - Pilihan alasan operasional baku: `OVERLOAD` (Kapasitas Penuh), `SICK_LEAVE` (Petugas Sakit/Cuti/OOO), `AREA_ROTATION` (Rotasi Wilayah Domisili), `PERFORMANCE_ESCALATION` (Eskalasi Kinerja Khusus), dan `OTHER`.
+   - Sinkronisasi otomatis ke Today's Plan dan pencatatan audit trail permanen pada tabel `collector_reassignment_logs`.
+
+5. **💰 CMS Incentive Engine Berbasis Bucket Flow Rate Modifier**:
+   - Perhitungan insentif otomatis yang mengintegrasikan variabel **Bucket Flow Rate** (kemacetan bergeser ke tingkat lebih parah) sebagai faktor pengali bonus atau pengurang penalti:
+     - **Insentif Dasar**: Standar Rp 3.000.000.
+     - **Target KPI Utama**: Persentase uang tertagih (*Collection Rate %*) $\rightarrow$ $\text{Insentif Berjalan} = \text{KPI \%} \times \text{Insentif Dasar}$.
+     - **Matriks Aturan Flow Rate Modifier** (Target Maksimal Toleransi Manajemen: **15%**):
+       - `< 10%`: **Sangat Bagus** $\rightarrow$ Pengali **1.2** (Bonus naik 20%).
+       - `10% – 15%`: **Memenuhi Target** $\rightarrow$ Pengali **1.0** (Insentif utuh 100%).
+       - `15.1% – 20%`: **Buruk** $\rightarrow$ Pengurang **0.8** (Insentif dipotong 20%).
+       - `> 20%`: **Sangat Buruk** $\rightarrow$ Pengurang **0.5** (Insentif dipotong 50%).
+     - **Rumus Akhir**: $\text{Insentif Akhir} = \text{Insentif Berjalan} \times \text{Modifier}$.
+     - **Contoh Pembuktian Kolektor Andi Pratama (KPI 90% $\rightarrow$ Insentif Berjalan Rp 2.700.000)**:
+       - *Skenario A (Flow Rate 8%)*: $\text{Rp } 2.700.000 \times 1.2 = \mathbf{\text{Rp } 3.240.000}$ (Bonus).
+       - *Skenario B (Flow Rate 18%)*: $\text{Rp } 2.700.000 \times 0.8 = \mathbf{\text{Rp } 2.160.000}$ (Penalti).
+     - Dilengkapi **Live Interactive Slider Simulator**, **Tabel Rekapitulasi Portofolio Kolektor**, dan **Cetak Slip Insentif Digital Resmi**.
+
+6. **Pencatatan Pembayaran Lapangan & Kuitansi Digital PIS (Payment Recording)**:
+   - Pencatatan penerimaan pembayaran tunai (*CASH*), transfer *Virtual Account*, atau scan *QRIS* dinamis.
    - Perekaman koordinat GPS (*Geotagging*) dan cap waktu seketika saat uang diterima untuk mencegah *fraud*.
-3. **Penerbitan Bukti Setor Digital Resmi (Payment Information Slip / PIS)**:
-   - Penerbitan kuitansi digital elektronik (PIS) berstandar perbankan lengkap dengan nomor kuitansi unik berurutan, rincian pembayaran, kode validasi QR, dan nama kolektor.
-   - Pengiriman otomatis bukti bayar PIS ke nomor WhatsApp nasabah seketika (*Instant WhatsApp Receipt*).
-4. **Permintaan Tautan Bayar Mandiri (Request Payment Link - QRIS & VA)**:
+   - Penerbitan kuitansi digital elektronik (PIS) berstandar perbankan lengkap dengan nomor kuitansi unik berurutan, rincian pembayaran, kode validasi QR, nama kolektor, dan pengiriman otomatis ke WhatsApp nasabah (*Instant WhatsApp Receipt*).
+
+7. **Permintaan Tautan Bayar Mandiri (Request Payment Link - QRIS & VA)**:
    - Debitur yang tidak memegang uang tunai dapat meminta dibuatkan tautan bayar mandiri.
    - Sistem men-*generate* kode QRIS dinamis atau nomor Virtual Account instan 24 jam dan langsung mengirimkan pesan instruksi bayar ke WhatsApp debitur.
-5. **Simulator Pelunasan Dipercepat (Foreclosure / Early Payoff Calculator)**:
-   - Menjawab pertanyaan debitur: *"Berapa total yang harus saya bayar jika melunasi kredit hari ini?"*.
-   - Menghitung secara otomatis:
-     - Sisa Pokok Pinjaman (*Outstanding Principal*)
-     - Bunga Berjalan Belum Jatuh Tempo (*Unbilled Interest*)
-     - Potongan Keringanan Bunga (*Interest Rebate Rule 78*)
-     - Biaya Penalti Pelunasan Dipercepat (*Early Termination Fee* standar 3.5%)
-     - Denda Keterlambatan Terhutang (*Late Fee Arrears*)
-     - Total Bersih Pelunasan Dipercepat (*Total Net Payoff Amount*)
+
+8. **Simulator Pelunasan Dipercepat (Foreclosure / Early Payoff Calculator Rule 78)**:
+   - Menghitung secara otomatis sisa pokok pinjaman (*Outstanding Principal*), bunga berjalan belum jatuh tempo (*Unbilled Interest*), potongan keringanan bunga (*Interest Rebate Rule 78*), biaya penalti pelunasan dipercepat (*Early Termination Fee* standar 3.5%), denda keterlambatan terhutang (*Late Fee Arrears*), serta total bersih pelunasan dipercepat (*Total Net Payoff Amount*).
    - Mengirimkan lembar penawaran resmi estimasi pelunasan langsung ke WhatsApp debitur dengan masa berlaku 7 hari kalender.
 
 ---

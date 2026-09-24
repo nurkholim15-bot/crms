@@ -204,8 +204,8 @@ flowchart TB
 1. **Unified Customer 360° View**: Agregasi total eksposur fasilitas kredit lintas produk (lancar vs overdue), informasi agunan (SHM/BPKB), serta linimasa interaksi omnichannel dalam satu CIF tunggal.
 2. **Decision Engine & Scoring Model (0–1000 Poin & Action Path Grade 1–8)**: Klasifikasi risiko gagal bayar multi-faktor (`LOW_RISK` $\ge 700$, `MEDIUM_RISK` $450-699$, `HIGH_RISK` $< 450$, `VIP`) berbasis 5 parameter resmi (Payment History 35%, Current DPD 25%, DSR 20%, Facility/Collateral 10%, Stabilitas ASN DKI 10%). Menghubungkan skor ke Grade (Action Path 1–8 & VIP) via pembagian traffic *Champion* (Grade 1 & 2 baseline 80%) vs *Challenger* (Grade 3–8 adaptif 20%), lalu menginterseksikannya dengan 10 Bucket DPD (`-3-0` s.d `> 150`) untuk penugasan PIC otomatis (WA, Robot, DC, FC, SFC, Senior Field Collector, Remedial, Special Team).
 3. **Settlement 6-Stage Lifecycle & Multi-Tranches**: Manajemen kompromi diskon pelunasan terstruktur (Initiate -> Schedule Multi-Tranches 1-6 termin -> Payment Plan -> Recommend & Approval Matrix berjenjang -> Tracking -> Closure Match-off).
-4. **Supervisory Control & Capacity Planning**: Distribusi antrean seimbang (*Balanced Round-Robin*), pemantauan beban kerja harian kolektor (optimal 25 akun), pendelegasian wewenang sementara (*Out of Office / OOO*), serta onboarding agensi penagihan eksternal dan pemantauan SLA.
-5. **mCollect Field Workbench**: Antarmuka *mobile-first* kolektor lapangan dengan perekaman bayar tunai/VA/QRIS, pencatatan koordinat GPS, penerbitan kuitansi resmi digital (PIS) ke WhatsApp, tautan bayar mandiri 24 jam, dan kalkulator pelunasan dipercepat (*Foreclosure Rule 78*).
+4. **Supervisory Control, Capacity Planning & Reassign Collector**: Distribusi antrean seimbang (*Balanced Round-Robin*), pemantauan beban kerja harian kolektor (optimal 25 akun), pendelegasian wewenang sementara (*Out of Office / OOO*), pengalihan tugas penagihan antar kolektor (*Reassign Collector*) dengan audit trail lengkap, serta onboarding agensi penagihan eksternal dan pemantauan SLA.
+5. **Collector Workbench & CMS Incentive Engine**: Antarmuka terpadu kolektor dengan **Task List** (alokasi akun), **Today's Plan** (urutan rute & target harian), **Customer Form** (profil 360°, kontak, histori kunjungan, dan pencatatan aksi lapangan), perekaman bayar tunai/VA/QRIS, penerbitan kuitansi resmi digital (PIS) ke WhatsApp, tautan bayar mandiri 24 jam, kalkulator pelunasan dipercepat (*Foreclosure Rule 78*), serta **CMS Incentive Engine** berbasis **Bucket Flow Rate Modifier** (Bonus 1.2x atau Penalti 0.8x/0.5x).
 6. **GeoTracker GPS Monitoring**: Peta vektor interaktif DKI Jakarta menampilkan armada kolektor secara *real-time*, pemutaran ulang rute animasi (*animated route playback*), analisis waktu produktif (*time analytics*), dan deteksi anomali waktu diam (> 120 menit).
 7. **Pre-Delinquency Management (PDM - DPD 0)**: Pengawasan dini sebelum jatuh tempo (H-3 s.d H-0), pengecekan saldo autodebet CASA, kalender transfer gaji/tukin ASN Pemprov DKI, dan pengingat ramah otomatis via WhatsApp.
 8. **Legal Recourse & Asset Liquidation**: Alur perkara hukum perbankan terstandarisasi dalam 6 tahapan litigasi perdata serta 8 tahapan eksekusi lelang agunan di KPKNL.
@@ -214,11 +214,50 @@ flowchart TB
 
 ---
 
+## 📱 Fitur Kolektor Terpadu & Kalkulasi Insentif CMS Flow Rate
+
+Sistem CRMS mengimplementasikan alur kerja kolektor lapangan dan perhitungan insentif modern berbasis kinerja risiko:
+
+### 1. Siklus Kerja Kolektor Lapangan (Collector Workflow)
+* **📋 Task List**: Daftar seluruh tugas penagihan yang dialokasikan ke kolektor berdasarkan algoritma *Decision Engine* dan beban kerja. Dilengkapi filter bucket, status, pencarian instan, dan fitur *Multi-Select* untuk menambahkan akun secara massal ke jadwal harian.
+* **📅 Today's Plan**: Jadwal rencana kerja harian yang dipilih kolektor. Disusun berdasarkan urutan rute perjalanan (*Route Sequence #1, #2, #3...*) dan estimasi waktu (*09:00 WIB, 11:00 WIB*). Memuat metrik target vs realisasi harian serta status dinamis (*PLANNED*, *IN_PROGRESS*, *VISITED*, *PTP*, *PAID*).
+* **📄 Customer Form**: Formulir detail interaktif yang muncul saat baris task diklik. Menyajikan data profil debitur (CIF, NIK, telepon, WhatsApp instan, alamat domisili, peta), rincian kredit (plafon, angsuran bulanan, sisa tenor), status tunggakan (DPD, bucket, risk score), serta form eksekusi hasil kunjungan (pencatatan status kontak, janji bayar PTP, terbitkan kuitansi PIS digital, buat tautan QRIS/VA, dan simulator pelunasan Rule 78).
+* **🔄 Reassign Collector**: Fitur supervisi / AR Head untuk memindahkan akun penagihan antar kolektor (tunggal atau massal) dengan pencatatan alasan operasional (*OVERLOAD*, *SICK_LEAVE*, *AREA_ROTATION*, *PERFORMANCE_ESCALATION*) serta *Audit Trail Log* permanen.
+
+### 2. CMS Incentive Engine Berbasis Bucket Flow Rate Modifier
+Dalam industri penagihan perbankan modern, kinerja kolektor tidak hanya dinilai dari nominal uang yang tertagih, tetapi juga kemampuan menahan laju penurunan kualitas portofolio (*Bucket Flow Rate*). Semakin rendah flow rate, kinerja kolektor semakin baik (bonus). Sebaliknya, jika flow rate tinggi (membiarkan debitur lolos ke bucket lebih macet), insentif dipotong (penalti).
+
+#### Komponen & Variabel Penilaian:
+1. **Insentif Dasar (Base Incentive)**: Rp 3.000.000 (dapat dikonfigurasi per target level).
+2. **Pencapaian KPI Utama**: Persentase jumlah uang berhasil ditagih (*Collection Rate %*) atau penyelesaian akun (*Rollback Rate %*).
+   $$\text{Insentif Berjalan} = \text{Pencapaian KPI Utama (\%)} \times \text{Insentif Dasar}$$
+3. **Matriks Aturan Bucket Flow Rate (Modifier)** — Target Maksimal Toleransi Manajemen: **15%**:
+   | Realisasi Flow Rate | Status Kinerja | Faktor Pengali / Pengurang (Modifier) | Dampak terhadap Insentif |
+   | :---: | :---: | :---: | :---: |
+   | **< 10%** | **Sangat Bagus** | **Pengali: 1.2** | **Bonus**: Insentif naik 20% |
+   | **10% – 15%** | **Memenuhi Target** | **Pengali: 1.0** | **Utuh**: Insentif diterima 100% |
+   | **15.1% – 20%** | **Buruk** | **Pengurang: 0.8** | **Penalti**: Insentif dipotong 20% |
+   | **> 20%** | **Sangat Buruk** | **Pengurang: 0.5** | **Penalti Berat**: Insentif dipotong 50% |
+4. **Rumus Insentif Akhir**:
+   $$\text{Insentif Akhir} = \text{Insentif Berjalan} \times \text{Bucket Flow Rate Modifier}$$
+
+#### Contoh Skenario Riil (Kolektor Andi Pratama - Portofolio Bucket 1):
+* **Insentif Dasar**: Rp 3.000.000 | **Pencapaian KPI Utama**: 90%
+* **Insentif Berjalan**: $90\% \times \text{Rp } 3.000.000 = \text{Rp } 2.700.000$
+* **Skenario A (Flow Rate Bagus = 8%)**:
+  * Realisasi flow rate 8% (< 10%) $\rightarrow$ Modifier = **1.2** (Faktor Pengali Bonus).
+  * Perhitungan: $\text{Rp } 2.700.000 \times 1.2 = \mathbf{\text{Rp } 3.240.000}$ *(Mendapat bonus tambahan Rp 540.000)*.
+* **Skenario B (Flow Rate Buruk = 18%)**:
+  * Realisasi flow rate 18% (15.1% - 20%) $\rightarrow$ Modifier = **0.8** (Faktor Pengurang Penalti).
+  * Perhitungan: $\text{Rp } 2.700.000 \times 0.8 = \mathbf{\text{Rp } 2.160.000}$ *(Insentif dipotong Rp 540.000)*.
+
+---
+
 ## 🗄️ Katalog Tabel Basis Data & Kebijakan ETL (Data Ingestion & Lifecycle Policy)
 
-Basis data **CRMS (Collection & Recovery Management System)** mengelola 18 entitas relasional terstruktur yang diklasifikasikan ke dalam 3 kategori berdasarkan sumber data dan siklus hidupnya:
+Basis data **CRMS (Collection & Recovery Management System)** mengelola **21 entitas relasional terstruktur** yang diklasifikasikan ke dalam 3 kategori berdasarkan sumber data dan siklus hidupnya:
 
-### 1. Taksonomi 18 Tabel Basis Data CRMS
+### 1. Taksonomi 21 Tabel Basis Data CRMS
 * **Kategori A: Master Replikasi Eksternal (External Ingestion Core Systems)**
   - `customers`: Master debitur (CIF, nama, kontak, alamat, NIK masked UU PDP, instansi ASN Pemprov DKI, status VIP). Difeeding dari **Customer Acquisition System (CAS/LOS)** & **Loan Management System (LMS/CBS)**.
   - `agreements`: Master rekening kredit aktif (No Kontrak, LOB KPR/KMK/KTA/KUR/CC, plafon, angsuran, tenor, agunan SHM/BPKB, cabang). Difeeding dari **Loan Management System (LMS/CBS)**.
@@ -228,6 +267,9 @@ Basis data **CRMS (Collection & Recovery Management System)** mengelola 18 entit
   - `decision_rules`: Tabel konfigurasi matriks strategi risiko (*Champion vs Challenger*) dan aturan interseksi Grade x Bucket DPD yang dikelola oleh Risk Administrator CRMS.
 * **Kategori C: Tabel Native Operasional & Transaksional CRMS (Dibuat & Dikelola di CRMS)**
   - `collection_activities`: Log rekam jejak histori penagihan (*Append-Only Audit Trail*, no update/no delete).
+  - `collector_daily_plans`: Rencana kunjungan harian yang dipilih kolektor (*Today's Plan*) lengkap dengan urutan rute perjalanan dan estimasi waktu kunjungan.
+  - `collector_reassignment_logs`: Catatan riwayat audit pemindahan akun antar kolektor (*Reassign Collector*) beserta alasan operasional dan supervisor penanggung jawab.
+  - `collector_incentive_rules`: Parameter acuan matriks *Bucket Flow Rate Modifier* untuk perhitungan insentif otomatis berbasis CMS.
   - `settlement_proposals`: Usulan kompromi diskon pelunasan dengan alur persetujuan bertingkat 6-stage (*Maker-Checker-Approver*).
   - `settlement_tranches`: Jadwal dan realisasi pembayaran bertahap (1 s.d 6 termin) hasil persetujuan settlement.
   - `skip_tracing_cases`: Berkas investigasi pelacakan kontak/domisili baru debitur yang hilang kontak (*unreachable*).
