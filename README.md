@@ -202,7 +202,7 @@ flowchart TB
 ## 🚀 10 Modul Enterprise Utama
 
 1. **Unified Customer 360° View**: Agregasi total eksposur fasilitas kredit lintas produk (lancar vs overdue), informasi agunan (SHM/BPKB), serta linimasa interaksi omnichannel dalam satu CIF tunggal.
-2. **Decision Engine & Scoring Model (0–1000 Poin)**: Klasifikasi risiko gagal bayar multi-faktor (`LOW_RISK`, `MEDIUM_RISK`, `HIGH_RISK`, `VIP`) dan alokasi antrean kerja otomatis (Action Path Grade 1–8) dengan pengujian A/B *Champion vs Challenger*.
+2. **Decision Engine & Scoring Model (0–1000 Poin & Action Path Grade 1–8)**: Klasifikasi risiko gagal bayar multi-faktor (`LOW_RISK` $\ge 700$, `MEDIUM_RISK` $450-699$, `HIGH_RISK` $< 450$, `VIP`) berbasis 5 parameter resmi (Payment History 35%, Current DPD 25%, DSR 20%, Facility/Collateral 10%, Stabilitas ASN DKI 10%). Menghubungkan skor ke Grade (Action Path 1–8 & VIP) via pembagian traffic *Champion* (Grade 1 & 2 baseline 80%) vs *Challenger* (Grade 3–8 adaptif 20%), lalu menginterseksikannya dengan 10 Bucket DPD (`-3-0` s.d `> 150`) untuk penugasan PIC otomatis (WA, Robot, DC, FC, SFC, Senior Field Collector, Remedial, Special Team).
 3. **Settlement 6-Stage Lifecycle & Multi-Tranches**: Manajemen kompromi diskon pelunasan terstruktur (Initiate -> Schedule Multi-Tranches 1-6 termin -> Payment Plan -> Recommend & Approval Matrix berjenjang -> Tracking -> Closure Match-off).
 4. **Supervisory Control & Capacity Planning**: Distribusi antrean seimbang (*Balanced Round-Robin*), pemantauan beban kerja harian kolektor (optimal 25 akun), pendelegasian wewenang sementara (*Out of Office / OOO*), serta onboarding agensi penagihan eksternal dan pemantauan SLA.
 5. **mCollect Field Workbench**: Antarmuka *mobile-first* kolektor lapangan dengan perekaman bayar tunai/VA/QRIS, pencatatan koordinat GPS, penerbitan kuitansi resmi digital (PIS) ke WhatsApp, tautan bayar mandiri 24 jam, dan kalkulator pelunasan dipercepat (*Foreclosure Rule 78*).
@@ -224,8 +224,8 @@ Basis data **CRMS (Collection & Recovery Management System)** mengelola 18 entit
   - `agreements`: Master rekening kredit aktif (No Kontrak, LOB KPR/KMK/KTA/KUR/CC, plafon, angsuran, tenor, agunan SHM/BPKB, cabang). Difeeding dari **Loan Management System (LMS/CBS)**.
 * **Kategori B: Hasil Transformasi Engine CRMS (CRMS Engine & Rule Generated)**
   - `pre_delinquency_accounts`: Akun DPD 0 pengawasan dini (H-3..H-0). Dihasilkan dari LMS + API CASA Tabungan Autodebet + Kalender Gaji/Tukin ASN DKI.
-  - `overdue_accounts`: Antrean kerja penagihan (DPD 1+). Dihasilkan oleh CRMS Decision Engine: scoring risiko multi-faktor (0–1000 poin), Action Path Grade 1–8, alokasi PIC & kanal rekomendasi.
-  - `decision_rules`: Tabel konfigurasi matriks strategi risiko (*Champion vs Challenger*) yang dikelola oleh Risk Administrator CRMS.
+  - `overdue_accounts`: Antrean kerja penagihan (DPD 1+). Dihasilkan oleh CRMS Decision Engine: scoring risiko multi-faktor (0–1000 poin), pemetaan Action Path Grade 1–8 & VIP x 10 Bucket DPD (-3-0 s.d >150), alokasi PIC & kanal rekomendasi otomatis.
+  - `decision_rules`: Tabel konfigurasi matriks strategi risiko (*Champion vs Challenger*) dan aturan interseksi Grade x Bucket DPD yang dikelola oleh Risk Administrator CRMS.
 * **Kategori C: Tabel Native Operasional & Transaksional CRMS (Dibuat & Dikelola di CRMS)**
   - `collection_activities`: Log rekam jejak histori penagihan (*Append-Only Audit Trail*, no update/no delete).
   - `settlement_proposals`: Usulan kompromi diskon pelunasan dengan alur persetujuan bertingkat 6-stage (*Maker-Checker-Approver*).

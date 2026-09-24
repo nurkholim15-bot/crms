@@ -79,25 +79,16 @@ func (e *Engine) Evaluate(dpd int, riskScore int, isVIP bool, isChampionTraffic 
 		}
 	}
 
-	// Jika dpd > 30, PIC adalah Senior Field Collector untuk semua Grade 1-8
-	if dpd > 30 {
-		pic := PIC_SENIOR_FIELD
-		return EvaluationResult{
-			Bucket:        bucket,
-			RiskScore:     riskScore,
-			RiskLevel:     riskLevel,
-			StrategyGroup: group,
-			ActionPath:    actionPath,
-			AssignedPIC:   pic,
-			PICChannel:    GetPICChannelName(pic),
-			DecisionRule:  fmt.Sprintf("Bucket %s ditugaskan kepada %s", bucket, pic),
-		}
-	}
-
-	// Ambil PIC dari matriks Grade untuk DPD 1-30
+	// Ambil PIC dari matriks Grade resmi
 	pic := ActionPathMatrix[actionPath][bucket]
 	if pic == "" {
-		pic = PIC_DC
+		if dpd > 150 {
+			pic = PIC_REMEDIAL
+		} else if dpd > 30 {
+			pic = PIC_SENIOR_FIELD
+		} else {
+			pic = PIC_DC
+		}
 	}
 
 	return EvaluationResult{

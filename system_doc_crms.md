@@ -280,33 +280,139 @@ Berdasarkan matriks evaluasi kebutuhan pada berkas review [**`Review CMS - Bank 
 
 ## 6. Arsitektur Bisnis & Aturan Segmentasi Overdue Bucket
 
-### 6.1. Klasifikasi 9 Bucket Overdue (Days Past Due / DPD)
+### 6.1. Klasifikasi 10 Bucket Overdue (Days Past Due / DPD)
 ```
-[--- FASE AWAL / DECISION ENGINE (1-30 DPD) ---] | [--- FASE LANJUT / CORE BANKING SYSTEM RULE (>30 DPD) ---]
-+-------+-------+--------+---------+---------+---------+----------+-----------+--------+
-|  1-3  |  4-7  |  8-13  |  14-18  |  19-25  |  26-30  |  31-60   |  61-150   |  >150  |
-+-------+-------+--------+---------+---------+---------+----------+-----------+--------+
+[--- PRE-DELINQUENCY & DECISION ENGINE (DPD <= 30) ---] | [--- FASE LANJUT / CORE BANKING SYSTEM RULE (>30 DPD) ---]
++--------+-------+-------+--------+---------+---------+---------+----------+-----------+--------+
+| -3 - 0 |  1-3  |  4-7  |  8-13  |  14-18  |  19-25  |  26-30  |  31-60   |  61-150   |  >150  |
++--------+-------+-------+--------+---------+---------+---------+----------+-----------+--------+
 ```
 
-### 6.2. Logika Pembagian Wewenang: Decision Engine vs Core Banking
-1. **DPD 1–30 (Decision Engine Phase)**:
-   - Dikelola oleh Decision Engine cerdas berbasis skor risiko (*behavioral scoring*).
-   - Membagi akun ke dalam strategi **Champion** (proses lama EOD) dan **Challenger** (otomasi digital adaptif).
-2. **DPD > 30 (Core Banking & Remedial Phase)**:
-   - Dikelola oleh aturan ketat perbankan, berfokus pada pengamanan fisik agunan, somasi berjenjang, dan pemulihan aset macet (*Special Asset Management*).
+### 6.2. Logika Pembagian Wewenang: Pre-Delinquency, Decision Engine vs Core Banking
+1. **DPD -3 s/d 0 (Pre-Delinquency Management / PDM Phase)**:
+   - Pengawasan preventif sebelum jatuh tempo (H-3 s.d H-0) berbasis deteksi saldo autodebet CASA tabungan dan kalender payroll/Tukin ASN Pemprov DKI.
+   - Menggunakan saluran digital non-intrusif (Gentle WhatsApp Auto-Reminder) untuk debitur risiko rendah/sedang, dan Smart Robo Call / Desk Alert untuk risiko tinggi.
+2. **DPD 1–30 (Decision Engine Phase)**:
+   - Dikelola oleh Decision Engine cerdas berbasis skor risiko (*behavioral scoring 0-1000 poin*).
+   - Membagi akun ke dalam strategi **Champion** (proses konvensional baseline 80%) dan **Challenger** (otomasi adaptif berbasis risiko 20%).
+3. **DPD > 30 (Core Banking & Remedial Phase)**:
+   - Dikelola oleh aturan ketat perbankan, berfokus pada pengamanan fisik agunan, somasi berjenjang (SP 1–3), penugasan Senior Field Collector, dan pemulihan aset macet / lelang KPKNL (*Remedial & Special Asset Management*).
 
-### 6.3. Matriks Action Path & Penugasan PIC
-| Grade | DPD 1-3 | DPD 4-7 | DPD 8-13 | DPD 14-18 | DPD 19-25 | DPD 26-30 | DPD 31-60 | DPD 61-150 | DPD > 150 |
-|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| **1** | Robot | DC | DC | DC | DC | DC | **Senior Field** | **Senior Field** | **Senior Field** |
-| **2** | Robot | DC | DC | DC | DC | DC | **Senior Field** | **Senior Field** | **Senior Field** |
-| **3** | WA | Robot | Robot | DC | DC | DC | **Senior Field** | **Senior Field** | **Senior Field** |
-| **4** | WA | Robot | DC | DC | DC | DC | **Senior Field** | **Senior Field** | **Senior Field** |
-| **5** | DC | DC | FC | FC | FC | FC | **Senior Field** | **Senior Field** | **Senior Field** |
-| **6** | DC | FC | FC | FC | FC | FC | **Senior Field** | **Senior Field** | **Senior Field** |
-| **7** | FC | FC | FC | FC | SFC | SFC | **Senior Field** | **Senior Field** | **Senior Field** |
-| **8** | FC | FC | SFC | SFC | SFC | SFC | **Senior Field** | **Senior Field** | **Senior Field** |
-| **VIP** | **Special Team** | **Special Team** | **Special Team** | **Special Team** | **Special Team** | **Special Team** | **Special Team** | **Special Team** | **Special Team** |
+### 6.3. Matriks Action Path & Penugasan PIC Resmi (10 Bucket x Grade 1–8 & VIP)
+Matriks di bawah ini merupakan tabel pemetaan resmi penugasan PIC (Person in Charge) berdasarkan kombinasi **Grade (1 s.d 8 & VIP)** pada sumbu vertikal dan **Bucket DPD (-3 s.d >150)** pada sumbu horizontal:
+
+| Grade | DPD -3-0 | DPD 1-3 | DPD 4-7 | DPD 8-13 | DPD 14-18 | DPD 19-25 | DPD 26-30 | DPD 31-60 | DPD 61-150 | DPD > 150 |
+|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| **1** | WA | Robot | DC | DC | DC | DC | DC | FC | Senior Field | Remedial |
+| **2** | WA | Robot | DC | DC | DC | DC | DC | FC | Senior Field | Remedial |
+| **3** | WA | WA | Robot | Robot | DC | DC | DC | FC | Senior Field | Remedial |
+| **4** | WA | WA | Robot | DC | DC | DC | DC | FC | Senior Field | Remedial |
+| **5** | Robot | DC | DC | FC | FC | FC | FC | Senior Field | Senior Field | Remedial |
+| **6** | Robot | DC | FC | FC | FC | FC | FC | Senior Field | Senior Field | Remedial |
+| **7** | DC | FC | FC | FC | FC | SFC | SFC | Senior Field | Senior Field | Remedial |
+| **8** | DC | FC | FC | SFC | SFC | SFC | SFC | Senior Field | Senior Field | Remedial |
+| **VIP** | **Special Team** | **Special Team** | **Special Team** | **Special Team** | **Special Team** | **Special Team** | **Special Team** | **Special Team** | **Special Team** | **Special Team** |
+
+*Keterangan Singkatan PIC*:
+* **WA**: WhatsApp Business API / AutoBot Blaster (Pesan interaktif pengingat pembayaran & link pembayaran instan).
+* **Robot**: Smart IVR Interactive Robo-Call (Panggilan suara robotik otomatis dengan deteksi nada DTMF konfirmasi janji bayar).
+* **DC**: Desk Collector / Phone Banking Telephony (Petugas penagih via telepon kantor dengan skrip dialog terpandu).
+* **FC**: Field Collector (Petugas penagihan lapangan cabang dengan aplikasi mobile mCollect).
+* **SFC**: Senior Field Collector (Kolektor lapangan senior untuk mediasi restrukturisasi dan penanganan kasus resisten).
+* **Senior Field**: Senior Field Collector khusus penanganan DPD 31–150 (pengecekan legalitas fisik agunan dan mitigasi sengketa).
+* **Remedial**: Divisi Remedial & Recovery Khusus NPL (Penanganan hukum litigasi, repossession aset, dan lelang KPKNL DPD > 150).
+* **Special Team**: Tim Khusus Eksekutif / AR Head (Penanganan personal eksklusif nasabah VIP / komersial bernilai tinggi).
+
+### 6.4. Jawaban Komprehensif: Bagaimana Scoring Collection Menentukan Grade (1–8 & VIP)
+
+Sering timbul dua pertanyaan mendasar dari manajemen risiko, operasional perbankan, dan auditor:
+> **Pertanyaan 1**: *"Apakah penentuan Grade (1 s.d 8 & VIP) menggunakan Scoring Collection?"*  
+> **Pertanyaan 2**: *"Jika ya, bagaimana caranya karena di dalam formulir/tabel Scoring Collection tidak ditemukan label atau kolom Grade?"*
+
+Berikut adalah penjelasan arsitektur logis dan alur penentuan Grade secara komprehensif:
+
+#### 1. Jawaban Langsung
+* **Jawaban Pertanyaan 1**: **YA, MUTLAK**. Penentuan Grade 1 hingga 8 dan segmen VIP sepenuhnya didasarkan pada hasil evaluasi **Collection Scoring (0–1000 Poin)**.
+* **Jawaban Pertanyaan 2**: Label "Grade" tidak ditemukan langsung di dalam kartu scoring karena **Scoring Model dan Matriks Grade adalah dua lapisan arsitektur terpisah (Two-Stage Architecture)**:
+  - **Lapisan 1 (Scoring Model)**: Bertindak sebagai **Evaluator Tingkat Risiko (Input Layer)** yang menghasilkan nilai kontinu $0 \le 	ext{Score} \le 1000$.
+  - **Lapisan 2 (Action Path Matrix)**: Bertindak sebagai **Katalog Strategi Operasional (Execution Layer)** yang mendefinisikan kanal dan PIC penagihan untuk setiap kombinasi strategi dan bucket keterlambatan.
+  - **Jembatan Penghubung (*The Bridge*)**: Decision Engine CRMS bertindak sebagai jembatan yang menghubungkan kedua lapisan tersebut melalui **3 Tahap Eksekusi**.
+
+#### 2. Pipeline 3 Langkah Konversi Skor ke Grade & PIC
+```mermaid
+flowchart TD
+    subgraph S1["LANGKAH 1: PERHITUNGAN MULTI-FAKTOR SCORING"]
+        direction TB
+        RAW["Data Nasabah & Fasilitas Pinjaman"] --> CALC["Kalkulasi Bobot Tertimbang (0 - 1000 Poin)"]
+        W1["1. Riwayat Pembayaran (Payment History): 35%"]
+        W2["2. Hari Keterlambatan Berjalan (Current DPD): 25%"]
+        W3["3. Rasio Beban Utang (DSR / Angsuran vs Gaji): 20%"]
+        W4["4. Karakteristik Fasilitas & Agunan: 10%"]
+        W5["5. Stabilitas Pekerjaan ASN/PNS DKI: 10%"]
+        CALC --- W1 & W2 & W3 & W4 & W5
+    end
+
+    subgraph S2["LANGKAH 2: KLASIFIKASI RISK LEVEL & PEMBAGIAN TRAFFIC"]
+        direction TB
+        SCORE_RES{"Total Skor (0 - 1000)"}
+        CALC --> SCORE_RES
+        
+        SCORE_RES -->|Flag is_vip = True| VIP_BOX["VIP PORTFOLIO<br>-> GRADE VIP"]
+        SCORE_RES -->|Skor >= 700| LOW_BOX["LOW RISK<br>(Nasabah Disiplin / Keterlambatan Temporer)"]
+        SCORE_RES -->|Skor 450 - 699| MED_BOX["MEDIUM RISK<br>(Arus Kas Fluktuatif / Butuh Edukasi)"]
+        SCORE_RES -->|Skor < 450| HIGH_BOX["HIGH RISK<br>(Riwayat Ingkar Janji / Rawan Macet)"]
+        
+        SPLIT{"Traffic Router<br>(Champion vs Challenger)"}
+        LOW_BOX & MED_BOX & HIGH_BOX --> SPLIT
+        
+        SPLIT -->|80% Traffic Baseline| CHAMP_AP["CHAMPION GROUP<br>• Varian A -> GRADE 1<br>• Varian B -> GRADE 2"]
+        SPLIT -->|20% Traffic Adaptif| CHAL_AP["CHALLENGER GROUP<br>• Low Risk -> GRADE 3 (A) / GRADE 4 (B)<br>• Medium Risk -> GRADE 5 (A) / GRADE 6 (B)<br>• High Risk -> GRADE 7 (A) / GRADE 8 (B)"]
+    end
+
+    subgraph S3["LANGKAH 3: INTERSEKSI GRADE X BUCKET DPD -> PIC"]
+        direction TB
+        GRADE_BOX["Grade Terpilih (1 s.d 8 atau VIP)"]
+        DPD_BOX["Bucket DPD Berjalan (-3-0 s.d >150)"]
+        CHAMP_AP & CHAL_AP & VIP_BOX --> GRADE_BOX
+        
+        INTERSECT{"Lookup Matriks Action Path"}
+        GRADE_BOX & DPD_BOX --> INTERSECT
+        
+        INTERSECT --> ASSIGN["Penugasan Petugas Resmi (PIC):<br>WA Bot | Smart Robot | Desk Collector (DC)<br>Field Collector (FC) | Senior Field Collector (SFC)<br>Senior Field | Remedial | Special Team"]
+    end
+
+    S1 ==> S2
+    S2 ==> S3
+```
+
+* **Langkah 1: Perhitungan Skor Multi-Faktor (Continuous Score 0–1000)**:
+  Sistem menghitung skor debitur berdasarkan 5 parameter utama:
+  $$	ext{Score} = \sum_{i=1}^{5} (w_i 	imes S_i)$$
+  Hasilnya adalah angka kontinu antara 0 hingga 1000.
+* **Langkah 2: Klasifikasi Risk Level & Alokasi Traffic (Mapping to Grade 1–8 & VIP)**:
+  1. *Nasabah VIP (`is_vip = true`)*: Tanpa melihat skor, langsung dialokasikan ke **Grade VIP** (Special Team / AR Head).
+  2. *Champion Traffic (80% portofolio)*: Dialokasikan ke **Grade 1** (varian A) atau **Grade 2** (varian B) sebagai baseline performa konvensional bank.
+  3. *Challenger Traffic (20% portofolio)*:
+     - Skor $\ge 700$ (`LOW_RISK`) $ightarrow$ Dialokasikan ke **Grade 3** atau **Grade 4** (Strategi *Digital-First*).
+     - Skor $450 - 699$ (`MEDIUM_RISK`) $ightarrow$ Dialokasikan ke **Grade 5** atau **Grade 6** (Strategi *Hybrid Desk & Field*).
+     - Skor $< 450$ (`HIGH_RISK`) $ightarrow$ Dialokasikan ke **Grade 7** atau **Grade 8** (Strategi *Intensive Field*).
+* **Langkah 3: Interseksi Matriks Dua Dimensi (Grade x Bucket DPD $ightarrow$ PIC)**:
+  Setelah Grade debitur ditetapkan (sumbu vertikal), sistem mencocokkannya dengan Bucket keterlambatan debitur saat ini (sumbu horizontal). Titik temu kedua sumbu ini secara otomatis menentukan siapa PIC yang ditugaskan dan kanal apa yang digunakan.
+
+#### 3. Logika Penetapan Pasangan Grade Ganjil vs Genap (Sub-Variant A/B Testing)
+Mengapa setiap tingkatan risiko memiliki dua Grade berdampingan (Grade 1 vs 2, Grade 3 vs 4, Grade 5 vs 6, Grade 7 vs 8)?  
+Ini adalah rancangan kecerdasan sistem untuk melakukan **eksperimentasi A/B testing sub-varian** guna menemukan titik waktu eskalasi paling efisien dan efektif:
+* **Grade 1 & 2 (Champion Baseline)**: Standar operasional konvensional bank. Menggunakan Robot pada DPD 1–3, kemudian dilanjutkan oleh Desk Collector (DC) hingga DPD 30, baru diterjunkan Field Collector pada DPD 31+.
+* **Grade 3 vs 4 (Challenger Low Risk - Digital-First)**:
+  - *Grade 3 (Extended Digital)*: Memberikan ruang digital lebih luas. Menggunakan WhatsApp pada DPD -3 s.d 3, Robot pada DPD 4–13, dan baru masuk Desk Collector pada DPD 14.
+  - *Grade 4 (Early DC Intervention)*: Menggunakan WhatsApp pada DPD -3 s.d 3, Robot pada DPD 4–7, namun mempercepat kontak Desk Collector sejak DPD 8.
+* **Grade 5 vs 6 (Challenger Medium Risk - Hybrid Desk + Field)**:
+  - *Grade 5 (Standard Hybrid)*: Menggunakan Desk Collector pada DPD 1–7, dan mulai menerjunkan Field Collector (FC) ke lapangan pada DPD 8.
+  - *Grade 6 (Aggressive Field)*: Mempercepat kunjungan lapangan Field Collector (FC) sejak DPD 4 apabila kontak telepon DC pada DPD 1–3 tidak direspons.
+* **Grade 7 vs 8 (Challenger High Risk - Intensive Field Direct)**:
+  - *Grade 7 (Standard Intensive)*: Menerjunkan Field Collector (FC) sejak hari pertama keterlambatan (DPD 1–18), dan dieskalasikan ke Senior Field Collector (SFC) pada DPD 19–30.
+  - *Grade 8 (Rapid Senior Escalation)*: Menerjunkan Field Collector (FC) pada DPD 1–7, dan langsung dieskalasikan ke Senior Field Collector (SFC) lebih dini pada DPD 8–30 untuk audit fisik agunan dan mitigasi sengketa.
+* **Grade VIP (Special Handling)**: Nasabah simpanan besar atau komersial prioritas tidak pernah dialihkan ke bot massal atau debt collector eksternal, melainkan ditangani langsung oleh AR Head / Tim Khusus di semua bucket (-3-0 hingga > 150).
 
 ---
 
@@ -823,78 +929,80 @@ sequenceDiagram
 
 ### 11.6. Decision Engine (Scoring Model & Rule Engine)
 
-Decision Engine CRMS adalah otak analitis cerdas yang mengevaluasi setiap akun kredit tertunggak pada siklus harian EOD maupun pembaruan transaksi *near-real-time*. Arsitektur engine ini memadukan dua subsistem inti: **Collection Scoring Model (Behavioral & Risk Scoring)** dan **Rule-Based Allocation Engine (Action Path Matrix)**.
+Decision Engine CRMS adalah otak analitis cerdas yang mengevaluasi setiap akun kredit tertunggak pada siklus harian EOD maupun pembaruan transaksi *near-real-time*. Arsitektur engine ini memadukan dua subsistem inti: **Collection Scoring Model (Behavioral & Multi-Factor Scoring 0–1000 Poin)** dan **Rule-Based Allocation Engine (Action Path Matrix Grade 1–8 & VIP)**.
 
 ```mermaid
 graph TD
     A["Data Debitur & Fasilitas Kredit"] --> B["Collection Scoring Engine"]
     
-    subgraph SCORING_MODEL["1. Model Skoring Koleksi (Skala 0 - 1000 Poin)"]
-        B1["Karakteristik Pinjaman (30%)<br>• Plafon & Rasio Baki Debet<br>• Jenis Kredit (KPR/KTA/KUR/CC)<br>• Debt Service Ratio (DSR)"]
-        B2["Riwayat Perilaku Bayar (35%)<br>• Frekuensi DPD 12 Bulan Terakhir<br>• Kept PTP Ratio vs Broken PTP<br>• Kecepatan Cure Bulan Lalu"]
-        B3["Faktor Demografi & Pekerjaan (20%)<br>• Payroll ASN DKI / BUMN<br>• Autodebet vs Transfer Mandiri<br>• Stabilitas Masa Kerja"]
-        B4["Kualitas Agunan (15%)<br>• Ada Agunan SHM/SHGB/BPKB<br>• Current Loan-to-Value (LTV)"]
-        B --> B1 & B2 & B3 & B4
+    subgraph SCORING_MODEL["1. Model Skoring Multi-Faktor Koleksi (Skala 0 - 1000 Poin)"]
+        B1["Riwayat Pembayaran (Payment History - 35%)<br>• Keberhasilan Janji Bayar (Kept PTP Ratio)<br>• Frekuensi DPD 12 Bulan Terakhir<br>• Kecepatan Cure Kol-1"]
+        B2["Hari Keterlambatan Berjalan (Current DPD - 25%)<br>• Posisi Bucket Keterlambatan Saat Ini<br>• Lonjakan DPD (Roll Rate Severity)"]
+        B3["Rasio Beban Utang / DSR (20%)<br>• Rasio Angsuran terhadap Gaji Bulanan<br>• Total Eksposur Fasilitas di Bank"]
+        B4["Tipe Fasilitas & Agunan (10%)<br>• Pinjaman Beragun Properti SHM vs Unsecured<br>• Rasio Loan-to-Value (LTV)"]
+        B5["Stabilitas Pekerjaan ASN/PNS DKI (10%)<br>• Status PNS/PPPK Pemprov DKI Jakarta<br>• Payroll Autodebet & Rekening Kasda"]
+        B --> B1 & B2 & B3 & B4 & B5
     end
 
-    B1 & B2 & B3 & B4 --> C["Agregasi Skor Risiko Kredit: 0 - 1000"]
+    B1 & B2 & B3 & B4 & B5 --> C["Agregasi Skor Risiko Kredit: 0 - 1000"]
 
     C --> D{"Klasifikasi Level Risiko"}
+    D -->|Flag VIP = True| D4["VIP PORTFOLIO<br>(Nasabah Prioritas Bank)"]
     D -->|Skor >= 700| D1["LOW RISK<br>(Kredit Baik / Risiko Rendah)"]
     D -->|Skor 450 - 699| D2["MEDIUM RISK<br>(Kredit Perhatian / Risiko Sedang)"]
     D -->|Skor < 450| D3["HIGH RISK<br>(Kredit Rawan / Risiko Tinggi)"]
-    D -->|Flag VIP = True| D4["VIP PORTFOLIO<br>(Nasabah Prioritas Bank)"]
 
-    subgraph STRATEGY_ASSIGNMENT["2. Alokasi Strategi Penagihan (Grade 1 - 8)"]
-        D1 --> E1["Challenger Grade 3 & 4<br>(Digital-First: WA Bot -> Robo Call)"]
-        D2 --> E2["Challenger Grade 5 & 6<br>(Hybrid: Robo Call / DC -> Field Visit)"]
-        D3 --> E3["Challenger Grade 7 & 8<br>(Field Officer Langsung DPD 1)"]
-        D4 --> E4["Special Team (AR Head)<br>(Penanganan Personal Eksklusif)"]
+    subgraph STRATEGY_ASSIGNMENT["2. Alokasi Strategi Penagihan (Grade 1 - 8 & VIP)"]
+        D4 --> E4["Grade VIP (Special Team / AR Head)<br>(Penanganan Personal Eksklusif)"]
+        D1 --> E1["Challenger Grade 3 & 4 (Low Risk)<br>(Digital-First: WA Bot -> Robo Call)"]
+        D2 --> E2["Challenger Grade 5 & 6 (Medium Risk)<br>(Hybrid: Robo Call / DC -> Field Visit)"]
+        D3 --> E3["Challenger Grade 7 & 8 (High Risk)<br>(Field Officer Langsung DPD 1)"]
     end
 
-    E1 & E2 & E3 --> F["Matriks Action Path x Bucket DPD 1-30"]
-    F --> G["Penugasan PIC Otomatis<br>(WA, Robot, DC, FC, SFC, Senior Field)"]
+    E1 & E2 & E3 --> F["Matriks Action Path x 10 Bucket DPD (-3-0 s/d >150)"]
+    F --> G["Penugasan PIC Otomatis<br>(WA, Robot, DC, FC, SFC, Senior Field, Remedial)"]
 ```
 
 #### 11.6.1. Filosofi & Perbedaan Collection Scoring vs Application Scoring
 * **Application Scoring (Credit Origination)**: Menilai kelayakan calon debitur saat permohonan kredit diajukan berdasarkan data historis statis (slip gaji, rekening koran, riwayat SLIK OJK). Tujuannya adalah keputusan biner: *Approve* atau *Reject*.
-* **Collection Scoring (Behavioral Recovery Scoring)**: Menilai **kemungkinan debitur memulihkan pembayarannya (*Cure Probability*)** dan **probabilitas akun melompat ke bucket keterlambatan yang lebih dalam (*Roll Rate Probability*)** setelah debitur mengalami keterlambatan pembayaran (DPD 1+). Tujuannya adalah menentukan **rekomendasi kanal penagihan paling hemat biaya** dan **urgensi intervensi petugas penagih lapangan**.
+* **Collection Scoring (Behavioral Recovery Scoring)**: Menilai **kemungkinan debitur memulihkan pembayarannya (*Cure Probability*)** dan **probabilitas akun melompat ke bucket keterlambatan yang lebih dalam (*Roll Rate Probability*)** setelah debitur mengalami keterlambatan pembayaran (DPD 1+) atau menjelang jatuh tempo (DPD 0). Tujuannya adalah menentukan **rekomendasi kanal penagihan paling hemat biaya** dan **urgensi intervensi petugas penagih lapangan**.
 
 #### 11.6.2. Parameter & Bobot Pembentuk Skor Koleksi (Collection Scoring Variables)
 CRMS menerapkan algoritma pembobotan multi-faktor standar industri perbankan dengan rentang skor **0 s/d 1000 Poin**:
 
-$$\text{Risk Score} = \sum_{i=1}^{n} (w_i \times S_i)$$
+$$	ext{Risk Score} = \sum_{i=1}^{5} (w_i 	imes S_i)$$
 
 | Kategori Parameter | Bobot ($w_i$) | Variabel Pengukuran | Indikator Skor Tinggi (Skor $\ge 700$) | Indikator Skor Rendah (Skor $< 450$) |
 |---|:---:|---|---|---|
-| **Riwayat Perilaku Bayar (*Repayment Behavior*)** | **35%** | • Keberhasilan janji bayar (*Kept PTP Ratio*)<br>• Frekuensi menunggak 6–12 bulan terakhir<br>• Kecepatan pelunasan (*average days to cure*) | PTP selalu ditepati ($> 85\%$), jarang menunggak, cepat kembali ke Kol-1 dalam tempo $\le 5$ hari. | Sering ingkar janji (*broken PTP* $> 50\%$), menunggak berulang hampir setiap bulan, lambat bayar. |
-| **Karakteristik Kredit (*Loan Profile*)** | **30%** | • Baki debet & rasio pemakaian plafon<br>• Jenis fasilitas pinjaman<br>• Rasio angsuran terhadap estimasi gaji (DSR) | Angsuran proporsional terhadap penghasilan ($DSR \le 35\%$), fasilitas beragunan SHM (KPR), limit kartu kredit terkendali. | DSR tinggi ($> 50\%$), fasilitas tanpa agunan (KTA/CC) dengan utilisasi limit maksimal ($> 90\%$). |
-| **Profil Demografi & Pekerjaan** | **20%** | • Jenis instansi pemberi kerja<br>• Mekanisme pembayaran cicilan<br>• Status kepegawaian | ASN/PNS Pemprov DKI Jakarta, pegawai tetap BUMN, skema potong gaji otomatis (*payroll autodebet*). | Pekerja kontrak/lepas, wiraswasta dengan omzet fluktuatif, pembayaran manual transfer. |
-| **Kualitas & Nilai Agunan (*Collateral Coverage*)** | **15%** | • Ada/tidaknya agunan fisik<br>• Rasio nilai pinjaman terhadap taksiran agunan (*LTV*)<br>• Legalitas sertifikat (SHM/SHGB/BPKB) | Agunan properti bernilai likuid tinggi dengan $LTV \le 60\%$, sertifikat SHM terikat Hak Tanggungan sempurna. | Kredit tanpa agunan (unsecured) atau agunan bergerak dengan depresiasi tinggi ($LTV > 90\%$). |
+| **Riwayat Pembayaran (*Payment History*)** | **35%** | • Keberhasilan janji bayar (*Kept PTP Ratio*)<br>• Frekuensi menunggak 12 bulan terakhir<br>• Kecepatan pelunasan (*average days to cure*) | PTP selalu ditepati ($> 85\%$), jarang menunggak, cepat kembali ke Kol-1 dalam tempo $\le 5$ hari. | Sering ingkar janji (*broken PTP* $> 50\%$), menunggak berulang hampir setiap bulan, lambat bayar. |
+| **Hari Keterlambatan Berjalan (*Current DPD*)** | **25%** | • Posisi bucket keterlambatan saat ini<br>• Lonjakan hari tunggakan (*DPD acceleration*) | Berada pada fase preventif DPD 0 s.d DPD 3 dengan tren penurunan. | Menunggak melebihi DPD 14 dengan tren memburuk menuju NPL. |
+| **Rasio Beban Utang (*Debt Service Ratio / DSR*)** | **20%** | • Rasio total angsuran terhadap estimasi gaji<br>• Total baki debet pinjaman aktif di bank | Angsuran proporsional terhadap penghasilan ($DSR \le 35\%$), sisa plafon likuid aman. | Beban utang sangat berat ($DSR > 50\%$), gaji tidak mencukupi untuk memenuhi kewajiban bulanan. |
+| **Tipe Fasilitas & Agunan (*Facility & Collateral*)** | **10%** | • Ada/tidaknya agunan fisik<br>• Rasio nilai pinjaman terhadap taksiran agunan (*LTV*)<br>• Legalitas sertifikat (SHM/SHGB/BPKB) | Agunan properti bernilai likuid tinggi dengan $LTV \le 60\%$, sertifikat SHM terikat Hak Tanggungan sempurna. | Kredit tanpa agunan (unsecured / KTA / CC) atau agunan bergerak dengan depresiasi tinggi ($LTV > 90\%$). |
+| **Stabilitas Pekerjaan ASN/PNS DKI (*Employment Stability*)** | **10%** | • Status kepegawaian institusi Pemprov DKI Jakarta<br>• Mekanisme autodebet rekening penggajian | ASN/PNS/PPPK aktif Pemprov DKI Jakarta, pegawai tetap BUMD DKI, autodebet terjadwal rapi dari kasda. | Pegawai kontrak non-ASN, pekerja lepas, atau debitur dengan riwayat rekening payroll pasif. |
 
 #### 11.6.3. Matriks Klasifikasi Level Risiko & Strategi Penagihan
 
 | Level Risiko | Rentang Skor | Karakteristik Debitur | Saluran Rekomendasi Utama | Tindakan Decision Engine | Estimasi Efisiensi Biaya |
 |---|:---:|---|---|---|:---:|
-| **`LOW_RISK`** | **700 – 1000** | Debitur prima, menunggak akibat kelalaian jadwal/libur perbankan atau kendala autodebet temporer. Kemauan bayar sangat tinggi. | **WhatsApp AutoBot** & SMS Gateway | Masuk ke **Grade 3 atau 4** (Challenger Digital-First). Tidak memerlukan kunjungan lapangan pada DPD 1–30. | **90% – 95%** |
+| **`LOW_RISK`** | **700 – 1000** | Debitur prima, menunggak akibat kelalaian jadwal/libur perbankan atau kendala autodebet temporer. Kemauan bayar sangat tinggi. | **WhatsApp AutoBot** & SMS Gateway | Masuk ke **Grade 3 atau 4** (Challenger Digital-First). Tanpa kunjungan fisik pada DPD 1–30. | **90% – 95%** |
 | **`MEDIUM_RISK`** | **450 – 699** | Debitur musiman (*seasonal*), arus kas bisnis berfluktuasi, atau ASN yang menunggu rapel tunjangan kinerja (Tukin). Membutuhkan edukasi dan reminder terjadwal. | **Smart Robo Call** & **Desk Collector (DC)** | Masuk ke **Grade 5 atau 6** (Challenger Hybrid). Kombinasi panggilan otomatis dan telepon personal kolektor. | **70% – 80%** |
 | **`HIGH_RISK`** | **0 – 449** | Debitur kronis, riwayat *broken PTP* berulang, nomor telepon kerap tidak aktif, agunan mengalami sengketa/depresiasi. | **Field Collector (FC)** & **Senior Field (SFC)** | Masuk ke **Grade 7 atau 8** (Challenger Intensive Field). Langsung dilakukan verifikasi fisik sejak DPD 1–7. | **Baseline Field** |
 | **`VIP`** | **Khusus** | Nasabah simpanan besar / High Net Worth Individuals / Kredit Korporasi & Komersial penting. | **Dedicated Special Team (AR Head)** | Tidak melalui bot digital / outbound call center. Dikelola melalui Portal Eksklusif AR Head. | N/A (Preservasi Hubungan Nasabah) |
 
-#### 11.6.4. Matriks Pemetaan Action Path (Grade 1–8) x 9 Bucket DPD
-Berdasarkan kombinasi Traffic (Champion vs Challenger) dan Risk Level dari scoring, Decision Engine menentukan petugas (PIC) penangan:
+#### 11.6.4. Matriks Pemetaan Action Path (Grade 1–8 & VIP) x 10 Bucket DPD
+Berdasarkan kombinasi Traffic (Champion vs Challenger) dan Risk Level dari scoring, Decision Engine menentukan petugas (PIC) penangan secara otomatis:
 
-| Action Path (Grade) | Segmentasi & Dasar Penentuan | DPD 1–3 | DPD 4–7 | DPD 8–13 | DPD 14–18 | DPD 19–25 | DPD 26–30 | DPD 31–60 | DPD 61–150 | DPD >150 |
-|:---:|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| **AP 1** | Champion Group (Baseline) | Robot | DC | DC | DC | DC | DC | Senior Field | Senior Field | Senior Field |
-| **AP 2** | Champion Group (Baseline) | Robot | DC | DC | DC | DC | DC | Senior Field | Senior Field | Senior Field |
-| **AP 3** | Challenger — Low Risk | **WA** | **Robot** | **Robot** | DC | DC | DC | Senior Field | Senior Field | Senior Field |
-| **AP 4** | Challenger — Low Risk | **WA** | **Robot** | DC | DC | DC | DC | Senior Field | Senior Field | Senior Field |
-| **AP 5** | Challenger — Medium Risk | DC | DC | FC | FC | FC | FC | Senior Field | Senior Field | Senior Field |
-| **AP 6** | Challenger — Medium Risk | DC | FC | FC | FC | FC | FC | Senior Field | Senior Field | Senior Field |
-| **AP 7** | Challenger — High Risk | **FC** | **FC** | FC | FC | SFC | SFC | Senior Field | Senior Field | Senior Field |
-| **AP 8** | Challenger — High Risk | **FC** | **FC** | SFC | SFC | SFC | SFC | Senior Field | Senior Field | Senior Field |
-| **VIP** | VIP Portfolio | **Special** | **Special** | **Special** | **Special** | **Special** | **Special** | **Special** | **Special** | **Special** |
+| Action Path (Grade) | Segmentasi & Dasar Penentuan | DPD -3-0 | DPD 1–3 | DPD 4–7 | DPD 8–13 | DPD 14–18 | DPD 19–25 | DPD 26–30 | DPD 31–60 | DPD 61–150 | DPD >150 |
+|:---:|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| **Grade 1** | Champion Group (Baseline A) | WA | Robot | DC | DC | DC | DC | DC | FC | Senior Field | Remedial |
+| **Grade 2** | Champion Group (Baseline B) | WA | Robot | DC | DC | DC | DC | DC | FC | Senior Field | Remedial |
+| **Grade 3** | Challenger — Low Risk (Digital Extended) | **WA** | **WA** | **Robot** | **Robot** | DC | DC | DC | FC | Senior Field | Remedial |
+| **Grade 4** | Challenger — Low Risk (Early DC) | **WA** | **WA** | **Robot** | DC | DC | DC | DC | FC | Senior Field | Remedial |
+| **Grade 5** | Challenger — Medium Risk (Standard Hybrid) | Robot | DC | DC | FC | FC | FC | FC | Senior Field | Senior Field | Remedial |
+| **Grade 6** | Challenger — Medium Risk (Early FC) | Robot | DC | FC | FC | FC | FC | FC | Senior Field | Senior Field | Remedial |
+| **Grade 7** | Challenger — High Risk (Standard Field) | DC | FC | FC | FC | FC | SFC | SFC | Senior Field | Senior Field | Remedial |
+| **Grade 8** | Challenger — High Risk (Early SFC) | DC | FC | FC | SFC | SFC | SFC | SFC | Senior Field | Senior Field | Remedial |
+| **VIP** | VIP Portfolio (Exclusive Handling) | **Special** | **Special** | **Special** | **Special** | **Special** | **Special** | **Special** | **Special** | **Special** | **Special** |
 
 #### 11.6.5. Simulasi Evaluasi Ulang Dinamis (A/B Testing Champion vs Challenger)
 * Sistem CRMS memungkinkan manajemen risiko melakukan **A/B Testing** perbandingan performa antara strategi penagihan konvensional (`CHAMPION`) dengan strategi cerdas berbasis skor risiko (`CHALLENGER`).

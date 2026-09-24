@@ -470,37 +470,63 @@ Dokumen ini disusun untuk memfasilitasi presentasi tingkat tinggi (*High-Level E
 #### 1. Informasi & Tata Letak Visual Slide:
 * **Nomor Slide**: 12 / 24
 * **Kategori / Pill Tag**: `MODUL INTERNAL`
-* **Tema Visual**: *Risk Matrix & A/B Test Light* (`#F8FAFC`) dengan 4 kartu tingkat risiko dan 2 kartu analitik besar di bawah.
+* **Tema Visual**: *Risk Matrix & Two-Stage Decision Light* (`#F8FAFC`) dengan 4 kartu tingkat risiko di atas, 1 tabel matriks 10-bucket di tengah, dan 2 kartu arsitektur analitik di bawah.
 * **4 Tingkat Risiko (*Risk Levels*)**:
-  1. `LOW RISK (Score > 750)`: Action Path 1-2. Otomasi digital penuh (WhatsApp Bot Blaster, Smart IVR Robo-Call). Biaya penagihan minimal, tanpa penugasan fisik.
-  2. `MEDIUM RISK (Score 500-750)`: Action Path 3-4. Sentralisasi Desk Telephony Head Office, penelusuran komitmen janji bayar, negosiasi restrukturisasi.
-  3. `HIGH RISK (Score < 500)`: Action Path 5-8. Eskalasi hybrid: Desk + Kunjungan langsung Field Officer mCollect & penanganan Senior Remedial.
-  4. `VIP PRIORITY (Eksklusif)`: Action Path VIP. Ditangani eksklusif di bawah wewenang AR Head / Executive Desk untuk menjaga reputasi nasabah.
+  1. `LOW RISK (Score >= 700)`: Action Path Grade 3 & 4 (Challenger Digital-First: WhatsApp Bot Blaster & Smart IVR Robo-Call). Biaya penagihan minimal, 100% hemat kunjungan fisik DPD 1–30.
+  2. `MEDIUM RISK (Score 450–699)`: Action Path Grade 5 & 6 (Challenger Hybrid: Desk Phone Telephony & eskalasi kunjungan Field Officer mCollect DPD 4/8+).
+  3. `HIGH RISK (Score < 450)`: Action Path Grade 7 & 8 (Challenger Intensive Field: Kunjungan Field Officer mCollect sejak DPD 1–18 dan Senior Field DPD 8/19+).
+  4. `VIP PRIORITY (Eksklusif)`: Action Path Grade VIP (Ditangani eksklusif personal oleh AR Head / Tim Khusus di semua bucket untuk menjaga reputasi nasabah).
+* **Tabel Matriks Action Path Resmi (10 Bucket DPD x Grade 1–8 & VIP)**:
+
+| Grade | DPD -3-0 | DPD 1-3 | DPD 4-7 | DPD 8-13 | DPD 14-18 | DPD 19-25 | DPD 26-30 | DPD 31-60 | DPD 61-150 | DPD > 150 |
+|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| **1** | WA | Robot | DC | DC | DC | DC | DC | FC | Senior Field | Remedial |
+| **2** | WA | Robot | DC | DC | DC | DC | DC | FC | Senior Field | Remedial |
+| **3** | WA | WA | Robot | Robot | DC | DC | DC | FC | Senior Field | Remedial |
+| **4** | WA | WA | Robot | DC | DC | DC | DC | FC | Senior Field | Remedial |
+| **5** | Robot | DC | DC | FC | FC | FC | FC | Senior Field | Senior Field | Remedial |
+| **6** | Robot | DC | FC | FC | FC | FC | FC | Senior Field | Senior Field | Remedial |
+| **7** | DC | FC | FC | FC | FC | SFC | SFC | Senior Field | Senior Field | Remedial |
+| **8** | DC | FC | FC | SFC | SFC | SFC | SFC | Senior Field | Senior Field | Remedial |
+| **VIP** | **Special Team** | **Special Team** | **Special Team** | **Special Team** | **Special Team** | **Special Team** | **Special Team** | **Special Team** | **Special Team** | **Special Team** |
+
 * **2 Kartu Analitik Bawah**:
-  - `Champion vs Challenger Engine`: Alokasi portofolio 80% Champion (strategi teruji) vs 20% Challenger (strategi eksperimen). A/B testing performa cure rate secara real-time; strategi pemenang otomatis dipromosikan.
-  - `Bobot Skoring Multi-Faktor (0-1000 Poin)`:
-    * Riwayat Pembayaran Masa Lalu (35%): Ketepatan waktu angsuran 12 bulan terakhir & frekuensi broken PTP.
-    * Days Past Due / DPD Berjalan (25%): Tingkat keterlambatan bucket saat ini.
-    * Rasio Kewajiban Finansial / DSR (20%): Besaran angsuran terhadap penghasilan bulanan.
-    * Tipe Fasilitas & Agunan (10%): Pinjaman beragun properti SHM mendapat penilai risiko lebih baik.
-    * Profil Stabilitas Pekerjaan (10%): Status PNS Pemprov DKI Jakarta mendapat pengurang risiko.
+  - `Champion vs Challenger Engine`: 
+    * 80% Portofolio dialokasikan ke **Champion (Grade 1 & 2)** sebagai standar baseline perbankan.
+    * 20% Portofolio dialokasikan ke **Challenger (Grade 3 s.d 8)** berdasarkan hasil skor risiko untuk A/B testing efisiensi biaya vs recovery rate.
+  - `Bobot Skoring Multi-Faktor (0–1000 Poin)`:
+    * Riwayat Pembayaran / Payment History (35%): Ketepatan waktu angsuran 12 bulan terakhir & rasio pemenuhan janji bayar (Kept PTP).
+    * Days Past Due / DPD Berjalan (25%): Posisi bucket keterlambatan dan tren akselerasi tunggakan saat ini.
+    * Rasio Beban Finansial / DSR (20%): Besaran angsuran bulanan terhadap estimasi penghasilan debitur.
+    * Tipe Fasilitas & Agunan (10%): Pinjaman beragunan likuid SHM (KPR) mendapat penilaian risiko lebih baik dibanding unsecured.
+    * Stabilitas Pekerjaan ASN/PNS DKI (10%): Status kepegawaian ASN Pemprov DKI dan skema autodebet rekening penggajian.
 
 #### 2. Penjelasan Narasi Presenter (Speaker Script):
 > *"Slide 12 membedah 'otak pemikir' dari CRMS, yaitu **Decision Engine & Multi-Factor Scoring Model**.*  
-> *Sistem tidak lagi memperlakukan nasabah secara seragam hanya berdasarkan hari keterlambatan (DPD). CRMS menghitung **Skor Risiko Perilaku dari 0 hingga 1000 Poin** secara multi-faktor: menggabungkan histori pembayaran 12 bulan terakhir, rasio beban angsuran, tipe agunan, dan kestabilan pekerjaan.*  
-> *Hasil skor membagi akun ke dalam 4 kategori risiko dan memetakan secara otomatis ke **Action Path Grade 1 s.d 8**:  
-> *Akun berisiko rendah ditangani otomatis oleh WhatsApp bot dan IVR robotik (Action Path 1-2). Akun risiko sedang dialokasikan ke Desk Telephony kantor pusat (Action Path 3-4). Sementara akun risiko tinggi langsung diterjunkan kolektor lapangan mCollect (Action Path 5-8).*  
-> *Yang paling canggih, sistem memiliki fitur **Champion vs Challenger**: 80% portofolio dijalankan dengan strategi Champion, dan 20% dengan Challenger untuk A/B testing strategi baru. Jika Challenger terbukti menghasilkan pelunasan lebih tinggi, algoritma akan otomatis dipromosikan menjadi Champion baru."*
+> *Sistem tidak lagi memperlakukan nasabah secara seragam hanya berdasarkan hari keterlambatan (DPD). CRMS menghitung **Skor Risiko Perilaku dari 0 hingga 1000 Poin** secara multi-faktor: 35% riwayat pembayaran 12 bulan terakhir, 25% posisi DPD berjalan, 20% rasio beban utang DSR, 10% tipe agunan properti, dan 10% kestabilan pekerjaan ASN Pemprov DKI.*  
+> *Seringkali muncul pertanyaan: **'Bagaimana cara skor 0–1000 poin tersebut menentukan Grade 1 sampai 8, padahal di formulir skoring tidak tercantum kolom Grade?'**  
+> *Jawabannya: Scoring Model dan Matriks Grade bekerja dalam **arsitektur 2-tahap yang dihubungkan oleh Decision Engine melalui 3 langkah pasti**:  
+> *Langkah 1: Hitung skor numerik multi-faktor 0–1000 poin.  
+> *Langkah 2: Klasifikasikan skor ke dalam Tingkat Risiko (Skor >= 700 = Low Risk, 450–699 = Medium Risk, < 450 = High Risk). Lalu lakukan pembagian lalu lintas portofolio: 80% dialokasikan ke strategi **Champion (Grade 1 & 2)**, dan 20% dialokasikan ke strategi adaptif **Challenger (Grade 3–4 untuk Low Risk, Grade 5–6 untuk Medium Risk, Grade 7–8 untuk High Risk)**. Khusus nasabah VIP langsung masuk **Grade VIP**.  
+> *Langkah 3: Lakukan interseksi 2-dimensi antara **Grade pada sumbu vertikal** dengan **Bucket DPD (-3-0 s.d >150) pada sumbu horizontal** untuk menetapkan siapa petugas PIC dan kanal yang ditugaskan.*  
+> *Dengan arsitektur ini, nasabah disiplin di Grade 3 cukup ditagih dengan WhatsApp dan Robot call tanpa perlu biaya bensin kolektor lapangan. Sebaliknya, nasabah berisiko tinggi di Grade 7 langsung diterjunkan Field Collector sejak DPD 1."*
 
 #### 3. Detail Arsitektur & Logika Sistem:
-* Engine diimplementasikan pada package `backend/internal/decisionengine/engine.go`. Algoritma mengeksekusi perhitungan skor secara instan menggunakan bobot parameter tertimbang (*weighted scoring matrix*).
+* Engine diimplementasikan pada package backend Golang: `backend/internal/decisionengine/rules.go` dan `engine.go`.
+* Mendukung 10 bucket DPD lengkap: `-3-0`, `1-3`, `4-7`, `8-13`, `14-18`, `19-25`, `26-30`, `31-60`, `61-150`, dan `> 150`.
+* Menjalankan evaluasi berkinerja tinggi (< 1 milidetik per akun) sehingga mampu mengevaluasi 500.000 fasilitas pinjaman dalam hitungan menit pada saat batch EOD maupun real-time re-evaluation via API `POST /api/v1/overdue-accounts/:id/reevaluate`.
 
 #### 4. Kepatuhan Regulasi & Governance:
-* Memenuhi ketentuan OJK tentang penerapan *Credit Risk Scoring Model* yang transparan, dapat dijelaskan (*explainable AI/rules*), dan bebas dari bias diskriminatif.
+* Memenuhi ketentuan OJK tentang penerapan *Credit Risk Scoring Model* yang transparan, dapat diaudit (*explainable rules*), dan bebas dari bias diskriminatif.
+* Menegakkan kepatuhan jeda somasi 14 hari kalender dan etika penagihan konsumen perbankan.
 
 #### 5. Antisipasi Tanya Jawab (Q&A):
-* **Pertanyaan Head of Credit Risk**: *"Apakah tim risiko bisa mengubah bobot skor tanpa harus compile ulang program Golang?"*
-* **Jawaban Presenter**: *"Tentu saja. Aturan pemetaan Action Path disimpan pada tabel `decision_rules` di database dan dapat dikonfigurasi langsung oleh Administrator Risiko melalui dashboard web CRMS."*
+* **Pertanyaan 1 (Dewan Direksi / Auditor)**: *"Apakah penentuan Grade penagihan (Action Path 1–8) menggunakan Scoring Collection?"*
+* **Jawaban Presenter**: *"Ya, mutlak. Collection Scoring (0–1000 poin) adalah dasar kuantitatif penentuan tingkat risiko kredit (Low Risk, Medium Risk, High Risk) yang memetakan akun ke Grade 1 s.d 8."*
+* **Pertanyaan 2 (Risk Management)**: *"Bagaimana caranya sistem menentukan Grade jika di dalam formulir atau tabel skoring tidak ditemukan label Grade?"*
+* **Jawaban Presenter**: *"Karena Scoring Model dan Matriks Grade adalah dua lapisan terpisah (Two-Stage Architecture). Lapisan 1 (Scoring Model) adalah Input Layer yang mengevaluasi risiko nasabah (skor 0–1000). Lapisan 2 (Action Path Matrix) adalah Execution Layer yang memetakan strategi penagihan. Decision Engine bertindak sebagai jembatan melalui 3 tahapan: (1) Hitung total skor 0–1000, (2) Klasifikasi level risiko dan bagi traffic Champion (Grade 1–2) vs Challenger (Grade 3–8), lalu (3) Interseksikan Grade dengan Bucket DPD berjalan untuk memilih PIC penugasan."*
+* **Pertanyaan 3 (Komite Kredit)**: *"Mengapa setiap tingkatan risiko memiliki dua nomor Grade (misal Low Risk menjadi Grade 3 dan Grade 4)?"*
+* **Jawaban Presenter**: *"Itu adalah fitur Sub-Variant A/B Testing untuk menguji agresivitas waktu eskalasi kanal penagihan. Contohnya pada Low Risk: Grade 3 menahan kanal robotik sampai DPD 13, sedangkan Grade 4 mempercepat eskalasi ke telepon Desk Collector pada DPD 8. Tim manajemen risiko dapat membandingkan cure rate kedua varian untuk menemukan strategi penagihan paling optimal dan hemat biaya."*
 
 ---
 
