@@ -95,5 +95,19 @@ func SetupRoutes(r *gin.Engine) {
 		v1.POST("/delegations", advH.CreateDelegation)
 		v1.DELETE("/delegations/:id", advH.CancelDelegation)
 		v1.GET("/capacity-planning", advH.GetCapacityPlanning)
+
+		// 10. Collector Workbench (Task List, Today's Plan, Reassign, & Incentive Engine)
+		collH := handlers.NewCollectorHandler(database.DB)
+		v1.GET("/collector/tasks", collH.GetCollectorTasks)
+		v1.GET("/collector/today-plan", collH.GetTodayPlan)
+		v1.POST("/collector/today-plan", collH.AddToTodayPlan)
+		v1.POST("/collector/today-plan/bulk", collH.BulkAddToTodayPlan)
+		v1.PUT("/collector/today-plan/:id/status", collH.UpdateTodayPlanStatus)
+		v1.DELETE("/collector/today-plan/:id", collH.RemoveFromTodayPlan)
+		v1.POST("/collector/reassign", collH.ReassignCollector)
+		v1.GET("/collector/reassignments", collH.GetReassignmentLogs)
+		v1.GET("/collector/incentives", collH.GetCollectorIncentives)
+		v1.POST("/collector/incentives/simulate", collH.SimulateIncentive)
 	}
 }
+

@@ -71,6 +71,15 @@ func InitDB(databaseURL string) (*gorm.DB, error) {
 	if err := db.AutoMigrate(&models.AuthorityDelegation{}); err != nil {
 		return nil, err
 	}
+	if err := db.AutoMigrate(&models.CollectorDailyPlan{}); err != nil {
+		return nil, err
+	}
+	if err := db.AutoMigrate(&models.CollectorReassignmentLog{}); err != nil {
+		return nil, err
+	}
+	if err := db.AutoMigrate(&models.CollectorIncentiveRule{}); err != nil {
+		return nil, err
+	}
 
 	DB = db
 	log.Println("PostgreSQL connection and migration successful!")

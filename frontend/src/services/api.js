@@ -144,5 +144,18 @@ export const createDelegation = (data) => api.post('/delegations', data);
 export const cancelDelegation = (id) => api.delete(`/delegations/${id}`);
 export const getCapacityPlanning = () => api.get('/capacity-planning');
 
+// Collector Features: Task List, Today's Plan, Reassign, & Incentive Engine
+export const getCollectorTasks = (params) => api.get('/collector/tasks', { params });
+export const getTodayPlan = (params) => api.get('/collector/today-plan', { params });
+export const addToTodayPlan = (data) => api.post('/collector/today-plan', data);
+export const bulkAddToTodayPlan = (data) => api.post('/collector/today-plan/bulk', data);
+export const updateTodayPlanStatus = (id, data) => api.put(`/collector/today-plan/${id}/status`, data);
+export const removeFromTodayPlan = (id) => api.delete(`/collector/today-plan/${id}`);
+export const reassignCollector = (data) => api.post('/collector/reassign', data);
+export const getReassignmentLogs = (params) => api.get('/collector/reassignments', { params });
+export const getCollectorIncentives = (params) => api.get('/collector/incentives', { params });
+export const simulateIncentive = (data) => api.post('/collector/incentives/simulate', data);
+
 export default api;
+
 

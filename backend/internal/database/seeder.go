@@ -16,6 +16,7 @@ import (
 func SeedInitialData(db *gorm.DB) {
 	// Pastikan users selalu ter-seed
 	SeedUsers(db)
+	SeedCollectorFeatures(db)
 
 	var count int64
 	db.Model(&models.Customer{}).Count(&count)
@@ -636,12 +637,6 @@ func SeedInitialData(db *gorm.DB) {
 }
 
 func SeedUsers(db *gorm.DB) {
-	var userCount int64
-	db.Model(&models.User{}).Count(&userCount)
-	if userCount > 0 {
-		return
-	}
-
 	hashPwd := func(pwd string) string {
 		h, err := bcrypt.GenerateFromPassword([]byte(pwd), bcrypt.DefaultCost)
 		if err != nil {
@@ -675,12 +670,39 @@ func SeedUsers(db *gorm.DB) {
 			Role:     "COLLECTOR",
 			IsActive: true,
 		},
+		{
+			Username: "andi",
+			Password: hashPwd("andi123"),
+			FullName: "Andi Pratama (Field Collector)",
+			Email:    "andi@crms.local",
+			Role:     "COLLECTOR",
+			IsActive: true,
+		},
+		{
+			Username: "budi",
+			Password: hashPwd("budi123"),
+			FullName: "Budi Santoso (RSO Officer)",
+			Email:    "budi@crms.local",
+			Role:     "COLLECTOR",
+			IsActive: true,
+		},
+		{
+			Username: "rian",
+			Password: hashPwd("rian123"),
+			FullName: "Rian Pratama (FRO Officer)",
+			Email:    "rian@crms.local",
+			Role:     "COLLECTOR",
+			IsActive: true,
+		},
 	}
 
 	for _, u := range initialUsers {
-		db.Create(&u)
+		var existing models.User
+		if err := db.Where("username = ?", u.Username).First(&existing).Error; err != nil {
+			db.Create(&u)
+		}
 	}
-	log.Println("Default CRMS users successfully seeded: admin, ar_head, collector.")
+	log.Println("CRMS users successfully verified/seeded: admin, ar_head, collector, andi, budi, rian.")
 }
 
 func SeedPreDelinquency(db *gorm.DB) {
@@ -1615,3 +1637,147 @@ func SeedAgenciesAndDelegations(db *gorm.DB) {
 
 	log.Println("External collection agencies and authority delegations successfully seeded.")
 }
+
+func SeedCollectorFeatures(db *gorm.DB) {
+	// 1. Seed Incentive Rules
+	var ruleCount int64
+	db.Model(&models.CollectorIncentiveRule{}).Count(&ruleCount)
+	if ruleCount == 0 {
+		rules := []models.CollectorIncentiveRule{
+			{
+				MinFlowRate: 0,
+				MaxFlowRate: 9.99,
+				StatusLabel: "Sangat Bagus",
+				Modifier:    1.2,
+				Description: "Faktor Pengali: 1.2 (Insentif naik 20%)",
+				OrderIndex:  1,
+			},
+			{
+				MinFlowRate: 10.0,
+				MaxFlowRate: 15.0,
+				StatusLabel: "Memenuhi Target",
+				Modifier:    1.0,
+				Description: "Faktor Pengali: 1.0 (Insentif utuh 100%)",
+				OrderIndex:  2,
+			},
+			{
+				MinFlowRate: 15.1,
+				MaxFlowRate: 20.0,
+				StatusLabel: "Buruk",
+				Modifier:    0.8,
+				Description: "Faktor Pengurang: 0.8 (Insentif dipotong 20%)",
+				OrderIndex:  3,
+			},
+			{
+				MinFlowRate: 20.1,
+				MaxFlowRate: 100.0,
+				StatusLabel: "Sangat Buruk",
+				Modifier:    0.5,
+				Description: "Faktor Pengurang: 0.5 (Insentif dipotong 50%)",
+				OrderIndex:  4,
+			},
+		}
+		for _, r := range rules {
+			db.Create(&r)
+		}
+		log.Println("Collector incentive rules seeded successfully.")
+	}
+
+	// 2. Seed Collector Daily Plan (Today's Plan)
+	var planCount int64
+	todayStr := time.Now().Format("2006-01-02")
+	db.Model(&models.CollectorDailyPlan{}).Where("plan_date = ?", todayStr).Count(&planCount)
+	if planCount == 0 {
+		var accounts []models.OverdueAccount
+		db.Limit(6).Find(&accounts)
+		if len(accounts) >= 3 {
+			now := time.Now()
+			plans := []models.CollectorDailyPlan{
+				{
+					PlanDate:          todayStr,
+					CollectorUsername: "andi",
+					CollectorName:     "Andi Pratama",
+					AgreementNo:       accounts[0].AgreementNo,
+					OverdueAccountID:  accounts[0].ID,
+					Priority:          "HIGH",
+					Status:            "VISITED",
+					RouteOrder:        1,
+					EstimatedTime:     "09:00 WIB",
+					Notes:             "Kunjungan ke alamat rumah debitur. Debitur berjanji melunasi sore ini.",
+					CreatedAt:         now,
+					UpdatedAt:         now,
+				},
+				{
+					PlanDate:          todayStr,
+					CollectorUsername: "andi",
+					CollectorName:     "Andi Pratama",
+					AgreementNo:       accounts[1].AgreementNo,
+					OverdueAccountID:  accounts[1].ID,
+					Priority:          "MEDIUM",
+					Status:            "PLANNED",
+					RouteOrder:        2,
+					EstimatedTime:     "11:00 WIB",
+					Notes:             "Follow-up angsuran tertunggak 18 DPD.",
+					CreatedAt:         now,
+					UpdatedAt:         now,
+				},
+				{
+					PlanDate:          todayStr,
+					CollectorUsername: "field_rso_1",
+					CollectorName:     "Budi Santoso",
+					AgreementNo:       accounts[2].AgreementNo,
+					OverdueAccountID:  accounts[2].ID,
+					Priority:          "HIGH",
+					Status:            "PTP",
+					RouteOrder:        1,
+					EstimatedTime:     "09:30 WIB",
+					Notes:             "Debitur sepakat PTP tanggal 28 dengan komitmen transfer bank.",
+					CreatedAt:         now,
+					UpdatedAt:         now,
+				},
+			}
+			for _, p := range plans {
+				db.Create(&p)
+			}
+			log.Println("Collector daily plan seeded successfully.")
+		}
+	}
+
+	// 3. Seed Reassignment Logs
+	var logCount int64
+	db.Model(&models.CollectorReassignmentLog{}).Count(&logCount)
+	if logCount == 0 {
+		var accounts []models.OverdueAccount
+		db.Limit(2).Find(&accounts)
+		if len(accounts) >= 2 {
+			now := time.Now()
+			logs := []models.CollectorReassignmentLog{
+				{
+					AgreementNo:      accounts[0].AgreementNo,
+					OverdueAccountID: accounts[0].ID,
+					FromCollector:    "field_fro_2",
+					ToCollector:      "andi",
+					Reason:           "AREA_ROTATION",
+					Notes:            "Penyesuaian zonasi domisili penagihan wilayah Jakarta Pusat ke Andi Pratama",
+					ReassignedBy:     "Bambang Wijaya (AR Head)",
+					ReassignedAt:     now.AddDate(0, 0, -1),
+				},
+				{
+					AgreementNo:      accounts[1].AgreementNo,
+					OverdueAccountID: accounts[1].ID,
+					FromCollector:    "collector",
+					ToCollector:      "field_rso_1",
+					Reason:           "OVERLOAD",
+					Notes:            "Pemerataan beban kerja penagihan Bucket 2 kepada petugas RSO",
+					ReassignedBy:     "Bambang Wijaya (AR Head)",
+					ReassignedAt:     now.Add(-6 * time.Hour),
+				},
+			}
+			for _, l := range logs {
+				db.Create(&l)
+			}
+			log.Println("Collector reassignment audit logs seeded successfully.")
+		}
+	}
+}
+

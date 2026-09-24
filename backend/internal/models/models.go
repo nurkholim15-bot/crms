@@ -351,4 +351,49 @@ type AuthorityDelegation struct {
 	UpdatedAt          time.Time `json:"updated_at"`
 }
 
+// CollectorDailyPlan merepresentasikan rencana kunjungan harian yang dipilih kolektor (Today's Plan)
+type CollectorDailyPlan struct {
+	ID                uint           `gorm:"primaryKey" json:"id"`
+	PlanDate          string         `gorm:"size:20;not null;index" json:"plan_date"` // YYYY-MM-DD
+	CollectorUsername string         `gorm:"size:100;not null;index" json:"collector_username"`
+	CollectorName     string         `gorm:"size:100;not null" json:"collector_name"`
+	AgreementNo       string         `gorm:"size:50;not null;index" json:"agreement_no"`
+	OverdueAccountID  uint           `gorm:"not null;index" json:"overdue_account_id"`
+	OverdueAccount    OverdueAccount `gorm:"foreignKey:OverdueAccountID" json:"overdue_account,omitempty"`
+	Priority          string         `gorm:"size:20;default:'MEDIUM'" json:"priority"` // HIGH, MEDIUM, LOW
+	Status            string         `gorm:"size:30;default:'PLANNED'" json:"status"`   // PLANNED, IN_PROGRESS, VISITED, PTP, PAID, CANCELLED
+	RouteOrder        int            `gorm:"default:1" json:"route_order"`
+	EstimatedTime     string         `gorm:"size:30" json:"estimated_time"` // e.g. "09:30 WIB"
+	CheckinAt         *time.Time     `json:"checkin_at"`
+	Notes             string         `gorm:"type:text" json:"notes"`
+	CreatedAt         time.Time      `json:"created_at"`
+	UpdatedAt         time.Time      `json:"updated_at"`
+}
+
+// CollectorReassignmentLog merepresentasikan riwayat audit pemindahan akun antar kolektor (Reassign Collector)
+type CollectorReassignmentLog struct {
+	ID               uint           `gorm:"primaryKey" json:"id"`
+	AgreementNo      string         `gorm:"size:50;not null;index" json:"agreement_no"`
+	OverdueAccountID uint           `gorm:"not null;index" json:"overdue_account_id"`
+	OverdueAccount   OverdueAccount `gorm:"foreignKey:OverdueAccountID" json:"overdue_account,omitempty"`
+	FromCollector    string         `gorm:"size:100;not null" json:"from_collector"`
+	ToCollector      string         `gorm:"size:100;not null" json:"to_collector"`
+	Reason           string         `gorm:"size:255;not null" json:"reason"` // OVERLOAD, SICK_LEAVE, AREA_ROTATION, PERFORMANCE_ESCALATION, OTHER
+	Notes            string         `gorm:"type:text" json:"notes"`
+	ReassignedBy     string         `gorm:"size:100;not null" json:"reassigned_by"` // Supervisor / AR Head
+	ReassignedAt     time.Time      `json:"reassigned_at"`
+}
+
+// CollectorIncentiveRule merepresentasikan aturan matriks flow rate modifier (CMS Incentive Engine)
+type CollectorIncentiveRule struct {
+	ID           uint    `gorm:"primaryKey" json:"id"`
+	MinFlowRate  float64 `gorm:"type:numeric(5,2);default:0" json:"min_flow_rate"`
+	MaxFlowRate  float64 `gorm:"type:numeric(5,2);default:100" json:"max_flow_rate"`
+	StatusLabel  string  `gorm:"size:50;not null" json:"status_label"` // Sangat Bagus, Memenuhi Target, Buruk, Sangat Buruk
+	Modifier     float64 `gorm:"type:numeric(4,2);not null" json:"modifier"` // 1.2, 1.0, 0.8, 0.5
+	Description  string  `gorm:"size:255" json:"description"`
+	OrderIndex   int     `gorm:"default:1" json:"order_index"`
+}
+
+
 

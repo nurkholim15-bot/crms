@@ -249,9 +249,9 @@ export default function Dashboard({ companyInfo }) {
           }`}
         >
           <Smartphone className="w-4 h-4 shrink-0" />
-          <span>mCollect Field Workbench</span>
+          <span>Collector Workbench</span>
           <span className={`px-1.5 py-0.2 rounded text-[10px] ${activeModule === 'mcollect' ? 'bg-emerald-500 text-white' : 'bg-emerald-100 text-emerald-700 font-bold'}`}>
-            PIS Digital
+            Task, Plan & Insentif
           </span>
         </button>
 
