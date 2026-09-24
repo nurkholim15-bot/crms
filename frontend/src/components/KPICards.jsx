@@ -34,7 +34,7 @@ export default function KPICards({ summary }) {
               {formatRupiah(summary.total_overdue_amount)}
             </h3>
             <p className="text-xs text-slate-500 mt-1 flex items-center">
-              <span className="font-semibold text-slate-700 mr-1">{summary.total_accounts} Akun</span> Retail Non-Fleet
+              <span className="font-semibold text-slate-700 mr-1">{summary.total_accounts} Akun</span> Portofolio Aktif
             </p>
           </div>
           <div className="w-10 h-10 rounded-lg bg-red-50 flex items-center justify-center text-red-600">

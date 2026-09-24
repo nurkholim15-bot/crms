@@ -24,7 +24,7 @@ export default function ConfinsEODSimulator({ onEODComplete, companyInfo }) {
     setIsRunning(true);
     setEodLogs(prev => [
       ...prev,
-      `[${new Date().toLocaleTimeString()}] Memulai batch EOD CONFINS: DPD +${incrementDays} hari, Cure Rate: ${(parseFloat(autoCureRatio) * 100).toFixed(0)}%...`
+      `[${new Date().toLocaleTimeString()}] Memulai batch EOD Core Banking: DPD +${incrementDays} hari, Cure Rate: ${(parseFloat(autoCureRatio) * 100).toFixed(0)}%...`
     ]);
 
     try {
@@ -78,9 +78,9 @@ export default function ConfinsEODSimulator({ onEODComplete, companyInfo }) {
               <RefreshCw className={`w-7 h-7 ${isRunning ? 'animate-spin' : ''}`} />
             </div>
             <div>
-              <h2 className="text-xl font-black">CONFINS End of Day (EOD) Batch Simulator</h2>
+              <h2 className="text-xl font-black">Core Banking End of Day (EOD) Batch Simulator</h2>
               <p className="text-slate-400 text-xs mt-0.5">
-                Simulasi Siklus Pergantian Hari Sistem Inti Pembiayaan CONFINS & Re-evaluasi Otomatis Decision Engine
+                Simulasi Siklus Pergantian Hari Sistem Inti Perbankan & Re-evaluasi Otomatis Decision Engine
               </p>
             </div>
           </div>
@@ -114,13 +114,13 @@ export default function ConfinsEODSimulator({ onEODComplete, companyInfo }) {
                 onChange={(e) => setIncrementDays(e.target.value)}
                 className="w-full border border-slate-300 rounded-lg p-2.5 bg-slate-50 font-semibold"
               >
-                <option value="1">+1 Hari (Siklus Harian Standar CONFINS)</option>
+                <option value="1">+1 Hari (Siklus Harian Standar Core Banking)</option>
                 <option value="3">+3 Hari (Simulasi Melewati Akhir Pekan)</option>
                 <option value="7">+7 Hari (Simulasi 1 Minggu Penuh)</option>
                 <option value="15">+15 Hari (Simulasi Transisi Lonjakan Bucket)</option>
               </select>
               <p className="text-[11px] text-slate-500 mt-1">
-                Semua akun aktif akan bertambah DPD-nya dan di-evaluasi ulang oleh Decision Engine atau CONFINS Rule.
+                Semua akun aktif akan bertambah DPD-nya dan di-evaluasi ulang oleh Decision Engine CRMS.
               </p>
             </div>
 
@@ -145,8 +145,8 @@ export default function ConfinsEODSimulator({ onEODComplete, companyInfo }) {
                 Mekanisme yang Berjalan Selama Batch EOD:
               </span>
               <ul className="text-[11px] text-slate-600 space-y-1.5 pl-4 list-disc font-medium">
-                <li>Akun DPD 1–30 dinilai ulang oleh <strong>Decision Engine (DE)</strong> sesuai Risk Score dan Traffic Group.</li>
-                <li>Akun yang melintasi <strong>DPD &gt; 30</strong> secara otomatis dialokasikan ke <strong>Senior Field Collector</strong>.</li>
+                <li>Seluruh akun aktif dievaluasi ulang oleh <strong>Decision Engine CRMS</strong> sesuai Risk Score dan Matriks Action Path.</li>
+                <li>Akun yang melintasi <strong>DPD &gt; 30</strong> secara otomatis dialokasikan ke <strong>Field Collector / Senior Field</strong> sesuai matriks Grade.</li>
                 <li>Akun nasabah VIP tetap terlindungi di bucket <strong>Special Team (AR Head)</strong> tanpa terpicu auto-blast.</li>
               </ul>
             </div>
@@ -159,7 +159,7 @@ export default function ConfinsEODSimulator({ onEODComplete, companyInfo }) {
               }`}
             >
               <RefreshCw className={`w-4 h-4 ${isRunning ? 'animate-spin' : ''}`} />
-              <span>{isRunning ? 'Memproses Batch EOD CONFINS...' : `Jalankan EOD (+${incrementDays} Hari)`}</span>
+              <span>{isRunning ? 'Memproses Batch EOD Core Banking...' : `Jalankan EOD (+${incrementDays} Hari)`}</span>
             </button>
           </div>
         </div>
@@ -171,7 +171,7 @@ export default function ConfinsEODSimulator({ onEODComplete, companyInfo }) {
             <div className="bg-emerald-50 rounded-xl border border-emerald-200 p-5 shadow-sm space-y-3">
               <div className="flex items-center space-x-2 text-emerald-900 font-extrabold text-sm">
                 <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-                <span>Hasil Batch CONFINS EOD Terakhir</span>
+                <span>Hasil Batch Core Banking EOD Terakhir</span>
               </div>
 
               <div className="grid grid-cols-3 gap-3 text-center text-xs">

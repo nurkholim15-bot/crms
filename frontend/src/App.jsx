@@ -127,9 +127,8 @@ export default function App() {
 
       {/* Footer */}
       <footer className="bg-white border-t border-slate-200 py-4 px-6 text-center text-xs text-slate-500">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center space-y-2 sm:space-y-0">
+        <div className="max-w-7xl mx-auto flex justify-center items-center">
           <p>© 2026 {companyInfo.namaPT} ({companyInfo.simbolPT}) – Collection & Recovery Management System (CRMS)</p>
-          <p className="text-[11px] text-slate-400">Retail Line of Business (All Excl. Fleet) • Decision Engine v2.1 • Core CONFINS</p>
         </div>
       </footer>
     </div>
