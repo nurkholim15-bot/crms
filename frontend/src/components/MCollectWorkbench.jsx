@@ -19,6 +19,7 @@ import {
   ExternalLink,
   ChevronRight,
   ShieldCheck,
+  User,
   UserCheck,
   Calendar,
   ArrowRightLeft,
@@ -125,14 +126,12 @@ const MCollectWorkbench = () => {
   const [foreclosureResult, setForeclosureResult] = useState(null);
   const [simulating, setSimulating] = useState(false);
 
-  // Available Collectors List
+  // Available Collectors List (sesuai akun terdaftar di sistem)
   const collectorsList = [
-    { username: 'andi', name: 'Andi Pratama', role: 'Field Collector Bucket 1', bucket: 'Bucket 1 (1-30 DPD)' },
-    { username: 'field_rso_1', name: 'Budi Santoso', role: 'Remedial Settlement Officer (RSO)', bucket: 'Bucket 2 (31-60 DPD)' },
-    { username: 'field_fro_1', name: 'Rian Pratama', role: 'Field Recovery Officer (FRO)', bucket: 'Bucket 1 (1-30 DPD)' },
-    { username: 'field_fro_2', name: 'Doni Setiawan', role: 'Field Recovery Officer (FRO)', bucket: 'Bucket 1 (1-30 DPD)' },
-    { username: 'collector', name: 'Dimas Kurniawan', role: 'Senior Field Collector (SFC)', bucket: 'Bucket 3+ (>60 DPD)' },
-    { username: 'agency_col_1', name: 'Hendra Wijaya', role: 'Partner Agency Collector', bucket: 'Mitra Eksternal' },
+    { username: 'andi', name: 'Andi Pratama', role: 'Field Collector', bucket: 'Bucket 1-13 DPD' },
+    { username: 'rian', name: 'Rian Pratama', role: 'Field Recovery Officer (FRO)', bucket: 'Bucket 14-30 DPD' },
+    { username: 'budi', name: 'Budi Santoso', role: 'Remedial Settlement Officer (RSO)', bucket: 'Bucket 31-60 DPD' },
+    { username: 'collector', name: 'Dimas Kurniawan', role: 'Senior Field Collector (SFC)', bucket: 'Bucket >60 DPD' },
   ];
 
   // Helper Format Rupiah
@@ -260,12 +259,12 @@ const MCollectWorkbench = () => {
     try {
       await addToTodayPlan({
         agreement_no: task.agreement_no,
-        collector_username: task.assigned_pic || 'andi',
-        collector_name: task.assigned_pic || 'Andi Pratama',
+        collector_username: task.collector_username || 'andi',
+        collector_name: task.collector_name || 'Andi Pratama',
         priority: task.dpd > 30 ? 'HIGH' : 'MEDIUM',
         plan_date: planDate,
       });
-      setSuccessNotice(`Akun ${task.agreement_no} berhasil dimasukkan ke Today's Plan!`);
+      setSuccessNotice(`Akun ${task.agreement_no} berhasil dimasukkan ke Today's Plan untuk ${task.collector_name || 'Andi Pratama'}!`);
       fetchTasks();
       fetchTodayPlans();
     } catch (err) {
@@ -276,9 +275,11 @@ const MCollectWorkbench = () => {
   const handleBulkAddToPlan = async () => {
     if (selectedTaskIds.length === 0) return;
     try {
+      const activeCollector = collectorsList.find(c => c.username === selectedCollectorFilter);
       const res = await bulkAddToTodayPlan({
         agreement_nos: selectedTaskIds,
         collector_username: selectedCollectorFilter !== 'ALL' ? selectedCollectorFilter : 'andi',
+        collector_name: activeCollector?.name || 'Andi Pratama',
         plan_date: planDate,
       });
       setSuccessNotice(`Berhasil menambahkan ${res.data.count} akun ke Today's Plan!`);
@@ -336,7 +337,7 @@ const MCollectWorkbench = () => {
         overdue_account_id: customerFormTask.id,
         agreement_no: customerFormTask.agreement_no,
         channel_type: 'FO',
-        performed_by: customerFormTask.assigned_pic || 'Andi Pratama',
+        performed_by: customerFormTask.collector_name || customerFormTask.assigned_pic || 'Andi Pratama',
         contact_status: visitStatus,
         result_code: visitStatus,
         ptp_date: isPTP && visitPTPDate ? new Date(visitPTPDate).toISOString() : null,
@@ -443,8 +444,8 @@ const MCollectWorkbench = () => {
         agreement_no: paymentModalAccount.agreement_no,
         amount_paid: Number(paymentAmount),
         payment_method: paymentMethod,
-        collector_username: paymentModalAccount.assigned_pic || 'andi',
-        collector_name: paymentModalAccount.assigned_pic || 'Andi Pratama',
+        collector_username: paymentModalAccount.collector_username || paymentModalAccount.assigned_pic || 'andi',
+        collector_name: paymentModalAccount.collector_name || paymentModalAccount.assigned_pic || 'Andi Pratama',
         geotag_lat: -6.195042,
         geotag_lng: 106.823145,
         send_whatsapp_now: sendWANow,
@@ -483,7 +484,7 @@ const MCollectWorkbench = () => {
         agreement_no: linkModalAccount.agreement_no,
         amount: Number(linkAmount),
         method: linkMethod,
-        collector: linkModalAccount.assigned_pic || 'Andi Pratama',
+        collector: linkModalAccount.collector_name || linkModalAccount.assigned_pic || 'Andi Pratama',
       });
       setGeneratedLinkResult(res.data);
       fetchReceipts();
@@ -699,7 +700,7 @@ const MCollectWorkbench = () => {
                     <th className="px-4 py-3 text-left">Fasilitas Pinjaman</th>
                     <th className="px-4 py-3 text-right">Tunggakan (Overdue)</th>
                     <th className="px-4 py-3 text-center">DPD & Bucket</th>
-                    <th className="px-4 py-3 text-center">PIC Ditugaskan</th>
+                    <th className="px-4 py-3 text-center">Kolektor Ditugaskan</th>
                     <th className="px-4 py-3 text-center">Status Plan</th>
                     <th className="px-4 py-3 text-center">Aksi Petugas</th>
                   </tr>
@@ -769,9 +770,15 @@ const MCollectWorkbench = () => {
                         </td>
 
                         <td className="px-4 py-3 text-center">
-                          <span className="px-2 py-0.5 rounded bg-gray-100 font-semibold text-gray-700">
-                            {t.assigned_pic}
-                          </span>
+                          <div className="font-bold text-gray-900 flex items-center justify-center gap-1.5">
+                            <User className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                            <span>{t.collector_name || 'Andi Pratama'}</span>
+                          </div>
+                          <div className="text-[11px] text-gray-500 mt-0.5">
+                            <span className="px-2 py-0.5 rounded bg-gray-100 text-gray-600 font-medium">
+                              {t.assigned_pic || 'Field Collector'}
+                            </span>
+                          </div>
                         </td>
 
                         {/* Status Today's Plan */}
@@ -920,7 +927,12 @@ const MCollectWorkbench = () => {
                           </span>
                         </div>
 
-                        <div className="text-xs text-gray-600 flex items-center gap-2">
+                        <div className="text-xs text-gray-600 flex flex-wrap items-center gap-2">
+                          <span className="inline-flex items-center gap-1 font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                            <User className="w-3 h-3 text-emerald-600" />
+                            Kolektor: {plan.collector_name || 'Andi Pratama'}
+                          </span>
+                          <span>•</span>
                           <span className="font-semibold text-rose-600">
                             Tunggakan: {formatRupiah(acc.overdue_amount)}
                           </span>
@@ -1088,7 +1100,7 @@ const MCollectWorkbench = () => {
                       />
                       <span className="font-bold text-gray-900">{task.agreement_no}</span>
                       <span className="text-gray-700">{task.agreement?.customer?.name}</span>
-                      <span className="text-gray-400">({task.assigned_pic} • DPD {task.dpd})</span>
+                      <span className="text-gray-500 font-medium">({task.collector_name || task.assigned_pic} • DPD {task.dpd})</span>
                       <span className="ml-auto font-semibold text-rose-600">
                         {formatRupiah(task.overdue_amount)}
                       </span>
@@ -1604,10 +1616,15 @@ const MCollectWorkbench = () => {
                       DPD {customerFormTask.dpd} ({customerFormTask.current_bucket})
                     </span>
                   </div>
-                  <div className="text-xs text-gray-500 flex items-center gap-2 mt-0.5">
+                  <div className="text-xs text-gray-500 flex flex-wrap items-center gap-2 mt-1">
                     <span>No Kontrak: <strong>{customerFormTask.agreement_no}</strong></span>
                     <span>•</span>
                     <span>CIF: {customerFormTask.agreement?.customer?.customer_no}</span>
+                    <span>•</span>
+                    <span className="inline-flex items-center gap-1 font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                      <User className="w-3 h-3 text-emerald-600" />
+                      Kolektor: {customerFormTask.collector_name || 'Andi Pratama'} ({customerFormTask.assigned_pic || 'Field Collector'})
+                    </span>
                   </div>
                 </div>
               </div>

@@ -7,7 +7,6 @@ import (
 	"strconv"
 	"time"
 
-	"crms-backend/internal/decisionengine"
 	"crms-backend/internal/models"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -38,7 +37,8 @@ func (h *CollectorHandler) GetCollectorTasks(c *gin.Context) {
 		Order("dpd desc, overdue_amount desc")
 
 	if collector != "" && collector != "ALL" {
-		query = query.Where("assigned_pic = ? OR assigned_pic ILIKE ?", collector, "%"+collector+"%")
+		query = query.Where("collector_username = ? OR collector_name ILIKE ? OR assigned_pic = ? OR assigned_pic ILIKE ?",
+			collector, "%"+collector+"%", collector, "%"+collector+"%")
 	}
 
 	if bucket != "" && bucket != "ALL" {
@@ -200,11 +200,17 @@ func (h *CollectorHandler) AddToTodayPlan(c *gin.Context) {
 
 	colUser := req.CollectorUsername
 	if colUser == "" {
-		colUser = overdue.AssignedPIC
+		colUser = overdue.CollectorUsername
+		if colUser == "" {
+			colUser = overdue.AssignedPIC
+		}
 	}
 	colName := req.CollectorName
 	if colName == "" {
-		colName = colUser
+		colName = overdue.CollectorName
+		if colName == "" {
+			colName = colUser
+		}
 	}
 
 	// Cek apakah sudah terdaftar di plan hari ini
@@ -298,11 +304,17 @@ func (h *CollectorHandler) BulkAddToTodayPlan(c *gin.Context) {
 
 		colUser := req.CollectorUsername
 		if colUser == "" {
-			colUser = overdue.AssignedPIC
+			colUser = overdue.CollectorUsername
+			if colUser == "" {
+				colUser = overdue.AssignedPIC
+			}
 		}
 		colName := req.CollectorName
 		if colName == "" {
-			colName = colUser
+			colName = overdue.CollectorName
+			if colName == "" {
+				colName = colUser
+			}
 		}
 
 		var count int64
@@ -477,12 +489,21 @@ func (h *CollectorHandler) ReassignCollector(c *gin.Context) {
 			continue
 		}
 
-		oldCollector := account.AssignedPIC
-		newCollector := req.ToCollector
+		oldCollector := account.CollectorName
+		if oldCollector == "" {
+			oldCollector = account.AssignedPIC
+		}
+		newCollectorUser := req.ToCollector
+		newCollectorName := req.ToCollector
+
+		var targetUser models.User
+		if err := h.db.Where("username = ?", req.ToCollector).First(&targetUser).Error; err == nil {
+			newCollectorName = targetUser.FullName
+		}
 
 		// Update akun
-		account.AssignedPIC = newCollector
-		account.PICChannel = decisionengine.GetPICChannelName(newCollector)
+		account.CollectorUsername = newCollectorUser
+		account.CollectorName = newCollectorName
 		account.UpdatedAt = now
 		h.db.Save(&account)
 
@@ -491,7 +512,7 @@ func (h *CollectorHandler) ReassignCollector(c *gin.Context) {
 			AgreementNo:      agrNo,
 			OverdueAccountID: account.ID,
 			FromCollector:    oldCollector,
-			ToCollector:      newCollector,
+			ToCollector:      newCollectorName,
 			Reason:           req.Reason,
 			Notes:            req.Notes,
 			ReassignedBy:     reassignedBy,
@@ -507,7 +528,7 @@ func (h *CollectorHandler) ReassignCollector(c *gin.Context) {
 			PerformedBy:      reassignedBy,
 			ContactStatus:    "REASSIGNED",
 			ResultCode:       "COLLECTOR_CHANGED",
-			Notes:            fmt.Sprintf("Akun dialihkan dari %s ke %s. Alasan: %s (%s)", oldCollector, newCollector, req.Reason, req.Notes),
+			Notes:            fmt.Sprintf("Akun dialihkan dari %s ke %s (%s). Alasan: %s (%s)", oldCollector, newCollectorName, newCollectorUser, req.Reason, req.Notes),
 			CreatedAt:        now,
 		})
 
@@ -515,8 +536,8 @@ func (h *CollectorHandler) ReassignCollector(c *gin.Context) {
 		h.db.Model(&models.CollectorDailyPlan{}).
 			Where("agreement_no = ? AND plan_date >= ?", agrNo, now.Format("2006-01-02")).
 			Updates(map[string]interface{}{
-				"collector_username": newCollector,
-				"collector_name":     newCollector,
+				"collector_username": newCollectorUser,
+				"collector_name":     newCollectorName,
 				"notes":              fmt.Sprintf("[Reassigned dari %s] %s", oldCollector, req.Notes),
 				"updated_at":         now,
 			})

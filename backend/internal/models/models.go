@@ -55,6 +55,8 @@ type OverdueAccount struct {
 	ActionPath         string     `gorm:"size:10;not null" json:"action_path"`          // 1 - 8, VIP
 	AssignedPIC        string     `gorm:"size:30;not null" json:"assigned_pic"`         // ROBO, DERO, WA, FO, FRO, RSO, RRO, AR Head
 	PICChannel         string     `gorm:"size:50;not null" json:"pic_channel"`          // HEAD_OFFICE, BRANCH, REMEDIAL, AR_HEAD
+	CollectorUsername  string     `gorm:"size:50;index" json:"collector_username"`      // andi, budi, rian, collector
+	CollectorName      string     `gorm:"size:100" json:"collector_name"`               // Andi Pratama, Budi Santoso, etc.
 	RecoveryStage      string     `gorm:"size:50;default:'STAGE_COLLECTION';index" json:"recovery_stage"` // STAGE_COLLECTION, STAGE_SKIP_TRACING, STAGE_RESTRUCTURING, STAGE_LEGAL_NOTICE, STAGE_LITIGATION_AUCTION, STAGE_SETTLEMENT, STAGE_CLOSED
 	RecommendedChannel string     `gorm:"size:50;default:'WA'" json:"recommended_channel"` // Smart Cost-Effective Channel
 	CostEfficiencyRate float64    `gorm:"default:95.0" json:"cost_efficiency_rate"`    // Estimasi efisiensi biaya kanal (%)

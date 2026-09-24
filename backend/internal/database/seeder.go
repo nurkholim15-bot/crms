@@ -460,6 +460,19 @@ func SeedInitialData(db *gorm.DB) {
 
 		lastContact := now.Add(-time.Duration(rand.Intn(48)) * time.Hour)
 
+		colUser := "andi"
+		colName := "Andi Pratama"
+		if dpd > 60 {
+			colUser = "collector"
+			colName = "Dimas Kurniawan"
+		} else if dpd > 30 {
+			colUser = "budi"
+			colName = "Budi Santoso"
+		} else if dpd > 13 {
+			colUser = "rian"
+			colName = "Rian Pratama"
+		}
+
 		overdue := models.OverdueAccount{
 			AgreementNo:        agrNo,
 			DPD:                dpd,
@@ -471,6 +484,8 @@ func SeedInitialData(db *gorm.DB) {
 			ActionPath:         eval.ActionPath,
 			AssignedPIC:        eval.AssignedPIC,
 			PICChannel:         eval.PICChannel,
+			CollectorUsername:  colUser,
+			CollectorName:      colName,
 			RecoveryStage:      recoveryStage,
 			RecommendedChannel: recommendedChannel,
 			CostEfficiencyRate: costRate,
@@ -565,6 +580,8 @@ func SeedInitialData(db *gorm.DB) {
 				ActionPath:         "VIP",
 				AssignedPIC:        "AR Head",
 				PICChannel:         "AR_HEAD",
+				CollectorUsername:  "ar_head",
+				CollectorName:      "Bambang Wijaya (AR Head)",
 				RecoveryStage:      "STAGE_COLLECTION",
 				RecommendedChannel: "WA",
 				CostEfficiencyRate: 95.0,
@@ -599,6 +616,19 @@ func SeedInitialData(db *gorm.DB) {
 			// Sebagian fasilitas kedua juga tertunggak
 			if i%6 == 0 {
 				dpd2 := (dpd / 2) + 2
+				colUser2 := "andi"
+				colName2 := "Andi Pratama"
+				if dpd2 > 60 {
+					colUser2 = "collector"
+					colName2 = "Dimas Kurniawan"
+				} else if dpd2 > 30 {
+					colUser2 = "budi"
+					colName2 = "Budi Santoso"
+				} else if dpd2 > 13 {
+					colUser2 = "rian"
+					colName2 = "Rian Pratama"
+				}
+
 				overdue2 := models.OverdueAccount{
 					AgreementNo:        agrNo2,
 					DPD:                dpd2,
@@ -610,6 +640,8 @@ func SeedInitialData(db *gorm.DB) {
 					ActionPath:         eval.ActionPath,
 					AssignedPIC:        eval.AssignedPIC,
 					PICChannel:         eval.PICChannel,
+					CollectorUsername:  colUser2,
+					CollectorName:      colName2,
 					RecoveryStage:      "STAGE_COLLECTION",
 					RecommendedChannel: "WA",
 					CostEfficiencyRate: 95.0,
