@@ -287,7 +287,7 @@ export default function Sidebar({
                 <div>
                   <button
                     onClick={() => toggleGroup('kolektor')}
-                    title="Kolektor & Lapangan"
+                    title="Collector & Lapangan"
                     className={`w-full flex items-center ${isCollapsed ? 'justify-center px-0' : 'justify-between px-3.5'} py-2.5 rounded-2xl text-xs font-semibold transition-all cursor-pointer ${
                       groupActive && !isOpen
                         ? 'bg-emerald-700/50 text-white font-bold'
@@ -296,7 +296,7 @@ export default function Sidebar({
                   >
                     <div className="flex items-center space-x-3 min-w-0">
                       <Smartphone className={`w-4 h-4 shrink-0 ${groupActive ? 'text-emerald-300' : 'text-emerald-400/80'}`} />
-                      {!isCollapsed && <span className="truncate">Kolektor & Lapangan</span>}
+                      {!isCollapsed && <span className="truncate">Collector & Lapangan</span>}
                     </div>
                     {!isCollapsed && (
                       <div className="flex items-center space-x-1.5">

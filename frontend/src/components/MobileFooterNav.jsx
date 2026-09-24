@@ -29,14 +29,14 @@ export default function MobileFooterNav({
   const footerItems = [
     {
       id: 'beranda',
-      label: 'Beranda',
+      label: 'Dashboard',
       icon: Home,
       isActive: isBerandaActive,
       action: () => handleNavigate('dashboard', 'reguler')
     },
     {
       id: 'kolektor',
-      label: 'Kolektor',
+      label: 'Collector',
       icon: Smartphone,
       isActive: isKolektorActive,
       action: () => handleNavigate('dashboard', 'mcollect')

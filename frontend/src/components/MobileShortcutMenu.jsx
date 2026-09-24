@@ -76,13 +76,13 @@ export default function MobileShortcutMenu({
   const shortcuts = [
     {
       id: 'beranda',
-      label: 'Beranda',
+      label: 'Dashboard',
       icon: Home,
       action: () => handleNavigate('dashboard', 'reguler')
     },
     {
       id: 'kolektor',
-      label: 'Kolektor',
+      label: 'Collector',
       icon: Smartphone,
       action: () => handleNavigate('dashboard', 'mcollect')
     },
@@ -206,10 +206,10 @@ export default function MobileShortcutMenu({
       };
     }
 
-    // Default to Kolektor if in mcollect/geotracker or general collector view
+    // Default to Collector if in mcollect/geotracker or general collector view
     if (activeModule === 'mcollect' || activeModule === 'geotracker') {
       return {
-        title: 'ALUR WORKFLOW UTAMA KOLEKTOR',
+        title: 'ALUR WORKFLOW UTAMA COLLECTOR',
         items: [
           {
             id: 'sub_tasklist',
@@ -229,7 +229,7 @@ export default function MobileShortcutMenu({
           },
           {
             id: 'sub_reassign',
-            label: 'Reassign Kolektor',
+            label: 'Reassign Collector',
             icon: UserPlus,
             color: 'bg-amber-600',
             active: activeModule === 'mcollect',
