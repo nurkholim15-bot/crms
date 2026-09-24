@@ -1,14 +1,72 @@
 import axios from 'axios';
 
+export const sanitizeHost = (host) => {
+  if (!host) return '';
+  let clean = host.trim();
+  if (!clean) return '';
+  if (!clean.startsWith('http://') && !clean.startsWith('https://')) {
+    clean = 'http://' + clean;
+  }
+  clean = clean.replace(/\/+$/, '');
+  if (clean.endsWith('/api/v1')) {
+    clean = clean.slice(0, -7);
+  }
+  return clean;
+};
+
+export const getApiHost = () => {
+  return localStorage.getItem('crms_api_host') || '';
+};
+
+export const setApiHost = (host) => {
+  const sanitized = sanitizeHost(host);
+  if (!sanitized) {
+    localStorage.removeItem('crms_api_host');
+    api.defaults.baseURL = '/api/v1';
+  } else {
+    localStorage.setItem('crms_api_host', sanitized);
+    api.defaults.baseURL = `${sanitized}/api/v1`;
+  }
+  return sanitized;
+};
+
+export const getBaseUrl = () => {
+  const host = getApiHost();
+  if (host) {
+    return `${sanitizeHost(host)}/api/v1`;
+  }
+  return '/api/v1';
+};
+
+export const testApiConnection = async (hostToTest) => {
+  const host = sanitizeHost(hostToTest || getApiHost());
+  if (!host) {
+    throw new Error('Host API belum diisi');
+  }
+  try {
+    const res = await axios.get(`${host}/health`, { timeout: 4000 });
+    return { ok: true, data: res.data };
+  } catch (err) {
+    try {
+      const res2 = await axios.get(`${host}/api/v1/users`, { timeout: 4000 });
+      return { ok: true, data: res2.data };
+    } catch (err2) {
+      throw new Error(err.message || 'Gagal terhubung ke host tersebut');
+    }
+  }
+};
+
 const api = axios.create({
-  baseURL: '/api/v1',
+  baseURL: getBaseUrl(),
   headers: {
     'Content-Type': 'application/json',
   },
+  timeout: 15000,
 });
 
-// Interceptor untuk menyertakan token otentikasi di setiap request
+// Interceptor untuk menyertakan token otentikasi & dynamic baseURL di setiap request
 api.interceptors.request.use((config) => {
+  config.baseURL = getBaseUrl();
   const token = localStorage.getItem('crms_token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;

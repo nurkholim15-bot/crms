@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Lock, 
   User, 
@@ -10,9 +10,11 @@ import {
   KeyRound,
   Sparkles,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Settings,
+  Server
 } from 'lucide-react';
-import { loginUser } from '../services/api';
+import { loginUser, getApiHost, setApiHost, testApiConnection } from '../services/api';
 
 export default function LoginPage({ onLoginSuccess, companyInfo }) {
   const [username, setUsername] = useState('');
@@ -20,6 +22,57 @@ export default function LoginPage({ onLoginSuccess, companyInfo }) {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+
+  // Konfigurasi Server API (Sesuai Desain Kopkara)
+  const [showConfigModal, setShowConfigModal] = useState(false);
+  const [savedHost, setSavedHost] = useState('');
+  const [hostInput, setHostInput] = useState('');
+  const [testingHost, setTestingHost] = useState(false);
+  const [testStatus, setTestStatus] = useState(null);
+
+  useEffect(() => {
+    const current = getApiHost();
+    setSavedHost(current);
+    setHostInput(current);
+  }, []);
+
+  const handleOpenConfig = () => {
+    const current = getApiHost();
+    setSavedHost(current);
+    setHostInput(current);
+    setTestStatus(null);
+    setShowConfigModal(true);
+  };
+
+  const handleSaveHost = () => {
+    const clean = setApiHost(hostInput);
+    setSavedHost(clean);
+    setShowConfigModal(false);
+    setTestStatus(null);
+  };
+
+  const handleTestConnection = async () => {
+    if (!hostInput.trim()) {
+      setTestStatus({ success: false, message: 'Masukkan IP laptop / URL backend terlebih dahulu.' });
+      return;
+    }
+    setTestingHost(true);
+    setTestStatus(null);
+    try {
+      const res = await testApiConnection(hostInput);
+      setTestStatus({
+        success: true,
+        message: `Terhubung: ${res.data?.system || 'CRMS Backend'} (${res.data?.status || 'UP'})`
+      });
+    } catch (err) {
+      setTestStatus({
+        success: false,
+        message: 'Gagal terhubung. Pastikan IP laptop, port 8030, & WiFi satu jaringan.'
+      });
+    } finally {
+      setTestingHost(false);
+    }
+  };
 
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
@@ -99,10 +152,35 @@ export default function LoginPage({ onLoginSuccess, companyInfo }) {
               <ShieldCheck className="w-4 h-4 mr-1.5 text-emerald-400" />
               Autentikasi Pengguna
             </h2>
-            <span className="text-[10px] text-slate-400 bg-slate-700/60 px-2 py-0.5 rounded font-mono">
-              Port 8030 Secure
-            </span>
+            <button
+              type="button"
+              onClick={handleOpenConfig}
+              className="group flex items-center space-x-1.5 px-2.5 py-1 bg-slate-700/80 hover:bg-slate-700 border border-slate-600 hover:border-slate-500 rounded-lg text-slate-300 hover:text-white transition cursor-pointer text-[11px]"
+              title="Konfigurasi Server API"
+            >
+              <Settings className="w-3.5 h-3.5 text-slate-400 group-hover:text-amber-400 group-hover:rotate-45 transition duration-200" />
+              <span className="font-mono text-[10px]">
+                {savedHost ? savedHost.replace(/^https?:\/\//, '') : 'Port 8030'}
+              </span>
+            </button>
           </div>
+
+          {/* Active Custom Host Indicator */}
+          {savedHost && (
+            <div className="flex items-center justify-between px-3 py-1.5 bg-slate-900/80 border border-emerald-500/30 rounded-xl text-[10px] text-emerald-400 font-mono">
+              <span className="flex items-center truncate mr-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1.5 animate-pulse shrink-0"></span>
+                <span className="truncate">Host API: {savedHost}</span>
+              </span>
+              <button
+                type="button"
+                onClick={handleOpenConfig}
+                className="text-slate-400 hover:text-white underline shrink-0 cursor-pointer"
+              >
+                Ubah
+              </button>
+            </div>
+          )}
 
           {errorMessage && (
             <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-xs flex items-center space-x-2">
@@ -232,6 +310,102 @@ export default function LoginPage({ onLoginSuccess, companyInfo }) {
           © 2026 {ptName} ({ptSymbol}) • CRMS v2.1 VPS Production
         </p>
       </div>
+
+      {/* Modal Konfigurasi Server API (Sesuai Desain & Layout Kopkara) */}
+      {showConfigModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 text-slate-800 space-y-4 border border-slate-200">
+            {/* Header: ⚙️ Konfigurasi Server API */}
+            <div className="flex items-center space-x-2">
+              <span className="text-xl">⚙️</span>
+              <h3 className="text-base font-bold text-slate-900 tracking-tight">
+                Konfigurasi Server API
+              </h3>
+            </div>
+
+            {/* Description */}
+            <p className="text-xs text-slate-600 leading-relaxed">
+              Masukkan IP laptop / URL backend CRMS (port 8030):
+            </p>
+
+            {/* Input Host */}
+            <div>
+              <input
+                type="text"
+                value={hostInput}
+                onChange={(e) => setHostInput(e.target.value)}
+                placeholder="http://192.168.1.X:8030"
+                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition"
+                autoFocus
+              />
+              {savedHost && (
+                <div className="flex justify-between items-center mt-1.5">
+                  <span className="text-[10px] text-slate-400 font-mono truncate max-w-[200px]">
+                    Tersimpan: {savedHost}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setHostInput('')}
+                    className="text-[10px] text-red-500 hover:underline cursor-pointer"
+                  >
+                    Reset default
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Test Connection Result Feedback */}
+            {testStatus && (
+              <div className={`p-2.5 rounded-xl text-xs flex items-center space-x-2 ${
+                testStatus.success 
+                  ? 'bg-emerald-50 border border-emerald-200 text-emerald-700' 
+                  : 'bg-red-50 border border-red-200 text-red-700'
+              }`}>
+                {testStatus.success ? (
+                  <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
+                ) : (
+                  <AlertCircle className="w-4 h-4 shrink-0 text-red-600" />
+                )}
+                <span className="text-[11px] leading-tight font-medium">
+                  {testStatus.message}
+                </span>
+              </div>
+            )}
+
+            {/* Action Buttons: Tes Koneksi, Batal, Simpan Host */}
+            <div className="flex items-center justify-between pt-2">
+              <button
+                type="button"
+                onClick={handleTestConnection}
+                disabled={testingHost}
+                className="text-[11px] font-semibold text-sky-600 hover:text-sky-700 underline cursor-pointer disabled:opacity-50"
+              >
+                {testingHost ? 'Menguji...' : '🔍 Tes Koneksi'}
+              </button>
+
+              <div className="flex items-center space-x-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowConfigModal(false);
+                    setTestStatus(null);
+                  }}
+                  className="px-4 py-2 bg-slate-400 hover:bg-slate-500 text-white text-xs font-semibold rounded-xl transition cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveHost}
+                  className="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold rounded-xl shadow-md transition cursor-pointer"
+                >
+                  Simpan Host
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
