@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import Navbar, { navItems } from './components/Navbar';
+import Sidebar from './components/Sidebar';
+import TopHeader from './components/TopHeader';
+import AboutModal from './components/AboutModal';
 import Dashboard from './pages/Dashboard';
 import DecisionEnginePage from './pages/DecisionEnginePage';
 import OperationsWorkbench from './pages/OperationsWorkbench';
@@ -10,8 +12,12 @@ import { resetDemoData, getDashboardSummary, logoutUser } from './services/api';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeModule, setActiveModule] = useState('reguler');
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [globalRefreshTrigger, setGlobalRefreshTrigger] = useState(0);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
   const [companyInfo, setCompanyInfo] = useState({
     namaPT: 'PT AAA',
     simbolPT: 'AAA'
@@ -44,15 +50,15 @@ export default function App() {
     fetchMeta();
   }, [globalRefreshTrigger]);
 
-  // Update Dynamic Document Title & Favicon Tab Browser (Sesuai Permintaan #1 & Gambar 3)
+  // Update Dynamic Document Title & Favicon Tab Browser
   useEffect(() => {
     const symbol = companyInfo.simbolPT || 'AAA';
     document.title = `${symbol} CRMS - Collection & Recovery Management System`;
 
-    // Perbarui favicon secara dinamis ke logo rounded-square merah dengan inisial perusahaan
+    // Perbarui favicon secara dinamis ke logo rounded-square emerald dengan inisial perusahaan
     const link = document.getElementById('app-favicon');
     if (link) {
-      const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23D91A2A'/><text x='16' y='21' fill='white' font-family='system-ui, -apple-system, sans-serif' font-weight='900' font-size='13' text-anchor='middle'>${symbol.toLowerCase()}</text></svg>`;
+      const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23064E3B'/><text x='16' y='21' fill='white' font-family='system-ui, -apple-system, sans-serif' font-weight='900' font-size='13' text-anchor='middle'>${symbol.toLowerCase()}</text></svg>`;
       link.href = `data:image/svg+xml,${encodeURIComponent(svg)}`;
     }
   }, [companyInfo]);
@@ -104,65 +110,83 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-100 flex flex-col font-['Plus_Jakarta_Sans',sans-serif] text-slate-900">
-      {/* Navbar Header */}
-      <Navbar 
-        activeTab={activeTab} 
-        setActiveTab={setActiveTab} 
-        onResetDemo={handleResetDemo}
-        isRefreshing={isRefreshing}
+    <div className="min-h-screen bg-[#064E3B] flex font-['Plus_Jakarta_Sans',sans-serif] text-slate-900 antialiased overflow-x-hidden">
+      {/* Sidebar Navigation (Collapsible desktop + sliding drawer mobile) */}
+      <Sidebar 
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        activeModule={activeModule}
+        setActiveModule={setActiveModule}
         companyInfo={companyInfo}
         currentUser={currentUser}
-        onLogout={handleLogout}
+        isCollapsed={isSidebarCollapsed}
+        setIsCollapsed={setIsSidebarCollapsed}
+        mobileOpen={mobileSidebarOpen}
+        setMobileOpen={setMobileSidebarOpen}
+        onOpenAbout={() => setIsAboutModalOpen(true)}
       />
 
-      {/* Main Tab Content */}
-      <main className="flex-1 pb-24 lg:pb-12">
-        {activeTab === 'dashboard' && <Dashboard key={globalRefreshTrigger} companyInfo={companyInfo} />}
-        {activeTab === 'decision_engine' && <DecisionEnginePage key={globalRefreshTrigger} companyInfo={companyInfo} />}
-        {activeTab === 'operations' && <OperationsWorkbench key={globalRefreshTrigger} companyInfo={companyInfo} />}
-        {activeTab === 'vip' && <VIPManagementPage key={globalRefreshTrigger} companyInfo={companyInfo} />}
-        {activeTab === 'confins' && <ConfinsEODSimulator key={globalRefreshTrigger} onEODComplete={handleEODComplete} companyInfo={companyInfo} />}
-      </main>
+      {/* Main Content Column */}
+      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
+        {/* Top Header */}
+        <TopHeader 
+          currentUser={currentUser}
+          companyInfo={companyInfo}
+          isRefreshing={isRefreshing}
+          onResetDemo={handleResetDemo}
+          onLogout={handleLogout}
+          onOpenAbout={() => setIsAboutModalOpen(true)}
+          setMobileOpen={setMobileSidebarOpen}
+          activeTab={activeTab}
+          activeModule={activeModule}
+        />
 
-      {/* Footer */}
-      <footer className="bg-white border-t border-slate-200 py-4 px-6 text-center text-xs text-slate-500 mb-14 lg:mb-0">
-        <div className="max-w-7xl mx-auto flex justify-center items-center">
-          <p>© 2026 {companyInfo.namaPT} ({companyInfo.simbolPT}) – Collection & Recovery Management System (CRMS)</p>
-        </div>
-      </footer>
+        {/* Content Card Area - LIMS styled rounded-3xl white card */}
+        <main className="flex-1 px-3 sm:px-6 lg:px-8 pb-8 pt-1">
+          <div className="bg-white rounded-3xl shadow-2xl p-4 sm:p-6 lg:p-8 min-h-[calc(100vh-140px)] border border-emerald-950/10 transition-all">
+            {activeTab === 'dashboard' && (
+              <Dashboard 
+                key={`${globalRefreshTrigger}-${activeModule}`} 
+                companyInfo={companyInfo} 
+                activeModule={activeModule}
+                setActiveModule={setActiveModule}
+              />
+            )}
+            {activeTab === 'decision_engine' && (
+              <DecisionEnginePage 
+                key={globalRefreshTrigger} 
+                companyInfo={companyInfo} 
+              />
+            )}
+            {activeTab === 'operations' && (
+              <OperationsWorkbench 
+                key={globalRefreshTrigger} 
+                companyInfo={companyInfo} 
+              />
+            )}
+            {activeTab === 'vip' && (
+              <VIPManagementPage 
+                key={globalRefreshTrigger} 
+                companyInfo={companyInfo} 
+              />
+            )}
+            {activeTab === 'confins' && (
+              <ConfinsEODSimulator 
+                key={globalRefreshTrigger} 
+                onEODComplete={handleEODComplete} 
+                companyInfo={companyInfo} 
+              />
+            )}
+          </div>
+        </main>
+      </div>
 
-      {/* Mobile Bottom Navigation Bar */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200 px-2 py-1.5 flex justify-around items-center shadow-2xl">
-        {navItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = activeTab === item.id;
-          return (
-            <button
-              key={item.id}
-              onClick={() => setActiveTab(item.id)}
-              className={`flex flex-col items-center justify-center py-1 px-1.5 rounded-xl transition cursor-pointer relative ${
-                isActive ? 'text-red-600 font-bold' : 'text-slate-500 hover:text-slate-800'
-              }`}
-            >
-              <div className="relative">
-                <Icon className={`w-5 h-5 ${isActive ? 'text-red-600 scale-110' : 'text-slate-500'} transition-transform`} />
-                {item.badge && (
-                  <span className="absolute -top-1 -right-2 px-1 text-[8px] font-black bg-purple-600 text-white rounded-full">
-                    {item.badge}
-                  </span>
-                )}
-              </div>
-              <span className="text-[10px] mt-0.5 leading-none tracking-tight">
-                {item.shortLabel || item.label}
-              </span>
-              {isActive && (
-                <span className="w-1 h-1 rounded-full bg-red-600 mt-0.5"></span>
-              )}
-            </button>
-          );
-        })}
-      </nav>
+      {/* About CRMS Modal */}
+      <AboutModal 
+        isOpen={isAboutModalOpen} 
+        onClose={() => setIsAboutModalOpen(false)} 
+        companyInfo={companyInfo} 
+      />
     </div>
   );
 }

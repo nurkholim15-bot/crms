@@ -43,8 +43,10 @@ import {
   UserCheck
 } from 'lucide-react';
 
-export default function Dashboard({ companyInfo }) {
-  const [activeModule, setActiveModule] = useState('reguler');
+export default function Dashboard({ companyInfo, activeModule: propActiveModule, setActiveModule: propSetActiveModule }) {
+  const [internalActiveModule, setInternalActiveModule] = useState('reguler');
+  const activeModule = propActiveModule !== undefined ? propActiveModule : internalActiveModule;
+  const setActiveModule = propSetActiveModule !== undefined ? propSetActiveModule : setInternalActiveModule;
   const [summary, setSummary] = useState(null);
   const [accounts, setAccounts] = useState([]);
   const [loading, setLoading] = useState(true);
