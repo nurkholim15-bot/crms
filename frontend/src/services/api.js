@@ -156,6 +156,12 @@ export const getReassignmentLogs = (params) => api.get('/collector/reassignments
 export const getCollectorIncentives = (params) => api.get('/collector/incentives', { params });
 export const simulateIncentive = (data) => api.post('/collector/incentives/simulate', data);
 
+// Twilio Telephony (Robocall & Desk Collection)
+export const getTelephonyConfig = () => api.get('/telephony/config');
+export const saveTelephonyConfig = (data) => api.post('/telephony/config', data);
+export const makeTwilioCall = (data) => api.post('/telephony/call', data);
+export const getTelephonyHistory = (params) => api.get('/telephony/history', { params });
+
 export default api;
 
 

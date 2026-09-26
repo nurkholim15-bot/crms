@@ -5,6 +5,7 @@ import {
 } from '../services/api';
 import ActivityModal from '../components/ActivityModal';
 import Customer360Modal from '../components/Customer360Modal';
+import TwilioCallModal from '../components/TwilioCallModal';
 import { 
   MessageSquare, 
   PhoneCall, 
@@ -17,7 +18,8 @@ import {
   Calendar,
   Building,
   Car,
-  Sparkles
+  Sparkles,
+  Volume2
 } from 'lucide-react';
 
 export default function OperationsWorkbench({ companyInfo }) {
@@ -26,6 +28,7 @@ export default function OperationsWorkbench({ companyInfo }) {
   const [loading, setLoading] = useState(false);
   const [selectedAccountForModal, setSelectedAccountForModal] = useState(null);
   const [selectedCustomerIdFor360, setSelectedCustomerIdFor360] = useState(null);
+  const [selectedAccountForTwilio, setSelectedAccountForTwilio] = useState(null);
   const [waSendingState, setWaSendingState] = useState({});
 
   const channels = [
@@ -84,7 +87,7 @@ export default function OperationsWorkbench({ companyInfo }) {
   return (
     <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-6">
       {/* Workbench Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center pb-4 border-b border-slate-200 gap-2">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center pb-4 border-b border-slate-200 gap-3">
         <div>
           <h2 className="text-lg sm:text-xl font-extrabold text-slate-900">
             Kanal Operasional Penanganan (PIC Workbench)
@@ -93,6 +96,15 @@ export default function OperationsWorkbench({ companyInfo }) {
             Eksekusi penagihan terintegrasi: WhatsApp Bot, Telephony Desk, Kunjungan Lapangan, & Penyelesaian Aset
           </p>
         </div>
+
+        {/* Quick Twilio Dialer Button */}
+        <button
+          onClick={() => setSelectedAccountForTwilio(accounts[0] || {})}
+          className="px-3.5 py-2 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 text-white text-xs font-bold rounded-xl shadow-md flex items-center gap-1.5 transition cursor-pointer"
+        >
+          <PhoneCall className="w-4 h-4 text-emerald-200" />
+          <span>📞 Twilio Voice Dialer</span>
+        </button>
       </div>
 
       {/* Channel Switcher Tabs */}
@@ -272,6 +284,17 @@ export default function OperationsWorkbench({ companyInfo }) {
                             </button>
                           )}
 
+                          {(selectedChannel === 'Robot' || selectedChannel === 'DC' || selectedChannel === 'Special Team') && (
+                            <button
+                              onClick={() => setSelectedAccountForTwilio(acc)}
+                              className="px-2.5 py-1 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition flex items-center shadow-xs cursor-pointer"
+                              title="Panggil via Twilio Voice / Robocall"
+                            >
+                              <PhoneCall className="w-3 h-3 mr-1" />
+                              Twilio Call
+                            </button>
+                          )}
+
                           <button
                             onClick={() => setSelectedAccountForModal(acc)}
                             className="px-2.5 py-1 text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition"
@@ -304,6 +327,15 @@ export default function OperationsWorkbench({ companyInfo }) {
         customerId={selectedCustomerIdFor360}
         onClose={() => setSelectedCustomerIdFor360(null)}
         onActivityLogged={fetchChannelAccounts}
+      />
+
+      {/* Modal Twilio Voice Call */}
+      <TwilioCallModal 
+        isOpen={!!selectedAccountForTwilio}
+        account={selectedAccountForTwilio}
+        companyInfo={companyInfo}
+        onClose={() => setSelectedAccountForTwilio(null)}
+        onCallSuccess={fetchChannelAccounts}
       />
     </div>
   );

@@ -108,6 +108,15 @@ func SetupRoutes(r *gin.Engine) {
 		v1.GET("/collector/reassignments", collH.GetReassignmentLogs)
 		v1.GET("/collector/incentives", collH.GetCollectorIncentives)
 		v1.POST("/collector/incentives/simulate", collH.SimulateIncentive)
+
+		// 11. Twilio Telephony & Programmable Voice (Robocall & Desk Collection)
+		twilioH := handlers.NewTwilioHandler(database.DB)
+		v1.GET("/telephony/config", twilioH.GetConfig)
+		v1.POST("/telephony/config", twilioH.SaveConfig)
+		v1.POST("/telephony/call", twilioH.MakeCall)
+		v1.POST("/telephony/twiml", twilioH.ServeTwiML)
+		v1.POST("/telephony/gather", twilioH.HandleGather)
+		v1.GET("/telephony/history", twilioH.GetCallHistory)
 	}
 }
 
